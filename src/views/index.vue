@@ -247,6 +247,9 @@ const formatDate = (dateString: string): string => {
     year: "numeric",
     month: "short",
     day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
   });
 };
 
