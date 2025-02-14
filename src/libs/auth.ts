@@ -1,12 +1,21 @@
 import { z } from "zod";
+import { TokenSchema, UserSchema } from "./gitlab";
 
 export const SessionSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  expiresAt: z.number(),
-  userId: z.string(),
-  username: z.string(),
-  avatar: z.string().nullable()
+  auth_token: TokenSchema.pick({
+    access_token: true,
+    refresh_token: true,
+  }).extend({
+    expires_at: z.number(),
+    code: z.string(),
+  }),
+  user: UserSchema.pick({
+    sub: true,
+    email: true,
+    nickname: true,
+    name: true,
+    picture: true,
+  }),
 });
 
 export type Session = z.infer<typeof SessionSchema>;

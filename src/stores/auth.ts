@@ -1,10 +1,7 @@
 import { defineStore } from "pinia";
-import {
-  getSession,
-  SessionSchema,
-  type Session,
-} from "@/libs/auth";
+import { getSession, SessionSchema, type Session } from "@/libs/auth";
 import router from "@/router";
+import { refreshAccessToken } from "@/libs/gitlab";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -12,12 +9,14 @@ export const useAuthStore = defineStore("auth", {
   }),
 
   actions: {
-     isAuthenticated(): boolean {
-      if(this.session) return true
+    isAuthenticated(): boolean {
+      if (this.session) {
+        return true;
+      }
 
-      this.session = getSession()
+      this.session = getSession();
 
-      return !!this.session
+      return !!this.session;
     },
     setSession(session: Session | null) {
       this.session = session;
@@ -33,6 +32,14 @@ export const useAuthStore = defineStore("auth", {
       } else {
         localStorage.removeItem("auth");
       }
+    },
+    setAuthToken(auth_token: Partial<Session["auth_token"]>) {
+      if (!this.session) return;
+
+      this.setSession({
+        ...this.session,
+        auth_token: { ...this.session.auth_token, ...auth_token },
+      });
     },
     logout() {
       this.session = null;

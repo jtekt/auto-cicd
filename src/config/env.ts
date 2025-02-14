@@ -5,7 +5,8 @@ const {
   VITE_APP_OIDC_CLIENT_ID,
   VITE_APP_GITLAB_OAUTH_ID,
   VITE_APP_BACKEND_URL,
-  VITE_APP_GITLAB_URL
+  VITE_APP_GITLAB_URL,
+  VITE_APP_OAUTH_REDIRECT_URI_PATH,
 } = import.meta.env;
 
 const envSchema = z.object({
@@ -17,11 +18,15 @@ const envSchema = z.object({
     .trim()
     .url()
     .transform((v) => (v.endsWith("/") ? v.slice(0, -1) : v)),
-    GITLAB_URL: z
+  GITLAB_URL: z
     .string()
     .trim()
     .url()
     .transform((v) => (v.endsWith("/") ? v.slice(0, -1) : v)),
+  OAUTH_REDIRECT_URI_PATH: z
+    .string()
+    .trim()
+    .transform((p) => (p.startsWith("/") ? p.slice(1) : p)),
 });
 
 export const env = envSchema.parse({
@@ -29,5 +34,6 @@ export const env = envSchema.parse({
   OIDC_CLIENT_ID: VITE_APP_OIDC_CLIENT_ID,
   GITLAB_OAUTH_ID: VITE_APP_GITLAB_OAUTH_ID,
   BACKEND_URL: VITE_APP_BACKEND_URL,
-  GITLAB_URL: VITE_APP_GITLAB_URL
+  GITLAB_URL: VITE_APP_GITLAB_URL,
+  OAUTH_REDIRECT_URI_PATH: VITE_APP_OAUTH_REDIRECT_URI_PATH,
 });
