@@ -1,9 +1,0 @@
-
-      stages:
-        - test
-
-      test_job:
-        stage: test
-        script:
-          - echo "This is a test pipeline"
-      
