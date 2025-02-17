@@ -1,0 +1,31 @@
+{
+    "templates": [
+        {
+            "name": "Javascript - Vue 3",
+            "raw": "FROM node:20.11.0 as build-stage\nWORKDIR /app\nCOPY package*.json ./\n\nRUN npm install\nCOPY ./ .\nRUN npm run build\n\nFROM nginx as production-stage\nRUN mkdir /app\nCOPY --from=build-stage /app/dist /app\nCOPY nginx.conf /etc/nginx/nginx.conf",
+            "languages": [
+                "javascript",
+                "typescript",
+                "vue"
+            ]
+        },
+        {
+            "name": "Python - pip - Fast API",
+            "raw": "FROM python:3.10\n\nWORKDIR /app\nCOPY requirements.txt requirements.txt\nRUN pip3 install -r requirements.txt\nRUN pip3 install uvicorn\nCOPY . .\nEXPOSE 80\nCMD [\"uvicorn\", \"app:app\", \"--host=0.0.0.0\", \"--port=80\"]",
+            "languages": [
+                "python",
+                "pip",
+                "fast-api"
+            ]
+        },
+        {
+            "name": "Python - poetry - Fast API",
+            "raw": "FROM python:3.11.6-slim\n\nENV POETRY_VERSION=1.8.3 \\n    POETRY_HOME=/opt/poetry \\n    POETRY_VIRTUALENVS_IN_PROJECT=1 \\n    POETRY_VIRTUALENVS_CREATE=1 \\n    POETRY_CACHE_DIR=/opt/.cache\n\nENV VIRTUAL_ENV=/code/.venv \\n    PATH=\"/code/.venv/bin:$PATH\"\n\nWORKDIR /code\n\nRUN python3 -m venv $POETRY_HOME \\n    && $POETRY_HOME/bin/pip install -U pip setuptools \\n    && $POETRY_HOME/bin/pip install poetry==${POETRY_VERSION}\n\nENV PATH=\"${PATH}:${POETRY_HOME}/bin\"\n\n# COPY ./pyproject.toml ./pyproject.toml\nCOPY . .\n\nRUN poetry install && rm -rf $POETRY_CACHE_DIR\n\n\nEXPOSE 80\n\n\nCMD [ \"python\", \"-m\", \"uvicorn\", \"app:app\", \"--host=0.0.0.0\", \"--port=80\"]",
+            "languages": [
+                "python",
+                "poetry",
+                "fast-api"
+            ]
+        }
+    ]
+}

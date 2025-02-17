@@ -68,7 +68,9 @@
                   {{ project.name.charAt(0).toUpperCase() }}
                 </v-avatar>
               </template>
-              <v-card-title>{{ project.name }}</v-card-title>
+              <v-card-title style="text-transform: capitalize">{{
+                project.name
+              }}</v-card-title>
               <v-card-subtitle>
                 {{ project.namespace.name }}
               </v-card-subtitle>
@@ -115,25 +117,12 @@
                 <v-icon start icon="mdi-gitlab"></v-icon>
                 GitLab
               </v-btn>
-              <v-btn
-                color="success"
-                variant="tonal"
-                @click="deployProject(project)"
-                :loading="project.deploying"
-                :disabled="project.deploying"
-              >
-                <v-icon start icon="mdi-rocket-launch-outline"></v-icon>
-                Deploy
-              </v-btn>
+              <DeployBtn :project="project" />
             </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
     </v-container>
-
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="3000">
-      {{ snackbar.text }}
-    </v-snackbar>
   </DefaultLayout>
 </template>
 
@@ -143,6 +132,7 @@ import { useAuthStore } from "@/stores/auth";
 import axios, { AxiosError } from "axios";
 import { onMounted, ref, computed } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
+import DeployBtn from "@/components/DeployBtn.vue";
 
 const authStore = useAuthStore();
 
@@ -174,7 +164,7 @@ const sortOptions = [
   },
 ];
 
-type Project = {
+export type Project = {
   id: number;
   description: string | null;
   name: string;
@@ -199,7 +189,6 @@ type Project = {
 };
 
 const projects = ref<Project[]>([]);
-const snackbar = ref({ show: false, text: "", color: "success" });
 
 const min_access_level = 30; // 30 = developer
 
@@ -308,122 +297,6 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
-
-const deployProject = async (project: Project) => {
-  project.deploying = true;
-  try {
-    if (!authStore.session) {
-      throw new Error("No active session");
-    }
-
-    const projectId = encodeURIComponent(project.id);
-    const filePath = ".gitlab-ci.yml";
-    const fileUrl = `${
-      env.GITLAB_URL
-    }/api/v4/projects/${projectId}/repository/files/${encodeURIComponent(
-      filePath
-    )}`;
-
-    const fileContent = `
-      stages:
-        - test
-
-      test_job:
-        stage: test
-        script:
-          - echo "This is a test pipeline"
-      `;
-
-    const commitMessage = "Update .gitlab-ci.yml for testing pipeline";
-
-    // Check if the file exists
-    let fileExists = false;
-    try {
-      const checkResponse = await axios.get(fileUrl, {
-        params: { ref: "main" },
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      });
-      fileExists = checkResponse.status === 200;
-    } catch (err) {
-      if (err instanceof AxiosError) {
-        if (err.response && err.response.status !== 404) {
-          throw err;
-        }
-        // If 404, file doesn't exist, which is fine
-      }
-    }
-
-    let response;
-    if (fileExists) {
-      // Update existing file
-      response = await axios.put(
-        fileUrl,
-        {
-          branch: "main",
-          content: fileContent,
-          commit_message: commitMessage,
-          encoding: "text",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-          },
-        }
-      );
-    } else {
-      // Create new file
-      response = await axios.post(
-        fileUrl,
-        {
-          branch: "main",
-          content: fileContent,
-          commit_message: commitMessage,
-          encoding: "text",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-          },
-        }
-      );
-    }
-
-    if (response.status !== 200 && response.status !== 201) {
-      throw new Error(
-        `Failed to ${fileExists ? "update" : "create"} .gitlab-ci.yml file`
-      );
-    }
-
-    snackbar.value = {
-      show: true,
-      text: `${fileExists ? "Updated" : "Created"} .gitlab-ci.yml in ${
-        project.name
-      }`,
-      color: "success",
-    };
-  } catch (err) {
-    console.error("Deployment error:", err);
-
-    let errMessage = `Failed to deploy to ${project.name}: `;
-    if (err instanceof Error || err instanceof AxiosError) {
-      errMessage += err.message;
-    } else {
-      errMessage += "Unknown error";
-    }
-
-    snackbar.value = {
-      show: true,
-      text: errMessage,
-      color: "error",
-    };
-  } finally {
-    project.deploying = false;
-  }
-};
 </script>
 
 <style scoped>

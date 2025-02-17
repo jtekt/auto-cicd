@@ -5,8 +5,6 @@
  */
 
 // Composables
-import { env } from "@/config/env";
-import { createAccessToken } from "@/libs/gitlab";
 import { useAuthStore } from "@/stores/auth";
 import { createRouter, createWebHistory } from "vue-router";
 
