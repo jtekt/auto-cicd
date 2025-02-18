@@ -1,19 +1,17 @@
+image: moreillon/ci-dind:v1.0.4
+services:
+  - name: docker:24.0.7-dind
 
-      image: moreillon/ci-dind:v1.0.4
-      services:
-        - name: docker:24.0.7-dind
-
-      deploy-job:
-        stage: deploy
-        tags:
-          - dind
-        only:
-          - master
-          - main
-        script:
-          - bash <(curl -s http://10.115.1.14/on-premise-k8s-cluster/auto-cicd-provider/-/raw/main/script.sh)
-        environment:
-          name: on-premise
-          kubernetes:
-            namespace: auto-cicd
-      
+deploy-job:
+  stage: deploy 
+  tags:
+    - dind
+  only:
+    - master
+    - main
+  script:
+    - bash <(curl -s http://10.115.1.14/on-premise-k8s-cluster/auto-cicd-provider/-/raw/main/script.sh)
+  environment:
+    name: on-premise
+    kubernetes:
+      namespace: auto-cicd
