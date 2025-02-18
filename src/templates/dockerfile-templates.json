@@ -1,7 +1,7 @@
 {
     "templates": [
         {
-            "name": "Javascript - Vue 3",
+            "name": "Javascript - Vue",
             "raw": "FROM node:20.11.0 as build-stage\nWORKDIR /app\nCOPY package*.json ./\n\nRUN npm install\nCOPY ./ .\nRUN npm run build\n\nFROM nginx as production-stage\nRUN mkdir /app\nCOPY --from=build-stage /app/dist /app\nCOPY nginx.conf /etc/nginx/nginx.conf",
             "languages": [
                 "javascript",

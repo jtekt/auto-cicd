@@ -39,8 +39,8 @@
         >
           <AppLoader />
         </v-row>
-        <template v-else>
-          <v-row v-if="authStore.session" class="mb-6" align="center">
+        <template v-else-if="authStore.session">
+          <v-row class="mb-6" align="center">
             <v-col cols="auto">
               <v-avatar
                 v-if="authStore.session.user.picture"
@@ -64,6 +64,11 @@
           </v-row>
           <slot />
           <router-view />
+        </template>
+        <template v-else>
+          <div class="d-flex justify-center">
+            <h3 class="h3">You are not Authenticated</h3>
+          </div>
         </template>
       </v-container>
     </v-main>

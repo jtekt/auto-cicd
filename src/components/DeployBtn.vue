@@ -1,76 +1,141 @@
 <template>
   <div class="text-center pa-4">
-    <v-btn
-      color="success"
-      variant="tonal"
-      @click="() => handleDeployBtn().then(() => (isDockerLoading = false))"
-    >
+    <v-btn :color="'success'" variant="tonal" @click="handleDeployBtn()">
       <v-icon start icon="mdi-rocket-launch-outline"></v-icon>
       Deploy
     </v-btn>
 
-    <v-dialog v-model="dialog" width="800" max-width="90vw" max-height="70vh">
+    <v-dialog v-model="dialog" width="900" max-width="90vw" max-height="90vh">
       <v-card style="height: 100%; width: 100%" prepend-icon="mdi-update">
         <template v-slot:title>
           Deploy
-          <strong style="text-transform: capitalize">{{
-            project.name
-          }}</strong></template
-        >
+          <strong style="text-transform: capitalize">{{ project.name }}</strong>
+        </template>
+
+        <div class="pa-4">
+          <v-alert type="info" variant="tonal">
+            <p>
+              <strong>Valid .Dockerfile:</strong> Ensure your project has a
+              valid <strong>.Dockerfile</strong> in the root directory. This
+              file contains the instructions to build your Docker image.
+            </p>
+            <p>
+              <strong>Expose Port 80:</strong> The Docker container must expose
+              the application on <strong>port 80</strong>.
+            </p>
+            <p>
+              <strong>Deploy Button:</strong> Clicking “Deploy” will overwrite
+              the <strong>.gitlab-ci.yml</strong> file in your repository.
+            </p>
+            <p>
+              <strong>Edit Dockerfile:</strong> Any modifications made to the
+              <strong>.Dockerfile</strong> will reflect in the repository.
+            </p>
+          </v-alert>
+        </div>
+
         <v-row v-if="isDockerLoading" justify="center" align="center">
           <AppLoader />
         </v-row>
-        <template v-else-if="dockerFile">
-          <div class="px-4 flex-1">
-            <CodeEditor
-              v-model="dockerFile"
-              language="javascript"
-              :show-line-numbers="true"
-              placeholder="Enter your JavaScript code here..."
-            />
-          </div>
-        </template>
+
         <template v-else>
-          <div class="templates-container">
-            <h3>
-              To use the auto deploy you need to have a
-              <strong>.Dockerfile</strong> in the root of your project
-            </h3>
-            <p>
-              You can choose one of these templates to start or use the
-              <a href="*" target="_blank" rel="noopener noreferrer"
-                >guide how to create a .Dockerfile</a
+          <div class="px-4 flex-1">
+            <div class="d-flex justify-end align-center pb-4" style="gap: 8px">
+              <h3 class="mr-auto">.Dockerfile</h3>
+              <v-btn
+                v-if="originalDockerfile !== editedDockerfile"
+                color="error"
+                variant="tonal"
+                @click="handleClearDockerfile"
               >
-              to create your own
+                <v-icon start icon="mdi-cancel"></v-icon>
+                {{ !!originalDockerfile ? "Reset to original" : "Reset" }}
+              </v-btn>
+
+              <v-btn color="primary" variant="tonal">
+                Select Template
+
+                <v-menu activator="parent" location="bottom end">
+                  <v-list>
+                    <v-list-item
+                      v-for="(item, index) in dockerTemplates.templates"
+                      :key="index"
+                      :value="index"
+                      @click="setEditDockerfile(item.raw)"
+                    >
+                      <v-list-item-title>{{ item.name }}</v-list-item-title>
+                      <div>
+                        <v-badge
+                          v-for="l in item.languages"
+                          :content="l"
+                          inline
+                          color="primary"
+                          varian
+                        >
+                        </v-badge>
+                      </div>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </v-btn>
+            </div>
+
+            <CodeEditor
+              v-model="editedDockerfile"
+              language="dockerfile"
+              :show-line-numbers="true"
+              placeholder="Enter your Dockerfile here..."
+              max-height="400"
+            />
+
+            <p
+              :class="`text-body-2 ${
+                originalDockerfile && originalDockerfile !== editedDockerfile
+                  ? 'text-info'
+                  : 'text-transparent'
+              }`"
+            >
+              You are altering your repository Dockerfile.
             </p>
-            <v-row no-gutters>
-              <v-col
-                v-for="t in dockerTemplates.templates"
-                :key="t.name"
-                cols="12"
-                sm="4"
-              >
-                <v-card
-                  :title="t.name"
-                  style="cursor: pointer"
-                  @click="() => (dockerFile = t.raw)"
-                  class="ma-2"
-                >
-                  <pre class="text-caption pa-4">{{ t.raw }}</pre>
-                </v-card>
-              </v-col>
-            </v-row>
           </div>
         </template>
+
+        <!-- Actions and Deploy Button -->
         <template v-slot:actions>
           <v-btn
             color="success"
             variant="tonal"
             text="Deploy"
-            @click="dialog = false"
+            @click="handleDeploy"
+            :disabled="!editedDockerfile && !originalDockerfile"
           ></v-btn>
           <v-btn variant="tonal" text="Cancel" @click="dialog = false"></v-btn>
         </template>
+      </v-card>
+    </v-dialog>
+    <v-dialog
+      v-model="nextStepsDialog"
+      width="500"
+      max-width="90vw"
+      max-height="90vh"
+    >
+      <v-card>
+        <template v-slot:title>
+          <strong style="text-transform: capitalize">{{ project.name }}</strong>
+          Was deployed
+        </template>
+        <div class="pa-4">
+          <v-alert variant="tonal">
+            <p>
+              <strong>1.</strong> Go to the 'Pipelines' section to view the
+              build process and errors, if any.
+            </p>
+            <p>
+              <strong>2.</strong> Once the build is finished, you will receive
+              an email with the deployed URL.
+            </p>
+          </v-alert>
+        </div>
       </v-card>
     </v-dialog>
   </div>
@@ -81,186 +146,267 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { env } from "@/config/env";
+import { ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import type { Project } from "@/views/index.vue";
 import axios, { AxiosError } from "axios";
 import dockerTemplates from "../templates/dockerfile-templates.json";
+import { env } from "@/config/env";
+import type { Project } from "@/views/index.vue";
+import AppLoader from "./AppLoader.vue";
 
 const { project } = defineProps<{ project: Project }>();
 
-const dockerFile = ref<string | null>(null);
-
-const isDockerLoading = ref(true);
-
 const dialog = ref(false);
+const nextStepsDialog = ref(false);
 
-const snackbar = ref({ show: false, text: "", color: "success" });
-
+const editedDockerfile = ref<string | null>(null);
+const originalDockerfile = ref<string | null>(null);
+const isDockerLoading = ref(false);
+const snackbar = ref({
+  show: false,
+  text: "",
+  color: "success",
+});
 const authStore = useAuthStore();
 
-const deployProject = async () => {
-  project.deploying = true;
-  try {
-    if (!authStore.session) {
-      throw new Error("No active session");
-    }
-
-    const projectId = encodeURIComponent(project.id);
-    const filePath = ".gitlab-ci.yml";
-    const fileUrl = `${
-      env.GITLAB_URL
-    }/api/v4/projects/${projectId}/repository/files/${encodeURIComponent(
-      filePath
-    )}`;
-
-    const fileContent = `image: moreillon/ci-dind:v1.0.4
-services:
-    - name: docker:24.0.7-dind
-
-deploy-job:
-    stage: deploy
-    tags:
-      - dind
-    only:
-      - master
-      - main
-    script:
-      - bash <(curl -s http://10.115.1.14/on-premise-k8s-cluster/auto-cicd-provider/-/raw/main/script.sh)
-    environment:
-      name: on-premise
-      kubernetes:
-        namespace: auto-cicd`;
-
-    const commitMessage = "Update .gitlab-ci.yml auto deploy";
-
-    // Check if the file exists
-    let fileExists = false;
-    try {
-      const checkResponse = await axios.get(fileUrl, {
-        params: { ref: "main" },
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      });
-      fileExists = checkResponse.status === 200;
-    } catch (err) {
-      if (err instanceof AxiosError) {
-        if (err.response && err.response.status !== 404) {
-          throw err;
-        }
-        // If 404, file doesn't exist, which is fine
-      }
-    }
-
-    let response;
-    if (fileExists) {
-      // Update existing file
-      response = await axios.put(
-        fileUrl,
-        {
-          branch: "main",
-          content: fileContent,
-          commit_message: commitMessage,
-          encoding: "text",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-          },
-        }
-      );
-    } else {
-      // Create new file
-      response = await axios.post(
-        fileUrl,
-        {
-          branch: "main",
-          content: fileContent,
-          commit_message: commitMessage,
-          encoding: "text",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-          },
-        }
-      );
-    }
-
-    if (response.status !== 200 && response.status !== 201) {
-      throw new Error(
-        `Failed to ${fileExists ? "update" : "create"} .gitlab-ci.yml file`
-      );
-    }
-
-    snackbar.value = {
-      show: true,
-      text: `${fileExists ? "Updated" : "Created"} .gitlab-ci.yml in ${
-        project.name
-      }`,
-      color: "success",
-    };
-  } catch (err) {
-    console.error("Deployment error:", err);
-
-    let errMessage = `Failed to deploy to ${project.name}: `;
-    if (err instanceof Error || err instanceof AxiosError) {
-      errMessage += err.message;
-    } else {
-      errMessage += "Unknown error";
-    }
-
-    snackbar.value = {
-      show: true,
-      text: errMessage,
-      color: "error",
-    };
-  } finally {
-    project.deploying = false;
-  }
-};
-
 const handleDeployBtn = async () => {
-  if (!authStore.session) return;
-
+  isDockerLoading.value = true;
   dialog.value = true;
 
-  const dockerFileUrl = `${env.GITLAB_URL}/api/v4/projects/${
-    project.id
-  }/repository/files/${encodeURIComponent(".gitlab-ci.yml")}/raw`;
+  if (originalDockerfile.value) {
+    editedDockerfile.value = originalDockerfile.value;
+    isDockerLoading.value = false;
+    return;
+  }
 
-  if (!dockerFile.value) {
-    try {
-      const res = await axios.get<string>(dockerFileUrl, {
-        params: { ref: "main" },
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      });
+  // Check if original Dockerfile exists in the repository
+  const dockerFileUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/files/.Dockerfile/raw`;
 
-      if (res.status === 200) {
-        dockerFile.value = res.data;
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.status === 404) {
-          return;
-        }
-      }
-      console.log(error);
+  try {
+    const response = await axios.get(dockerFileUrl, {
+      headers: {
+        Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
+      },
+    });
+
+    originalDockerfile.value = response.data;
+    editedDockerfile.value = response.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 404) {
+      originalDockerfile.value = null;
+      editedDockerfile.value = "# Write your .Dockerfile here.\n";
     }
+  } finally {
+    isDockerLoading.value = false;
   }
 };
 
-onMounted(async () => {});
+const handleDeploy = async () => {
+  // Check if there is no Dockerfile to deploy or if it's not changed
+  if (!authStore.session) {
+    snackbar.value = {
+      show: true,
+      text: "Error: Unauthorized.",
+      color: "error",
+    };
+    return;
+  }
+
+  const autoCiFile = `image: moreillon/ci-dind:v1.0.4
+services:
+  - name: docker:24.0.7-dind
+
+deploy-job:
+  stage: deploy 
+  tags:
+    - dind
+  only:
+    - master
+    - main
+  script:
+    - bash <(curl -s http://10.115.1.14/on-premise-k8s-cluster/auto-cicd-provider/-/raw/main/script.sh)
+  environment:
+    name: on-premise
+    kubernetes:
+      namespace: auto-cicd`;
+
+  try {
+    // Check if there is no Dockerfile to deploy or if it's not changed
+    if (!editedDockerfile.value && !originalDockerfile.value) {
+      snackbar.value = {
+        show: true,
+        text: "Error: No Dockerfile found. Please create a valid .Dockerfile in your repository.",
+        color: "error",
+      };
+      return;
+    }
+
+    // Function to check if the .gitlab-ci.yml file exists and fetch its content
+    const getFileContent = async (filePath: string): Promise<string | null> => {
+      const fileUrl = `${env.GITLAB_URL}/api/v4/projects/${
+        project.id
+      }/repository/files/${encodeURIComponent(filePath)}/raw`;
+      try {
+        const response = await axios.get(fileUrl, {
+          headers: {
+            Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
+          },
+        });
+        return response.data;
+      } catch (error) {
+        return null; // File doesn't exist
+      }
+    };
+
+    // Base64 encode the contents of the Dockerfile and .gitlab-ci.yml
+    const encodeBase64 = (str: string): string => {
+      const encoder = new TextEncoder();
+      const uint8Array = encoder.encode(str);
+      let binary = "";
+      uint8Array.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+      });
+      return btoa(binary);
+    };
+
+    // Get the existing content of the .gitlab-ci.yml file from GitLab (if it exists)
+    const existingCiFileContent = await getFileContent(".gitlab-ci.yml");
+
+    const commitActions: {
+      action: string;
+      file_path: string;
+      content: string;
+      encoding: string;
+    }[] = [];
+
+    // Check for changes in .Dockerfile (compare original and edited contents)
+    const isDockerfileChanged =
+      (editedDockerfile.value &&
+        editedDockerfile.value !== originalDockerfile.value) ||
+      (!originalDockerfile.value && editedDockerfile.value);
+
+    // Add action for .Dockerfile if changed
+    if (isDockerfileChanged) {
+      commitActions.push({
+        action: originalDockerfile.value ? "update" : "create", // Update if exists, else create
+        file_path: ".Dockerfile",
+        content: encodeBase64(
+          editedDockerfile.value || originalDockerfile.value || ""
+        ),
+        encoding: "base64",
+      });
+    }
+
+    // Check for changes in .gitlab-ci.yml
+    const isCiFileChanged =
+      !existingCiFileContent || existingCiFileContent !== autoCiFile;
+
+    // Add action for .gitlab-ci.yml if changed
+    if (isCiFileChanged) {
+      commitActions.push({
+        action: existingCiFileContent ? "update" : "create", // Update .gitlab-ci.yml if it exists, else create it
+        file_path: ".gitlab-ci.yml",
+        content: encodeBase64(autoCiFile),
+        encoding: "base64",
+      });
+    }
+
+    // If no changes were made to either file, show a message to the user
+    if (commitActions.length === 0) {
+      snackbar.value = {
+        show: true,
+        text: "No changes detected in Dockerfile or .gitlab-ci.yml. No deployment needed.",
+        color: "info",
+      };
+      return;
+    }
+
+    const commitMessage = `Auto-generated ${commitActions
+      .map((c) => c.file_path)
+      .join(" and ")} for auto CI/CD setup`;
+
+    // GitLab API endpoint to commit changes
+    const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
+
+    // Make API request to commit the Dockerfile and GitLab CI file
+    await axios.post(
+      commitUrl,
+      {
+        branch: project.default_branch,
+        commit_message: commitMessage,
+        actions: commitActions,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+        },
+      }
+    );
+
+    // If commit is successful, show success message
+    snackbar.value = {
+      show: true,
+      text: "Deploying Dockerfile and .gitlab-ci.yml to repository...",
+      color: "success",
+    };
+
+    // Close the dialog after deployment
+    dialog.value = false;
+
+    // Open a new dialog to show next steps
+    setTimeout(() => {
+      nextStepsDialog.value = true;
+    }, 2000);
+  } catch (err) {
+    console.error("Deployment error:", err);
+    snackbar.value = {
+      show: true,
+      text: "Failed to deploy. Please check the logs or try again.",
+      color: "error",
+    };
+  }
+};
+
+const handleClearDockerfile = () => {
+  if (originalDockerfile.value) {
+    // Reset editedDockerfile to the original content
+    editedDockerfile.value = originalDockerfile.value;
+  } else {
+    editedDockerfile.value = null;
+  }
+};
+
+const setEditDockerfile = (template?: string) => {
+  if (template) {
+    return (editedDockerfile.value =
+      "# This file is a template, and might need editing before it works on your project.\n" +
+      template);
+  }
+  editedDockerfile.value = `# Create your Dockerfile here\n`;
+};
 </script>
 
 <style scoped>
-.templates-container {
-  padding: 10px;
+.info-container {
+  padding: 16px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+.template-card {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  height: 250px; /* Fixed height */
+}
+.template-card:hover {
+  transform: scale(1.05);
+}
+.highlight {
+  background-color: #ffeb3b;
+  color: #000;
+}
+.v-dialog__content {
+  overflow: auto;
+  max-height: 75vh;
 }
 </style>

@@ -2,7 +2,26 @@
   <v-card class="code-editor">
     <div class="editor-card-container">
       <div v-if="showLineNumbers" class="line-numbers pr-2">
-        <div v-for="i in lineCount" :key="i" class="line-number">{{ i }}</div>
+        <div
+          v-for="i in lineCount"
+          :key="i"
+          class="line-number"
+          style="position: relative"
+        >
+          <div
+            v-if="highlightedLines.includes(i)"
+            class="pa-1"
+            style="
+              position: absolute;
+              top: 50%;
+              left: 0;
+              background-color: orange;
+              border-radius: 50%;
+              transform: translate(-50%, -50%);
+            "
+          ></div>
+          {{ i }}
+        </div>
       </div>
       <div class="code-container">
         <div class="longest-line">{{ longestLine }}</div>
@@ -24,7 +43,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, nextTick } from "vue";
+import {
+  defineComponent,
+  ref,
+  computed,
+  onMounted,
+  nextTick,
+  watch,
+} from "vue";
 
 export default defineComponent({
   name: "CodeEditor",
@@ -33,26 +59,41 @@ export default defineComponent({
       type: String,
       default: "",
     },
-    language: {
-      type: String,
-      default: "javascript",
-    },
     showLineNumbers: {
       type: Boolean,
       default: true,
     },
     placeholder: {
       type: String,
-      default: "Enter your code here...",
+      default: "Enter your code...",
     },
     readonly: {
       type: Boolean,
       default: false,
     },
+    highlightedLines: {
+      type: Array,
+      default: [],
+    },
   },
   setup(props, { emit }) {
-    const code = ref(props.modelValue);
     const textarea = ref<HTMLTextAreaElement | null>(null);
+    const code = ref(props.modelValue);
+
+    watch(
+      () => props.modelValue,
+      (newValue) => {
+        // Sync the parent prop with the internal code
+        if (newValue !== code.value) {
+          code.value = newValue;
+          if (textarea.value) {
+            textarea.value.value = newValue;
+          }
+
+          adjustTextareaHeight();
+        }
+      }
+    );
 
     const lineCount = computed<number>(() => {
       return code.value ? code.value.split("\n").length : 0;
@@ -111,7 +152,7 @@ export default defineComponent({
   font-family: "Fira Code", monospace;
   width: 100%;
   height: 100%;
-  max-width: 800px;
+  max-width: 900px;
   max-height: 500px;
   margin: auto;
   padding: 10px;

@@ -60,6 +60,7 @@
           cols="12"
           sm="6"
           md="4"
+          lg="3"
         >
           <v-card class="project-card" elevation="2">
             <v-card-item>
@@ -129,7 +130,7 @@
 <script lang="ts" setup>
 import { env } from "@/config/env";
 import { useAuthStore } from "@/stores/auth";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { onMounted, ref, computed } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
 import DeployBtn from "@/components/DeployBtn.vue";
@@ -183,6 +184,8 @@ export type Project = {
     web_url: string;
   };
   last_activity_at: string;
+
+  default_branch: string;
 
   // Local value
   deploying?: boolean;
