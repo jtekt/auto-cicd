@@ -5,19 +5,26 @@
  */
 
 // Composables
+import DefaultLayout from "@/components/DefaultLayout.vue";
 import { useAuthStore } from "@/stores/auth";
 import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
   {
     path: "/",
-    name: "Home",
-    component: () => import("@/views/index.vue"),
-  },
-  {
-    path: "/auth",
-    name: "Auth",
-    component: () => import("@/views/auth.vue"),
+    component: DefaultLayout,
+    children: [
+      {
+        path: "",
+        name: "Home",
+        component: () => import("@/views/index.vue"),
+      },
+      {
+        path: "/auth",
+        name: "Auth",
+        component: () => import("@/views/auth.vue"),
+      },
+    ],
   },
 ];
 

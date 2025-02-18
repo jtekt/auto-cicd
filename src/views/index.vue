@@ -1,130 +1,128 @@
 <template>
-  <DefaultLayout>
-    <v-container>
-      <v-row v-if="projects.length > 0">
-        <v-col cols="12" sm="6" md="4">
-          <v-text-field
-            v-model="searchQuery"
-            label="Search by name or namespace"
-            prepend-icon="mdi-magnify"
-            clearable
-            variant="outlined"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="12" sm="6" md="4">
-          <v-select
-            v-model="sortBy"
-            clearable
-            :items="sortOptions"
-            item-title="text"
-            item-value="value"
-            label="Sort by"
-            prepend-icon="mdi-sort"
-            variant="outlined"
-          >
-            <template v-slot:item="{ item, props }">
-              <v-list-item v-bind="props">
-                <template v-slot:prepend>
-                  <v-icon :icon="item.raw.icon"></v-icon>
-                </template>
-              </v-list-item>
-            </template>
-          </v-select>
-        </v-col>
-      </v-row>
-
-      <v-row v-if="isLoading">
-        <v-col cols="12" class="text-center">
-          <AppLoader />
-        </v-col>
-      </v-row>
-
-      <v-row v-else-if="error">
-        <v-col cols="12">
-          <v-alert type="error" prominent>
-            {{ error }}
-          </v-alert>
-        </v-col>
-      </v-row>
-
-      <v-row v-else-if="filteredProjects.length < 1">
-        <v-col cols="12">
-          <v-alert type="info" prominent> No projects found </v-alert>
-        </v-col>
-      </v-row>
-
-      <v-row v-else>
-        <v-col
-          v-for="project in filteredProjects"
-          :key="project.id"
-          cols="12"
-          sm="6"
-          md="4"
-          lg="3"
+  <v-container>
+    <v-row v-if="projects.length > 0">
+      <v-col cols="12" sm="6" md="4">
+        <v-text-field
+          v-model="searchQuery"
+          label="Search by name or namespace"
+          prepend-icon="mdi-magnify"
+          clearable
+          variant="outlined"
+        ></v-text-field>
+      </v-col>
+      <v-col cols="12" sm="6" md="4">
+        <v-select
+          v-model="sortBy"
+          clearable
+          :items="sortOptions"
+          item-title="text"
+          item-value="value"
+          label="Sort by"
+          prepend-icon="mdi-sort"
+          variant="outlined"
         >
-          <v-card class="project-card" elevation="2">
-            <v-card-item>
+          <template v-slot:item="{ item, props }">
+            <v-list-item v-bind="props">
               <template v-slot:prepend>
-                <v-avatar color="primary" size="48">
-                  {{ project.name.charAt(0).toUpperCase() }}
-                </v-avatar>
+                <v-icon :icon="item.raw.icon"></v-icon>
               </template>
-              <v-card-title style="text-transform: capitalize">{{
-                project.name
-              }}</v-card-title>
-              <v-card-subtitle>
-                {{ project.namespace.name }}
-              </v-card-subtitle>
-              <template v-slot:append>
-                <v-chip
-                  :color="getAccessLevelColor(project)"
-                  size="small"
-                  class="font-weight-bold"
-                >
-                  {{ getAccessLevel(project) }}
-                </v-chip>
-              </template>
-            </v-card-item>
+            </v-list-item>
+          </template>
+        </v-select>
+      </v-col>
+    </v-row>
 
-            <v-card-text>
-              <p class="text-body-2 text-medium-emphasis">
-                {{ project.description || "No description available" }}
-              </p>
-              <v-divider class="my-2"></v-divider>
-              <v-row no-gutters align="center" class="mt-2">
-                <v-col cols="auto">
-                  <v-icon
-                    icon="mdi-clock-outline"
-                    size="small"
-                    class="mr-1"
-                  ></v-icon>
-                </v-col>
-                <v-col>
-                  <span class="text-caption"
-                    >Last Activity:
-                    {{ formatDate(project.last_activity_at) }}</span
-                  >
-                </v-col>
-              </v-row>
-            </v-card-text>
+    <v-row v-if="isLoading">
+      <v-col cols="12" class="text-center">
+        <AppLoader />
+      </v-col>
+    </v-row>
 
-            <v-card-actions>
-              <v-btn
-                color="primary"
-                variant="tonal"
-                :href="project.web_url"
-                target="_blank"
+    <v-row v-else-if="error">
+      <v-col cols="12">
+        <v-alert type="error" prominent>
+          {{ error }}
+        </v-alert>
+      </v-col>
+    </v-row>
+
+    <v-row v-else-if="filteredProjects.length < 1">
+      <v-col cols="12">
+        <v-alert type="info" prominent> No projects found </v-alert>
+      </v-col>
+    </v-row>
+
+    <v-row v-else>
+      <v-col
+        v-for="project in filteredProjects"
+        :key="project.id"
+        cols="12"
+        sm="6"
+        md="4"
+        lg="3"
+      >
+        <v-card class="project-card" elevation="2">
+          <v-card-item>
+            <template v-slot:prepend>
+              <v-avatar color="primary" size="48">
+                {{ project.name.charAt(0).toUpperCase() }}
+              </v-avatar>
+            </template>
+            <v-card-title style="text-transform: capitalize">{{
+              project.name
+            }}</v-card-title>
+            <v-card-subtitle>
+              {{ project.namespace.name }}
+            </v-card-subtitle>
+            <template v-slot:append>
+              <v-chip
+                :color="getAccessLevelColor(project)"
+                size="small"
+                class="font-weight-bold"
               >
-                <v-icon start icon="mdi-gitlab"></v-icon>
-                GitLab
-              </v-btn>
-              <DeployBtn :project="project" />
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-  </DefaultLayout>
+                {{ getAccessLevel(project) }}
+              </v-chip>
+            </template>
+          </v-card-item>
+
+          <v-card-text>
+            <p class="text-body-2 text-medium-emphasis">
+              {{ project.description || "No description available" }}
+            </p>
+            <v-divider class="my-2"></v-divider>
+            <v-row no-gutters align="center" class="mt-2">
+              <v-col cols="auto">
+                <v-icon
+                  icon="mdi-clock-outline"
+                  size="small"
+                  class="mr-1"
+                ></v-icon>
+              </v-col>
+              <v-col>
+                <span class="text-caption"
+                  >Last Activity:
+                  {{ formatDate(project.last_activity_at) }}</span
+                >
+              </v-col>
+            </v-row>
+          </v-card-text>
+
+          <v-card-actions>
+            <v-btn
+              color="primary"
+              variant="tonal"
+              :href="project.web_url"
+              target="_blank"
+            >
+              <v-icon start icon="mdi-gitlab"></v-icon>
+              GitLab
+            </v-btn>
+            <DeployBtn :project="project" />
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts" setup>

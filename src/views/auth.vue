@@ -1,46 +1,44 @@
 <template>
-  <DefaultLayout :validate-auth="false">
-    <v-row v-if="isLoading">
-      <v-col cols="12" class="text-center">
-        <AppLoader />
+  <v-row v-if="isLoading">
+    <v-col cols="12" class="text-center">
+      <AppLoader />
+    </v-col>
+  </v-row>
+  <v-container v-else class="fill-height" fluid>
+    <v-row align="center" justify="center">
+      <v-col cols="12" sm="8" md="6" lg="4">
+        <v-card class="elevation-8">
+          <v-card-text class="text-center pa-8">
+            <v-img
+              src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
+              alt="GitLab Logo"
+              contain
+              height="100"
+              class="mb-6"
+            ></v-img>
+            <h1 class="text-h4 font-weight-bold mb-6">
+              JTEKT GitLab Auto CI&CD
+            </h1>
+            <p class="mb-6">
+              Sign in to your account to access your projects and deploy them.
+            </p>
+            <v-btn
+              :href="url"
+              color="primary"
+              size="x-large"
+              block
+              class="mt-6"
+              elevation="2"
+              :ripple="false"
+            >
+              <v-icon left class="mr-4">mdi-gitlab</v-icon>
+              Login with GitLab
+            </v-btn>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
-    <v-container v-else class="fill-height" fluid>
-      <v-row align="center" justify="center">
-        <v-col cols="12" sm="8" md="6" lg="4">
-          <v-card class="elevation-8">
-            <v-card-text class="text-center pa-8">
-              <v-img
-                src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
-                alt="GitLab Logo"
-                contain
-                height="100"
-                class="mb-6"
-              ></v-img>
-              <h1 class="text-h4 font-weight-bold mb-6">
-                JTEKT GitLab Auto CI&CD
-              </h1>
-              <p class="mb-6">
-                Sign in to your account to access your projects and deploy them.
-              </p>
-              <v-btn
-                :href="url"
-                color="primary"
-                size="x-large"
-                block
-                class="mt-6"
-                elevation="2"
-                :ripple="false"
-              >
-                <v-icon left class="mr-4">mdi-gitlab</v-icon>
-                Login with GitLab
-              </v-btn>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-  </DefaultLayout>
+  </v-container>
 </template>
 
 <script setup lang="ts">

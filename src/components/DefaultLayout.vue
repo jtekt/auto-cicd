@@ -62,7 +62,7 @@
               </h2>
             </v-col>
           </v-row>
-          <slot />
+          <router-view />
         </template>
         <template v-else>
           <div class="d-flex justify-center">
@@ -85,19 +85,13 @@ import { useAuthStore } from "@/stores/auth";
 import { onMounted, ref } from "vue";
 import AppLoader from "./AppLoader.vue";
 import { createGitlabAuthUrl, refreshAccessToken } from "@/libs/gitlab";
-import { useRouter } from "vue-router";
-
-const { validateAuth } = defineProps({
-  validateAuth: {
-    type: Boolean,
-    default: true,
-  },
-});
+import { useRoute, useRouter } from "vue-router";
 
 const authStore = useAuthStore();
 const isLoading = ref(true);
 
 const router = useRouter();
+const route = useRoute();
 
 const theme = ref(localStorage.getItem("theme") || "light");
 
@@ -113,7 +107,7 @@ onMounted(() => {
     setupTokenRefresh();
   }, 60 * 1000); // Check every minute
 
-  if (!validateAuth) {
+  if (route.name === "Auth") {
     isLoading.value = false;
     return;
   }
