@@ -1,0 +1,42 @@
+# Ignore all .git directories
+.git/
+
+# Ignore all node_modules directories (for Node.js projects)
+node_modules/
+
+# Ignore all log files
+*.log
+
+# Ignore all temporary files (e.g., created by IDEs or editors)
+*.swp
+*.bak
+*.tmp
+*.DS_Store
+Thumbs.db
+
+# Ignore build directories (e.g., for compiled languages)
+dist/
+build/
+target/
+
+# Ignore package manager lock files (to avoid re-installing dependencies unnecessarily)
+package-lock.json
+yarn.lock
+composer.lock
+
+# Ignore Python virtual environments (for Python projects)
+venv/
+env/
+
+# Ignore compiled binary files (e.g., .class for Java, .o for C/C++)
+*.class
+*.o
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ignore Docker-related files
+.dockerignore
+Dockerfile
