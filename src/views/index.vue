@@ -133,7 +133,7 @@ import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
 import { onMounted, ref, computed } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
-import DeployBtn from "@/components/DeployBtn.vue";
+import DeployBtn from "@/components/DeployHandler.vue";
 
 const authStore = useAuthStore();
 

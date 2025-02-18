@@ -12,7 +12,7 @@
           <strong style="text-transform: capitalize">{{ project.name }}</strong>
         </template>
 
-        <div class="pa-4">
+        <div v-if="!dockerLoadingError" class="pa-4">
           <v-alert type="info" variant="tonal">
             <p>
               <strong>Valid .Dockerfile:</strong> Ensure your project has a
@@ -34,9 +34,20 @@
           </v-alert>
         </div>
 
-        <v-row v-if="isDockerLoading" justify="center" align="center">
+        <v-row
+          v-if="isDockerLoading"
+          justify="center"
+          align="center"
+          class="pa-4"
+        >
           <AppLoader />
         </v-row>
+
+        <div v-else-if="dockerLoadingError" class="pa-5">
+          <v-alert type="error" variant="tonal">
+            <p>{{ dockerLoadingError }}</p>
+          </v-alert>
+        </div>
 
         <template v-else>
           <div class="px-4 flex-1">
@@ -140,7 +151,7 @@
     </v-dialog>
   </div>
 
-  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="5000">
+  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="6000">
     {{ snackbar.text }}
   </v-snackbar>
 </template>
@@ -161,6 +172,7 @@ const nextStepsDialog = ref(false);
 
 const editedDockerfile = ref<string | null>(null);
 const originalDockerfile = ref<string | null>(null);
+const dockerLoadingError = ref<string | null>(null);
 const isDockerLoading = ref(false);
 const snackbar = ref({
   show: false,
@@ -172,6 +184,7 @@ const authStore = useAuthStore();
 const handleDeployBtn = async () => {
   isDockerLoading.value = true;
   dialog.value = true;
+  dockerLoadingError.value = null;
 
   if (originalDockerfile.value) {
     editedDockerfile.value = originalDockerfile.value;
@@ -192,9 +205,16 @@ const handleDeployBtn = async () => {
     originalDockerfile.value = response.data;
     editedDockerfile.value = response.data;
   } catch (error) {
-    if (error instanceof AxiosError && error.response?.status === 404) {
-      originalDockerfile.value = null;
-      editedDockerfile.value = "# Write your .Dockerfile here.\n";
+    if (error instanceof AxiosError) {
+      if (error.response?.status === 404) {
+        originalDockerfile.value = null;
+        editedDockerfile.value = "# Write your .Dockerfile here.\n";
+      } else {
+        console.error(error);
+        // Comunication error
+        dockerLoadingError.value =
+          error.response?.data || `Error ${error.code}: ${error.message}`;
+      }
     }
   } finally {
     isDockerLoading.value = false;
@@ -229,6 +249,51 @@ deploy-job:
     name: on-premise
     kubernetes:
       namespace: auto-cicd`;
+
+  // TODO: Check if there is no side effect in the containers. It was created with AI
+  const dockerignoreFile = `# Ignore all .git directories
+.git/
+
+# Ignore all node_modules directories (for Node.js projects)
+node_modules/
+
+# Ignore all log files
+*.log
+
+# Ignore all temporary files (e.g., created by IDEs or editors)
+*.swp
+*.bak
+*.tmp
+*.DS_Store
+Thumbs.db
+
+# Ignore build directories (e.g., for compiled languages)
+dist/
+build/
+target/
+
+# Ignore package manager lock files (to avoid re-installing dependencies unnecessarily)
+package-lock.json
+yarn.lock
+composer.lock
+
+# Ignore Python virtual environments (for Python projects)
+venv/
+env/
+
+# Ignore compiled binary files (e.g., .class for Java, .o for C/C++)
+*.class
+*.o
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ignore Docker-related files
+.dockerignore
+Dockerfile
+`;
 
   try {
     // Check if there is no Dockerfile to deploy or if it's not changed
@@ -269,9 +334,6 @@ deploy-job:
       return btoa(binary);
     };
 
-    // Get the existing content of the .gitlab-ci.yml file from GitLab (if it exists)
-    const existingCiFileContent = await getFileContent(".gitlab-ci.yml");
-
     const commitActions: {
       action: string;
       file_path: string;
@@ -297,6 +359,9 @@ deploy-job:
       });
     }
 
+    // Get the existing content of the .gitlab-ci.yml file from GitLab (if it exists)
+    const existingCiFileContent = await getFileContent(".gitlab-ci.yml");
+
     // Check for changes in .gitlab-ci.yml
     const isCiFileChanged =
       !existingCiFileContent || existingCiFileContent !== autoCiFile;
@@ -311,6 +376,19 @@ deploy-job:
       });
     }
 
+    // Get the .dockerignore file from GitLab (if it exists)
+    const existsgDockerignore = !!(await getFileContent(".dockerignore"));
+
+    // Add action for .dockerignore
+    if (!existsgDockerignore) {
+      commitActions.push({
+        action: "create",
+        file_path: ".dockerignore",
+        content: encodeBase64(dockerignoreFile),
+        encoding: "base64",
+      });
+    }
+
     // If no changes were made to either file, show a message to the user
     if (commitActions.length === 0) {
       snackbar.value = {
@@ -321,9 +399,9 @@ deploy-job:
       return;
     }
 
-    const commitMessage = `Auto-generated ${commitActions
+    const commitMessage = `Auto-generated [${commitActions
       .map((c) => c.file_path)
-      .join(" and ")} for auto CI/CD setup`;
+      .join(", ")}] for auto CI/CD setup`;
 
     // GitLab API endpoint to commit changes
     const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
@@ -346,7 +424,7 @@ deploy-job:
     // If commit is successful, show success message
     snackbar.value = {
       show: true,
-      text: "Deploying Dockerfile and .gitlab-ci.yml to repository...",
+      text: commitMessage,
       color: "success",
     };
 
