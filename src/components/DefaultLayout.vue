@@ -63,7 +63,6 @@
             </v-col>
           </v-row>
           <slot />
-          <router-view />
         </template>
         <template v-else>
           <div class="d-flex justify-center">
