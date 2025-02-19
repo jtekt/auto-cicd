@@ -93,6 +93,7 @@
                   ? 'text-info'
                   : 'text-transparent'
               }`"
+              style="user-select: none"
             >
               {{ t("pages.home.deploy.codeEditor.originalChanged") }}
             </p>

@@ -34,6 +34,7 @@
             spellcheck="false"
             @input="handleInput"
             @keydown="handleKeyDown"
+            no-resize
             ref="textarea"
           ></textarea>
         </div>
