@@ -102,8 +102,8 @@ function toggleTheme() {
   localStorage.setItem("theme", theme.value);
 }
 
-onMounted(() => {
-  setupTokenRefresh();
+onMounted(async () => {
+  await setupTokenRefresh();
 
   setInterval(async () => {
     setupTokenRefresh();
@@ -118,6 +118,9 @@ onMounted(() => {
     isLoading.value = false;
     return;
   }
+
+  // Reset Auth session
+  authStore.setSession(null);
 
   window.location.href = createGitlabAuthUrl();
 });
