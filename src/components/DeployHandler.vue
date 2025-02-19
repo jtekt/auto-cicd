@@ -2,44 +2,19 @@
   <div class="text-center pa-4">
     <v-btn :color="'success'" variant="tonal" @click="handleDeployBtn()">
       <v-icon start icon="mdi-rocket-launch-outline"></v-icon>
-      Deploy
+      {{ t("pages.home.deploy.deploy") }}
     </v-btn>
 
     <v-dialog v-model="dialog" width="900" max-width="90vw" max-height="90vh">
       <v-card style="height: 100%; width: 100%" prepend-icon="mdi-update">
         <template v-slot:title>
-          Deploy
+          {{ t("pages.home.deploy.deploy") }}
           <strong style="text-transform: capitalize">{{ project.name }}</strong>
         </template>
 
         <div v-if="!dockerLoadingError" class="pa-4">
           <v-alert type="info" variant="tonal">
-            <p>
-              <strong>Valid .Dockerfile:</strong> Ensure your project has a
-              valid <strong>.Dockerfile</strong> in the root directory. This
-              file contains the instructions to build your Docker image.
-            </p>
-            <p>
-              <strong>Expose Port 80:</strong> The Docker container must expose
-              the application on <strong>port 80</strong>.
-            </p>
-            <p>
-              <strong>Deploy Button:</strong> Clicking “Deploy” will overwrite
-              the <strong>.gitlab-ci.yml</strong> file in your repository.
-            </p>
-            <!-- <p>
-              <strong>About environment variables:</strong> You can setup the
-              variables in your gitlab project in Settings > CICD > Variables >
-              Add variable. with the following settings:
-            </p>
-            <ul>
-              <li>Type: <strong>file</strong></li>
-              <li>Key: <strong>ENV</strong></li>
-              <li>
-                Value: your variables in the same format as .env files (without
-                ")
-              </li>
-            </ul> -->
+            <p v-for="i in 3" v-html="t('pages.home.deploy.info.' + i)"></p>
           </v-alert>
         </div>
 
@@ -69,11 +44,15 @@
                 @click="handleClearDockerfile"
               >
                 <v-icon start icon="mdi-cancel"></v-icon>
-                {{ !!originalDockerfile ? "Reset to original" : "Reset" }}
+                {{
+                  !!originalDockerfile
+                    ? t("pages.home.deploy.resetOriginal")
+                    : t("pages.home.deploy.reset")
+                }}
               </v-btn>
 
               <v-btn color="primary" variant="tonal">
-                Select Template
+                {{ t("pages.home.deploy.template") }}
 
                 <v-menu activator="parent" location="bottom end">
                   <v-list>
@@ -104,7 +83,7 @@
               v-model="editedDockerfile"
               language="dockerfile"
               :show-line-numbers="true"
-              placeholder="Enter your Dockerfile here..."
+              :placeholder="t('pages.home.deploy.codeEditor.placeholder')"
               max-height="400"
             />
 
@@ -115,7 +94,7 @@
                   : 'text-transparent'
               }`"
             >
-              You are altering your repository Dockerfile.
+              {{ t("pages.home.deploy.codeEditor.originalChanged") }}
             </p>
           </div>
         </template>
@@ -125,14 +104,82 @@
           <v-btn
             color="success"
             variant="tonal"
-            text="Deploy"
+            :text="t('pages.home.deploy.deploy')"
             @click="handleDeploy"
-            :disabled="!editedDockerfile && !originalDockerfile"
+            :disabled="
+              (!editedDockerfile || editedDockerfile.trim().length === 0) &&
+              !originalDockerfile
+            "
           ></v-btn>
-          <v-btn variant="tonal" text="Cancel" @click="dialog = false"></v-btn>
+          <v-btn
+            variant="tonal"
+            :text="t('pages.home.deploy.cancel')"
+            @click="dialog = false"
+          ></v-btn>
         </template>
       </v-card>
     </v-dialog>
+
+    <!-- Confirmation Dialog -->
+    <v-dialog
+      v-model="confirmDeployDialog"
+      persistent
+      width="500"
+      max-width="90vw"
+      max-height="90vh"
+    >
+      <v-card prepend-icon="mdi-check-all">
+        <template v-slot:title>
+          {{ t("pages.home.deploy.confirmDeployTitle") }}
+        </template>
+        <v-card-text>
+          <template v-if="deployFileInfo.length > 0">
+            <p>{{ t("pages.home.deploy.confirmDeployMessage") }}</p>
+            <v-list>
+              <v-list-item
+                v-for="(fileInfo, index) in deployFileInfo"
+                :key="index"
+                :class="
+                  fileInfo.action === 'update' ? 'blue--text' : 'green--text'
+                "
+              >
+                <v-list-item-title class="font-weight-bold">{{
+                  fileInfo.file
+                }}</v-list-item-title>
+                <v-list-item-subtitle
+                  :class="`font-weight-bold ${
+                    fileInfo.action === 'update' ? 'text-info' : 'text-success'
+                  }`"
+                >
+                  {{
+                    fileInfo.action === "update"
+                      ? t("pages.home.deploy.update")
+                      : t("pages.home.deploy.insert")
+                  }}
+                </v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+          </template>
+          <p v-else class="text-warning">
+            {{ t("pages.home.deploy.noChangesMade") }}
+          </p>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn
+            v-if="deployFileInfo.length > 0"
+            color="primary"
+            variant="tonal"
+            @click="confirmDeploy()"
+            >{{ t("pages.home.deploy.continue") }}</v-btn
+          >
+          <v-btn variant="tonal" @click="cancelDeploy()">{{
+            t("pages.home.deploy.cancel")
+          }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Next Steps Dialog (show after deployment) -->
     <v-dialog
       v-model="nextStepsDialog"
       width="500"
@@ -141,28 +188,26 @@
     >
       <v-card>
         <template v-slot:title>
-          <strong style="text-transform: capitalize">{{ project.name }}</strong>
-          Was deployed
+          {{ t("nextStepsTitle") }}
         </template>
-        <div class="pa-4">
+        <v-card-text>
           <v-alert variant="tonal">
-            <p>
-              <strong>1.</strong> Go to the 'Pipelines' section to view the
-              build process and errors, if any.
-            </p>
-            <p>
-              <strong>2.</strong> Once the build is finished, you will receive
-              an email with the deployed URL.
-            </p>
+            <p>{{ t("nextStepsMessage1") }}</p>
+            <p>{{ t("nextStepsMessage2") }}</p>
           </v-alert>
-        </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="nextStepsDialog = false">{{
+            t("close")
+          }}</v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
 
-  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="6000">
-    {{ snackbar.text }}
-  </v-snackbar>
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="6000">
+      {{ snackbar.text }}
+    </v-snackbar>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -173,10 +218,14 @@ import dockerTemplates from "../templates/dockerfile-templates.json";
 import { env } from "@/config/env";
 import type { Project } from "@/views/index.vue";
 import AppLoader from "./AppLoader.vue";
+import { useLocale } from "vuetify";
+
+const { t } = useLocale();
 
 const { project } = defineProps<{ project: Project }>();
 
 const dialog = ref(false);
+const confirmDeployDialog = ref(false);
 const nextStepsDialog = ref(false);
 
 const editedDockerfile = ref<string | null>(null);
@@ -189,6 +238,9 @@ const snackbar = ref({
   color: "success",
 });
 const authStore = useAuthStore();
+
+// Tracks the information of files that will be inserted or updated
+const deployFileInfo = ref<{ file: string; action: string }[]>([]);
 
 const handleDeployBtn = async () => {
   isDockerLoading.value = true;
@@ -217,7 +269,7 @@ const handleDeployBtn = async () => {
     if (error instanceof AxiosError) {
       if (error.response?.status === 404) {
         originalDockerfile.value = null;
-        editedDockerfile.value = "# Write your .Dockerfile here.\n";
+        editedDockerfile.value = null;
       } else {
         console.error(error);
         // Comunication error
@@ -231,7 +283,45 @@ const handleDeployBtn = async () => {
 };
 
 const handleDeploy = async () => {
-  // Check if there is no Dockerfile to deploy or if it's not changed
+  // Prepare file changes info for the confirmation dialog
+  deployFileInfo.value = [];
+
+  // Check if the Dockerfile has been changed
+  const isDockerfileChanged =
+    (editedDockerfile.value &&
+      editedDockerfile.value !== originalDockerfile.value) ||
+    (!originalDockerfile.value && editedDockerfile.value);
+
+  if (isDockerfileChanged) {
+    deployFileInfo.value.push({
+      file: ".Dockerfile",
+      action: originalDockerfile.value ? "update" : "insert",
+    });
+  }
+
+  const existingCiFileContent = await getFileContent(".gitlab-ci.yml");
+  if (!existingCiFileContent || existingCiFileContent !== autoCiFile) {
+    deployFileInfo.value.push({
+      file: ".gitlab-ci.yml",
+      action: existingCiFileContent ? "update" : "insert",
+    });
+  }
+
+  // Check if the .dockerignore file needs to be created/updated
+  const existsDockerignore = await getFileContent(".dockerignore");
+  if (!existsDockerignore) {
+    deployFileInfo.value.push({
+      file: ".dockerignore",
+      action: "insert",
+    });
+  }
+
+  confirmDeployDialog.value = true; // Open confirmation dialog
+};
+
+const confirmDeploy = async () => {
+  confirmDeployDialog.value = false;
+
   if (!authStore.session) {
     snackbar.value = {
       show: true,
@@ -241,71 +331,8 @@ const handleDeploy = async () => {
     return;
   }
 
-  const autoCiFile = `image: moreillon/ci-dind:v1.0.4
-services:
-  - name: docker:24.0.7-dind
-
-deploy-job:
-  stage: deploy 
-  tags:
-    - dind
-  only:
-    - master
-    - main
-  script:
-    - bash <(curl -s http://10.115.1.14/on-premise-k8s-cluster/auto-cicd-provider/-/raw/main/script.sh)
-  environment:
-    name: on-premise
-    kubernetes:
-      namespace: auto-cicd`;
-
-  // TODO: Check if there is no side effect in the containers. It was created with AI
-  const dockerignoreFile = `# Ignore all .git directories
-.git/
-
-# Ignore all node_modules directories (for Node.js projects)
-node_modules/
-
-# Ignore all log files
-*.log
-
-# Ignore all temporary files (e.g., created by IDEs or editors)
-*.swp
-*.bak
-*.tmp
-*.DS_Store
-Thumbs.db
-
-# Ignore build directories (e.g., for compiled languages)
-dist/
-build/
-target/
-
-# Ignore package manager lock files (to avoid re-installing dependencies unnecessarily)
-package-lock.json
-yarn.lock
-composer.lock
-
-# Ignore Python virtual environments (for Python projects)
-venv/
-env/
-
-# Ignore compiled binary files (e.g., .class for Java, .o for C/C++)
-*.class
-*.o
-
-# Ignore OS-specific files
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# Ignore Docker-related files
-.dockerignore
-Dockerfile
-`;
-
   try {
-    // Check if there is no Dockerfile to deploy or if it's not changed
+    // Check if there is no Dockerfile to deploy
     if (!editedDockerfile.value && !originalDockerfile.value) {
       snackbar.value = {
         show: true,
@@ -314,23 +341,6 @@ Dockerfile
       };
       return;
     }
-
-    // Function to check if the .gitlab-ci.yml file exists and fetch its content
-    const getFileContent = async (filePath: string): Promise<string | null> => {
-      const fileUrl = `${env.GITLAB_URL}/api/v4/projects/${
-        project.id
-      }/repository/files/${encodeURIComponent(filePath)}/raw`;
-      try {
-        const response = await axios.get(fileUrl, {
-          headers: {
-            Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
-          },
-        });
-        return response.data;
-      } catch (error) {
-        return null; // File doesn't exist
-      }
-    };
 
     // Base64 encode the contents of the Dockerfile and .gitlab-ci.yml
     const encodeBase64 = (str: string): string => {
@@ -440,9 +450,9 @@ Dockerfile
     // Close the dialog after deployment
     dialog.value = false;
 
-    // Open a new dialog to show next steps
+    // Show the next steps dialog after a successful deployment
     setTimeout(() => {
-      nextStepsDialog.value = true;
+      nextStepsDialog.value = true; // Show the next steps dialog
     }, 2000);
   } catch (err) {
     console.error("Deployment error:", err);
@@ -452,6 +462,10 @@ Dockerfile
       color: "error",
     };
   }
+};
+
+const cancelDeploy = () => {
+  confirmDeployDialog.value = false;
 };
 
 const handleClearDockerfile = () => {
@@ -471,6 +485,88 @@ const setEditDockerfile = (template?: string) => {
   }
   editedDockerfile.value = `# Create your Dockerfile here\n`;
 };
+
+// Function to check if the .gitlab-ci.yml file exists and fetch its content
+const getFileContent = async (filePath: string): Promise<string | null> => {
+  const fileUrl = `${env.GITLAB_URL}/api/v4/projects/${
+    project.id
+  }/repository/files/${encodeURIComponent(filePath)}/raw`;
+  try {
+    const response = await axios.get(fileUrl, {
+      headers: {
+        Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    return null; // File doesn't exist
+  }
+};
+
+// Auto gitlab-ci.yml file
+const autoCiFile = `image: moreillon/ci-dind:v1.0.4
+services:
+  - name: docker:24.0.7-dind
+
+deploy-job:
+  stage: deploy 
+  tags:
+    - dind
+  only:
+    - master
+    - main
+  script:
+    - bash <(curl -s http://10.115.1.14/on-premise-k8s-cluster/auto-cicd-provider/-/raw/main/script.sh)
+  environment:
+    name: on-premise
+    kubernetes:
+      namespace: auto-cicd`;
+
+// TODO: Check if there is no side effect in the containers. It was created with AI
+// General .dockerignore file
+const dockerignoreFile = `# Ignore all .git directories
+.git/
+
+# Ignore all node_modules directories (for Node.js projects)
+node_modules/
+
+# Ignore all log files
+*.log
+
+# Ignore all temporary files (e.g., created by IDEs or editors)
+*.swp
+*.bak
+*.tmp
+*.DS_Store
+Thumbs.db
+
+# Ignore build directories (e.g., for compiled languages)
+dist/
+build/
+target/
+
+# Ignore package manager lock files (to avoid re-installing dependencies unnecessarily)
+package-lock.json
+yarn.lock
+composer.lock
+
+# Ignore Python virtual environments (for Python projects)
+venv/
+env/
+
+# Ignore compiled binary files (e.g., .class for Java, .o for C/C++)
+*.class
+*.o
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ignore Docker-related files
+.dockerignore
+Dockerfile
+`;
 </script>
 
 <style scoped>

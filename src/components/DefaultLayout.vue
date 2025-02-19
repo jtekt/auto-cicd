@@ -6,12 +6,7 @@
           to="/"
           class="d-flex align-center mr-auto text-decoration-none"
         >
-          <v-img
-            src="https://cdn-au.onetrust.com/logos/a3e2bc3c-266a-4de4-ad77-66a8ebcaf869/2d0ab49a-5c52-4f4f-90d0-e46c8181978e/a4a20d9b-9875-42b8-8854-8b56d1ec81c5/%E2%91%A3JTEKT_logo_Positive_type,_Black_+_Red.jpg"
-            alt="JTEK logo"
-            width="120"
-            contain
-          />
+          <v-img src="/JTEKT_logo.jpg" alt="JTEK logo" width="120" contain />
         </RouterLink>
         <v-spacer></v-spacer>
         <v-btn
@@ -19,12 +14,15 @@
           @click="toggleTheme"
         ></v-btn>
         <v-btn
+          :text="current === 'en' ? '日本語' : 'EN'"
+          @click="setLanguage(current === 'en' ? 'ja' : 'en')"
+        ></v-btn>
+        <v-btn
           v-if="!!authStore.session"
-          prepend-icon="mdi-logout"
+          icon="mdi-logout"
           class="ml-4"
           @click="authStore.logout"
         >
-          Logout
         </v-btn>
       </v-container>
     </v-app-bar>
@@ -86,6 +84,10 @@ import { onMounted, ref } from "vue";
 import AppLoader from "./AppLoader.vue";
 import { createGitlabAuthUrl, refreshAccessToken } from "@/libs/gitlab";
 import { useRoute, useRouter } from "vue-router";
+import { useLocale } from "vuetify";
+import { setLanguage } from "@/plugins/vuetify";
+
+const { current } = useLocale();
 
 const authStore = useAuthStore();
 const isLoading = ref(true);

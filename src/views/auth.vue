@@ -20,7 +20,7 @@
               JTEKT GitLab Auto CI&CD
             </h1>
             <p class="mb-6">
-              Sign in to your account to access your projects and deploy them.
+              {{ t("pages.auth.signInMessage") }}
             </p>
             <v-btn
               :href="url"
@@ -39,6 +39,10 @@
       </v-col>
     </v-row>
   </v-container>
+
+  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="4000">
+    {{ snackbar.text }}
+  </v-snackbar>
 </template>
 
 <script setup lang="ts">
@@ -51,6 +55,9 @@ import {
 import { useAuthStore } from "@/stores/auth";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useLocale } from "vuetify";
+
+const { t } = useLocale();
 
 const url = createGitlabAuthUrl();
 
@@ -60,6 +67,12 @@ const authStore = useAuthStore();
 
 const router = useRouter();
 const route = useRoute();
+
+const snackbar = ref({
+  show: false,
+  text: "",
+  color: "success",
+});
 
 onMounted(async () => {
   if (
@@ -75,6 +88,12 @@ onMounted(async () => {
 
   if (!accessToken) {
     isLoading.value = false;
+
+    snackbar.value = {
+      show: true,
+      color: "error",
+      text: t("pages.auth.errors.token"),
+    };
     return;
   }
 
@@ -83,6 +102,12 @@ onMounted(async () => {
 
   if (!user) {
     isLoading.value = false;
+
+    snackbar.value = {
+      show: true,
+      color: "error",
+      text: t("pages.auth.errors.profile"),
+    };
     return;
   }
 

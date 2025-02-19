@@ -4,7 +4,7 @@
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="searchQuery"
-          label="Search by name or namespace"
+          :label="t('pages.home.searchLabel')"
           prepend-icon="mdi-magnify"
           clearable
           variant="outlined"
@@ -13,11 +13,10 @@
       <v-col cols="12" sm="6" md="4">
         <v-select
           v-model="sortBy"
-          clearable
           :items="sortOptions"
           item-title="text"
           item-value="value"
-          label="Sort by"
+          :label="t('pages.home.sortLabel')"
           prepend-icon="mdi-sort"
           variant="outlined"
         >
@@ -40,7 +39,7 @@
 
     <v-row v-else-if="error">
       <v-col cols="12">
-        <v-alert type="error" prominent>
+        <v-alert type="error" variant="tonal" prominent>
           {{ error }}
         </v-alert>
       </v-col>
@@ -48,7 +47,9 @@
 
     <v-row v-else-if="filteredProjects.length < 1">
       <v-col cols="12">
-        <v-alert type="info" prominent> No projects found </v-alert>
+        <v-alert variant="tonal" class="text-center">
+          {{ t("pages.home.projects.noFound") }}
+        </v-alert>
       </v-col>
     </v-row>
 
@@ -87,7 +88,9 @@
 
           <v-card-text>
             <p class="text-body-2 text-medium-emphasis">
-              {{ project.description || "No description available" }}
+              {{
+                project.description || t("pages.home.projects.noDescription")
+              }}
             </p>
             <v-divider class="my-2"></v-divider>
             <v-row no-gutters align="center" class="mt-2">
@@ -100,7 +103,7 @@
               </v-col>
               <v-col>
                 <span class="text-caption"
-                  >Last Activity:
+                  >{{ t("pages.home.projects.lastActivity") }}
                   {{ formatDate(project.last_activity_at) }}</span
                 >
               </v-col>
@@ -117,7 +120,7 @@
               <v-icon start icon="mdi-gitlab"></v-icon>
               GitLab
             </v-btn>
-            <DeployBtn :project="project" />
+            <DeployBtn v-if="!!project" :project="project" />
           </v-card-actions>
         </v-card>
       </v-col>
@@ -132,36 +135,39 @@ import axios from "axios";
 import { onMounted, ref, computed } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
 import DeployBtn from "@/components/DeployHandler.vue";
+import { useLocale } from "vuetify";
+
+const { t } = useLocale();
 
 const authStore = useAuthStore();
 
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const searchQuery = ref("");
-const sortBy = ref("name-asc");
+const sortBy = ref("last_activity_at-dsc");
 
-const sortOptions = [
+const sortOptions = computed(() => [
   {
-    text: "Name (A-Z)",
+    text: t("pages.home.projects.sort.nameAscText"),
     value: "name-asc",
     icon: "mdi-sort-alphabetical-ascending",
   },
   {
-    text: "Name (Z-A)",
+    text: t("pages.home.projects.sort.nameDscText"),
     value: "name-dsc",
     icon: "mdi-sort-alphabetical-descending",
   },
   {
-    text: "Last Edited (Newest)",
+    text: t("pages.home.projects.sort.editedAscText"),
     value: "last_activity_at-dsc",
     icon: "mdi-sort-clock-descending",
   },
   {
-    text: "Last Edited (Oldest)",
+    text: t("pages.home.projects.sort.editedDscText"),
     value: "last_activity_at-asc",
     icon: "mdi-sort-clock-ascending",
   },
-];
+]);
 
 export type Project = {
   id: number;
@@ -256,6 +262,7 @@ const filteredProjects = computed(() => {
   }
 
   const [sortField, sortDirection] = sortBy.value.split("-");
+
   result.sort((a, b) => {
     let comparison = 0;
     if (sortField === "name") {
@@ -274,7 +281,7 @@ const filteredProjects = computed(() => {
 onMounted(async () => {
   try {
     if (!authStore.session) {
-      error.value = "No active session. Please log in.";
+      error.value = t("pages.home.projects.errors.noSession");
       return;
     }
 
@@ -293,7 +300,7 @@ onMounted(async () => {
     }));
   } catch (err) {
     console.error(err);
-    error.value = "Failed to fetch projects. Please try again.";
+    error.value = t("pages.home.projects.errors.fetchProjects");
   } finally {
     isLoading.value = false;
   }
