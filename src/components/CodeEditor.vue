@@ -42,109 +42,96 @@
   </v-card>
 </template>
 
-<script lang="ts">
-import {
-  defineComponent,
-  ref,
-  computed,
-  onMounted,
-  nextTick,
-  watch,
-} from "vue";
+<script lang="ts" setup>
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 
-export default defineComponent({
-  name: "CodeEditor",
-  props: {
-    modelValue: {
-      type: String,
-      default: "",
-    },
-    showLineNumbers: {
-      type: Boolean,
-      default: true,
-    },
-    placeholder: {
-      type: String,
-      default: "Enter your code...",
-    },
-    readonly: {
-      type: Boolean,
-      default: false,
-    },
-    highlightedLines: {
-      type: Array,
-      default: [],
-    },
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: "",
   },
-  setup(props, { emit }) {
-    const textarea = ref<HTMLTextAreaElement | null>(null);
-    const code = ref(props.modelValue);
-
-    watch(
-      () => props.modelValue,
-      (newValue) => {
-        // Sync the parent prop with the internal code
-        if (newValue !== code.value) {
-          code.value = newValue;
-          if (textarea.value) {
-            textarea.value.value = newValue;
-          }
-
-          adjustTextareaHeight();
-        }
-      }
-    );
-
-    const lineCount = computed<number>(() => {
-      return code.value ? code.value.split("\n").length : 0;
-    });
-
-    const longestLine = computed<string>(() => {
-      return code.value
-        ? code.value.split("\n").sort((a, b) => b.length - a.length)[0]
-        : "";
-    });
-
-    const handleInput = () => {
-      emit("update:modelValue", code.value);
-      adjustTextareaHeight();
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Tab") {
-        e.preventDefault();
-        const start = textarea.value!.selectionStart;
-        const end = textarea.value!.selectionEnd;
-        code.value =
-          code.value.substring(0, start) + "  " + code.value.substring(end);
-        textarea.value!.selectionStart = textarea.value!.selectionEnd =
-          start + 2;
-      }
-    };
-
-    const adjustTextareaHeight = () => {
-      if (textarea.value) {
-        textarea.value.style.height = "auto";
-        textarea.value.style.height = `${textarea.value.scrollHeight}px`;
-      }
-    };
-
-    onMounted(() => {
-      nextTick(() => {
-        adjustTextareaHeight();
-      });
-    });
-
-    return {
-      longestLine,
-      code,
-      lineCount,
-      handleInput,
-      handleKeyDown,
-      textarea,
-    };
+  defaultValue: {
+    type: String,
+    default: "",
+  },
+  showLineNumbers: {
+    type: Boolean,
+    default: true,
+  },
+  placeholder: {
+    type: String,
+    default: "Enter your code...",
+  },
+  readonly: {
+    type: Boolean,
+    default: false,
+  },
+  highlightedLines: {
+    type: Array,
+    default: () => [],
   },
 });
+
+const textarea = ref<HTMLTextAreaElement | null>(null);
+const code = ref(props.modelValue || props.defaultValue);
+
+watch(
+  () => props.modelValue || props.defaultValue,
+  (newValue) => {
+    // Sync the parent prop with the internal code
+    if (newValue !== code.value) {
+      code.value = newValue;
+      if (textarea.value) {
+        textarea.value.value = newValue;
+      }
+
+      adjustTextareaHeight();
+    }
+  }
+);
+
+const lineCount = computed(() => {
+  return code.value ? code.value.split("\n").length : 0;
+});
+
+const longestLine = computed(() => {
+  return code.value
+    ? code.value.split("\n").sort((a, b) => b.length - a.length)[0]
+    : "";
+});
+
+const handleInput = () => {
+  emit("update:modelValue", code.value);
+  adjustTextareaHeight();
+};
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const start = textarea.value!.selectionStart;
+    const end = textarea.value!.selectionEnd;
+    code.value =
+      code.value.substring(0, start) + "  " + code.value.substring(end);
+    textarea.value!.selectionStart = textarea.value!.selectionEnd = start + 2;
+  }
+};
+
+const adjustTextareaHeight = () => {
+  if (textarea.value) {
+    textarea.value.style.height = "auto";
+    textarea.value.style.height = `${textarea.value.scrollHeight}px`;
+  }
+};
+
+onMounted(() => {
+  nextTick(() => {
+    adjustTextareaHeight();
+  });
+});
+
+const emit = defineEmits<{
+  (event: "update:modelValue", value: string): void;
+}>();
 </script>
 
 <style scoped>

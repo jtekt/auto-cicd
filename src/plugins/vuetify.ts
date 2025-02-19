@@ -26,8 +26,8 @@ const messages = {
         signInMessage:
           "Sign in to your account to access your projects and deploy them.",
         errors: {
-          token: "Error creating access token from GitLab",
-          profile: "Error getting user profile from GitLab",
+          token: "Error creating GitLab access token.",
+          profile: "rror retrieving user profile from GitLab.",
         },
       },
       home: {
@@ -40,8 +40,8 @@ const messages = {
           sort: {
             nameAscText: "Name (A-Z)",
             nameDscText: "Name (Z-A)",
-            editedAscText: "Last Edited (Newest)",
-            editedDscText: "Last Edited (Oldest)",
+            editedAscText: "Last Edited (Most Recent)",
+            editedDscText: "Last Edited (Least Recent)",
           },
           errors: {
             noSession: "No active session. Please log in.",
@@ -50,32 +50,32 @@ const messages = {
         },
         deploy: {
           info: {
-            "1": "<strong>Valid .Dockerfile:</strong> Ensure your project has a valid <strong>.Dockerfile</strong> in the root directory. This file contains the instructions to build your Docker image.",
-            "2": "<strong>Expose Port 80:</strong> The Docker container must expose the application on <strong>port 80</strong>.",
-            "3": "<strong>Deploy Button:</strong> Clicking “Deploy” will overwrite the <strong>.gitlab-ci.yml</strong> file in your repository.",
+            "1": "1. Ensure your project has a valid .Dockerfile in the root directory. This file contains the instructions to build your Docker image.",
+            "2": "2. The Docker container must expose the application via port 80.",
+            "3": "3. On click deploy please review the files that will be changed before continuing.",
           },
           codeEditor: {
             placeholder: "Write your Dockerfile here...",
-            originalChanged: "Original .Dockerfile is changed",
+            originalChanged: "The original .Dockerfile has been modified",
           },
           deploy: "Deploy",
           cancel: "Cancel",
           confirmDeployTitle: "Confirm Deployment",
           confirmDeployMessage:
-            "Are you sure you want to deploy? The following files will be altered:",
+            "Are you sure you want to deploy? The following files will be modified:",
           continue: "Continue",
           nextStepsTitle: "Deployment Successful",
           nextStepsMessage1:
-            "1. Go to the 'Pipelines' section to view the build process and any errors.",
+            "1. Go to the 'Pipelines' section to monitor the build process and check for any errors.",
           nextStepsMessage2:
-            "2. Once the build finishes, you will receive an email with the deployed URL.",
+            "2. Once the build finishes, if this is the first auto deploy then you will receive an email with the deployed URL.",
           close: "Close",
           update: "Update",
           insert: "Insert",
           noChangesMade:
-            "No changes were made to the deployment files. Nothing to deploy.",
+            "No changes were made to the deployment files. There is nothing to deploy.",
           reset: "Reset",
-          resetOriginal: "Reset to original",
+          resetOriginal: "Reset to the original",
           template: "Template",
         },
       },
@@ -88,51 +88,51 @@ const messages = {
     pages: {
       auth: {
         signInMessage:
-          "プロジェクトにアクセスしてデプロイするためにサインインしてください。",
+          "アカウントにサインインして、プロジェクトにアクセスし、デプロイしてください。",
         errors: {
-          token: "GitLabからのアクセストークン作成エラー",
-          profile: "GitLabからユーザープロフィールの取得エラー",
+          token: "GitLabからアクセストークンの作成に失敗しました",
+          profile: "GitLabからユーザープロフィールの取得に失敗しました",
         },
       },
       home: {
-        searchLabel: "名前または名前空間で検索",
+        searchLabel: "名前またはネームスペースで検索",
         sortLabel: "並べ替え",
         projects: {
           noFound: "プロジェクトが見つかりません",
-          lastActivity: "最終アクティビティ:",
+          lastActivity: "最終活動:",
           noDescription: "説明なし",
           sort: {
             nameAscText: "名前 (A-Z)",
             nameDscText: "名前 (Z-A)",
-            editedAscText: "最終編集 (最新)",
+            editedAscText: "最終編集 (新しい順)",
             editedDscText: "最終編集 (古い順)",
           },
           errors: {
             noSession:
               "アクティブなセッションがありません。ログインしてください。",
             fetchProjects:
-              "プロジェクトの取得に失敗しました。再試行してください。",
+              "プロジェクトの取得に失敗しました。もう一度試してください。",
           },
         },
         deploy: {
           info: {
-            "1": "<strong>有効な .Dockerfile:</strong> プロジェクトのルートディレクトリに有効な <strong>.Dockerfile</strong> があることを確認してください。このファイルにはDockerイメージをビルドするための指示が含まれています。",
-            "2": "<strong>ポート80を公開:</strong> Dockerコンテナはアプリケーションを<strong>ポート80</strong>で公開する必要があります。",
-            "3": "<strong>デプロイボタン:</strong> 「デプロイ」をクリックすると、リポジトリ内の <strong>.gitlab-ci.yml</strong> ファイルが上書きされます。",
+            "1": "1. プロジェクトのルートディレクトリに有効な .Dockerfile があることを確認してください。このファイルには、Dockerイメージを構築するための指示が含まれています。",
+            "2": "2. Dockerコンテナは、ポート80 を通じてアプリケーションを公開する必要があります。",
+            "3": "3. デプロイをクリックすると、続行する前に変更されるファイルを確認してください。",
           },
           codeEditor: {
             placeholder: "ここにDockerfileを書いてください...",
-            originalChanged: "元の .Dockerfile が変更されました",
+            originalChanged: "元の .Dockerfile は変更されました",
           },
           deploy: "デプロイ",
           cancel: "キャンセル",
           confirmDeployTitle: "デプロイの確認",
           confirmDeployMessage:
-            "デプロイしてもよろしいですか？以下のファイルが変更されます:",
+            "本当にデプロイしますか？次のファイルが変更されます:",
           continue: "続行",
-          nextStepsTitle: "デプロイ成功",
+          nextStepsTitle: "デプロイが成功しました",
           nextStepsMessage1:
-            "1. 'Pipelines' セクションに移動してビルドプロセスやエラーを確認してください。",
+            "1. 'Pipelines' セクションに移動して、ビルドプロセスとエラーを確認してください。",
           nextStepsMessage2:
             "2. ビルドが完了すると、デプロイされたURLが記載されたメールが届きます。",
           close: "閉じる",

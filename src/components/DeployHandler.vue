@@ -14,7 +14,9 @@
 
         <div v-if="!dockerLoadingError" class="pa-4">
           <v-alert type="info" variant="tonal">
-            <p v-for="i in 3" v-html="t('pages.home.deploy.info.' + i)"></p>
+            <p v-for="i in 3">
+              {{ t("pages.home.deploy.info." + i) }}
+            </p>
           </v-alert>
         </div>
 
@@ -81,8 +83,6 @@
 
             <CodeEditor
               v-model="editedDockerfile"
-              language="dockerfile"
-              :show-line-numbers="true"
               :placeholder="t('pages.home.deploy.codeEditor.placeholder')"
               max-height="400"
             />
@@ -124,7 +124,7 @@
     <v-dialog
       v-model="confirmDeployDialog"
       persistent
-      width="500"
+      width="600"
       max-width="90vw"
       max-height="90vh"
     >
@@ -135,30 +135,35 @@
         <v-card-text>
           <template v-if="deployFileInfo.length > 0">
             <p>{{ t("pages.home.deploy.confirmDeployMessage") }}</p>
-            <v-list>
-              <v-list-item
+            <v-expansion-panels variant="accordion">
+              <v-expansion-panel
                 v-for="(fileInfo, index) in deployFileInfo"
                 :key="index"
-                :class="
-                  fileInfo.action === 'update' ? 'blue--text' : 'green--text'
-                "
               >
-                <v-list-item-title class="font-weight-bold">{{
-                  fileInfo.file
-                }}</v-list-item-title>
-                <v-list-item-subtitle
-                  :class="`font-weight-bold ${
-                    fileInfo.action === 'update' ? 'text-info' : 'text-success'
-                  }`"
-                >
-                  {{
-                    fileInfo.action === "update"
-                      ? t("pages.home.deploy.update")
-                      : t("pages.home.deploy.insert")
-                  }}
-                </v-list-item-subtitle>
-              </v-list-item>
-            </v-list>
+                <template v-slot:title>
+                  <div class="d-flex flex-column">
+                    <h4>{{ fileInfo.file }}</h4>
+                    <p
+                      :class="`font-weight-bold ${
+                        fileInfo.action === 'update'
+                          ? 'text-info'
+                          : 'text-success'
+                      }`"
+                    >
+                      {{ fileInfo.action }}
+                    </p>
+                  </div>
+                </template>
+                <template v-slot:text>
+                  <CodeEditor
+                    :defaultValue="getDeployableFile(fileInfo.file)"
+                    max-height="300"
+                    readonly
+                    style="font-size: 12px"
+                  />
+                </template>
+              </v-expansion-panel>
+            </v-expansion-panels>
           </template>
           <p v-else class="text-warning">
             {{ t("pages.home.deploy.noChangesMade") }}
@@ -239,8 +244,10 @@ const snackbar = ref({
 });
 const authStore = useAuthStore();
 
+type ManagedFiles = ".Dockerfile" | ".gitlab-ci.yml" | ".dockerignore";
+
 // Tracks the information of files that will be inserted or updated
-const deployFileInfo = ref<{ file: string; action: string }[]>([]);
+const deployFileInfo = ref<{ file: ManagedFiles; action: string }[]>([]);
 
 const handleDeployBtn = async () => {
   isDockerLoading.value = true;
@@ -567,6 +574,17 @@ Desktop.ini
 .dockerignore
 Dockerfile
 `;
+
+const getDeployableFile = (fileName: ManagedFiles): string | null => {
+  switch (fileName) {
+    case ".Dockerfile":
+      return editedDockerfile.value;
+    case ".dockerignore":
+      return dockerignoreFile;
+    case ".gitlab-ci.yml":
+      return autoCiFile;
+  }
+};
 </script>
 
 <style scoped>
