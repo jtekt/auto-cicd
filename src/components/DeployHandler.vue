@@ -30,8 +30,16 @@
             <p>
               <strong>About environment variables:</strong> You can setup the
               variables in your gitlab project in Settings > CICD > Variables >
-              Add variable.
+              Add variable. with the following settings:
             </p>
+            <ul>
+              <li>Type: <strong>file</strong></li>
+              <li>Key: <strong>ENV</strong></li>
+              <li>
+                Value: your variables in the same format as .env files (without
+                ")
+              </li>
+            </ul>
           </v-alert>
         </div>
 
