@@ -42,7 +42,6 @@
 </template>
 
 <script setup lang="ts">
-import DefaultLayout from "@/components/DefaultLayout.vue";
 import {
   createAccessToken,
   createGitlabAuthUrl,
@@ -75,7 +74,7 @@ onMounted(async () => {
 
   if (!accessToken) {
     isLoading.value = false;
-    return router.push("/auth");
+    return;
   }
 
   // Get user info
@@ -83,7 +82,7 @@ onMounted(async () => {
 
   if (!user) {
     isLoading.value = false;
-    return router.push("/auth");
+    return;
   }
 
   // Set the session state
