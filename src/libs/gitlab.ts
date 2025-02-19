@@ -38,7 +38,7 @@ export const createGitlabAuthUrl = () => {
   );
   url.searchParams.append("response_type", "code");
   url.searchParams.append("scope", scopes);
-  url.searchParams.append("state", "auth-ci-front");
+  url.searchParams.append("state", env.OAUTH_STATE_VALIDATOR);
 
   return url.toString();
 };
@@ -66,12 +66,7 @@ export const createAccessToken = async (
     // Validate
     return TokenSchema.parse(token.data);
   } catch (error) {
-    console.log(error, {
-      redirect_uri: window.location.origin + "/" + env.OAUTH_REDIRECT_URI_PATH,
-      code,
-      client_id: env.GITLAB_OAUTH_ID,
-      gitlab_url: env.GITLAB_URL,
-    });
+    console.log(error);
     return null;
   }
 };

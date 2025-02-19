@@ -27,7 +27,7 @@
               <strong>Deploy Button:</strong> Clicking “Deploy” will overwrite
               the <strong>.gitlab-ci.yml</strong> file in your repository.
             </p>
-            <p>
+            <!-- <p>
               <strong>About environment variables:</strong> You can setup the
               variables in your gitlab project in Settings > CICD > Variables >
               Add variable. with the following settings:
@@ -39,7 +39,7 @@
                 Value: your variables in the same format as .env files (without
                 ")
               </li>
-            </ul>
+            </ul> -->
           </v-alert>
         </div>
 

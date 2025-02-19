@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import { env } from "@/config/env";
 import {
   createAccessToken,
   createGitlabAuthUrl,
@@ -63,7 +64,7 @@ const route = useRoute();
 onMounted(async () => {
   if (
     typeof route.query.code !== "string" ||
-    route.query.state !== "auth-ci-front"
+    route.query.state !== env.OAUTH_STATE_VALIDATOR
   ) {
     isLoading.value = false;
     return;
