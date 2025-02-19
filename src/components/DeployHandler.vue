@@ -28,8 +28,9 @@
               the <strong>.gitlab-ci.yml</strong> file in your repository.
             </p>
             <p>
-              <strong>Edit Dockerfile:</strong> Any modifications made to the
-              <strong>.Dockerfile</strong> will reflect in the repository.
+              <strong>About environment variables:</strong> You can setup the
+              variables in your gitlab project in Settings > CICD > Variables >
+              Add variable.
             </p>
           </v-alert>
         </div>

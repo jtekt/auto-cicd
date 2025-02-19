@@ -62,13 +62,13 @@
               </h2>
             </v-col>
           </v-row>
-          <router-view />
         </template>
-        <template v-else>
+        <template v-else-if="route.name !== 'Auth'">
           <div class="d-flex justify-center">
             <h3 class="h3">You are not Authenticated</h3>
           </div>
         </template>
+        <router-view />
       </v-container>
     </v-main>
 
