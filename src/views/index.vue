@@ -81,7 +81,7 @@
                 size="small"
                 class="font-weight-bold"
               >
-                {{ getAccessLevel(project) }}
+                {{ project.maxAccessLevel.humanAccess }}
               </v-chip>
             </template>
           </v-card-item>
@@ -104,17 +104,38 @@
               <v-col>
                 <span class="text-caption"
                   >{{ t("pages.home.projects.lastActivity") }}
-                  {{ formatDate(project.last_activity_at) }}</span
+                  {{ formatDate(project.lastActivityAt) }}</span
                 >
               </v-col>
             </v-row>
+            <!-- <v-row class="pa-4">
+              <div
+                v-for="(language, index) in project.languages"
+                :key="index"
+                :style="{ width: language.share + '%', padding: 0 }"
+              >
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ props }">
+                    <div
+                      v-bind="props"
+                      class="language-bar"
+                      :style="{
+                        backgroundColor: getLanguageColor(language.name),
+                        height: '20px',
+                      }"
+                    ></div>
+                  </template>
+                  <span>{{ language.name }}</span>
+                </v-tooltip>
+              </div>
+            </v-row> -->
           </v-card-text>
 
           <v-card-actions>
             <v-btn
               color="primary"
               variant="tonal"
-              :href="project.web_url"
+              :href="project.webUrl"
               target="_blank"
             >
               <v-icon start icon="mdi-gitlab"></v-icon>
@@ -131,11 +152,16 @@
 <script lang="ts" setup>
 import { env } from "@/config/env";
 import { useAuthStore } from "@/stores/auth";
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
 import { onMounted, ref, computed } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
 import DeployBtn from "@/components/DeployHandler.vue";
 import { useLocale } from "vuetify";
+import {
+  AccessLevel,
+  type Project,
+  type ProjectsResponse,
+} from "@/types/project";
 
 const { t } = useLocale();
 
@@ -169,73 +195,75 @@ const sortOptions = computed(() => [
   },
 ]);
 
-export type Project = {
-  id: number;
-  description: string | null;
-  name: string;
-  web_url: string;
-  permissions: {
-    group_access: {
-      access_level: number; // 0 to 50
-    };
-    project_access: {
-      access_level: number | null;
-    };
-  };
-  namespace: {
-    name: string;
-    full_path: string;
-    web_url: string;
-  };
-  last_activity_at: string;
-
-  default_branch: string;
-
-  // Local value
-  deploying?: boolean;
-};
-
 const projects = ref<Project[]>([]);
 
-const min_access_level = 30; // 30 = developer
-
-const getAccessLevel = (project: Project): string => {
-  const projectAccess = project.permissions.project_access?.access_level;
-  const groupAccess = project.permissions.group_access?.access_level;
-  const accessLevel = Math.max(projectAccess || 0, groupAccess || 0);
+const getAccessLevelColor = (project: Project): string => {
+  const accessLevel = project.maxAccessLevel.stringValue;
 
   switch (accessLevel) {
-    case 50:
-      return "Owner";
-    case 40:
-      return "Maintainer";
-    case 30:
-      return "Developer";
-    case 20:
-      return "Reporter";
-    case 10:
-      return "Guest";
+    case AccessLevel.OWNER:
+    case AccessLevel.ADMIN:
+      return "red";
+    case AccessLevel.MAINTAINER:
+      return "orange";
+    case AccessLevel.DEVELOPER:
+      return "green";
+    case AccessLevel.REPORTER:
+      return "blue";
+    case AccessLevel.GUEST:
+      return "grey";
+    case AccessLevel.NO_ACCESS:
+    case AccessLevel.MINIMAL_ACCESS:
+    case AccessLevel.PLANNER:
+      return "lightgrey"; // Handle additional access levels
     default:
-      return "No access";
+      return "grey";
   }
 };
 
-const getAccessLevelColor = (project: Project): string => {
-  const accessLevel = getAccessLevel(project);
-  switch (accessLevel) {
-    case "Owner":
-      return "red";
-    case "Maintainer":
-      return "orange";
-    case "Developer":
-      return "green";
-    case "Reporter":
-      return "blue";
-    case "Guest":
-      return "grey";
-    default:
-      return "grey";
-  }
+const getLanguageColor = (language: string): string => {
+  const languageColors: { [key: string]: string } = {
+    // Frontend Frameworks
+    Vue: "#42b883", // Vue.js
+    React: "#61dafb", // React.js (JS)
+    Angular: "#dd0031", // Angular (JS)
+    Svelte: "#ff3e00", // Svelte (JS)
+    Ember: "#f05e28", // Ember.js
+    // JS Languages/Types
+    TypeScript: "#3178c6", // TypeScript
+    JavaScript: "#f7df1e", // JavaScript
+    JSX: "#61dafb", // JSX
+    TSX: "#3178c6", // TSX
+    // Static Languages
+    HTML: "#e34c26", // HTML
+    Dockerfile: "#384d54", // Dockerfile
+    CSS: "#563d7c", // CSS
+    Python: "#306998", // Python
+    Ruby: "#e53e3e", // Ruby
+    Go: "#00add8", // Go
+    "C++": "#00599c", // C++
+    Swift: "#f05138", // Swift
+    PHP: "#4F5B93", // PHP
+    C: "#00599C", // C
+    Java: "#f8b800", // Java
+    Kotlin: "#7f52ff", // Kotlin
+    R: "#276DC3", // R
+    Scala: "#DC322F", // Scala
+    Rust: "#dea584", // Rust
+    Elixir: "#6e4a7e", // Elixir
+    Lua: "#000080", // Lua
+    Dart: "#00B4AB", // Dart
+    ObjectiveC: "#6766fb", // Objective-C
+    // More
+    Markdown: "#083fa1", // Markdown files
+    GraphQL: "#e10098", // GraphQL
+    JSON: "#f7df1e", // JSON (JavaScript Object Notation)
+    YAML: "#ffcc00", // YAML
+    XML: "#0060e2", // XML
+    SQL: "#f29111", // SQL
+    Shell: "#89e051", // Shell Script (Bash, etc.)
+  };
+  return languageColors[language] || "#cccccc"; // Default to gray if no match
 };
 
 const formatDate = (dateString: string): string => {
@@ -269,8 +297,8 @@ const filteredProjects = computed(() => {
       comparison = a.name.localeCompare(b.name);
     } else if (sortField === "last_activity_at") {
       comparison =
-        new Date(a.last_activity_at).getTime() -
-        new Date(b.last_activity_at).getTime();
+        new Date(a.lastActivityAt).getTime() -
+        new Date(b.lastActivityAt).getTime();
     }
     return sortDirection === "asc" ? comparison : -comparison;
   });
@@ -285,19 +313,7 @@ onMounted(async () => {
       return;
     }
 
-    const res = await axios.get<Project[]>(
-      `${env.GITLAB_URL}/api/v4/projects?min_access_level=${min_access_level}`,
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      }
-    );
-
-    projects.value = res.data.map((project) => ({
-      ...project,
-      deploying: false,
-    }));
+    projects.value = await fetchAllProjects();
   } catch (err) {
     console.error(err);
     error.value = t("pages.home.projects.errors.fetchProjects");
@@ -305,6 +321,91 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+const fetchAllProjects = async (): Promise<Project[]> => {
+  if (!authStore.session) return [];
+
+  let allProjects: Project[] = [];
+  let hasNextPage = true;
+  let endCursor: string | null = null;
+  let res: AxiosResponse<ProjectsResponse, any> | null = null;
+  // Loop until all pages are fetched
+  while (hasNextPage) {
+    try {
+      res = await axios.post<ProjectsResponse>(
+        `${env.GITLAB_URL}/api/graphql`,
+        {
+          query: `
+        {
+          projects(minAccessLevel: DEVELOPER, archived: EXCLUDE${
+            endCursor ? `, after: ${endCursor}` : ""
+          }) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            edges {
+              node {
+                id
+                description
+                name
+                webUrl
+                languages {
+                  name
+                  share
+                }
+                namespace {
+                  name
+                  fullPath
+                  webUrl
+                }
+                lastActivityAt
+                avatarUrl
+                maxAccessLevel {
+                  humanAccess
+                  stringValue
+                }
+                repository {
+                  rootRef
+                }
+              }
+            }
+          }
+        }
+      `,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!res) break;
+
+      console.log(res.data);
+      const projects = res.data.data.projects.edges;
+      // Append the current page's projects to the allProjects array
+      allProjects = allProjects.concat(
+        projects.map((project) => ({
+          ...project.node,
+          deploying: false, // Add any other properties you need
+        }))
+      );
+
+      // Update pagination info
+      hasNextPage = res.data.data.projects.pageInfo.hasNextPage;
+      endCursor = res.data.data.projects.pageInfo.endCursor;
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      break;
+    }
+  }
+
+  // Return the aggregated list of all projects
+  return allProjects;
+};
 </script>
 
 <style scoped>

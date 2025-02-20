@@ -5,14 +5,21 @@
       {{ t("pages.home.deploy.deploy") }}
     </v-btn>
 
-    <v-dialog v-model="dialog" width="900" max-width="90vw" max-height="90vh">
+    <v-dialog
+      v-if="isDockerFileEnabled"
+      v-model="dialog"
+      width="900"
+      max-width="90vw"
+      max-height="90vh"
+    >
       <v-card style="height: 100%; width: 100%" prepend-icon="mdi-update">
         <template v-slot:title>
           {{ t("pages.home.deploy.deploy") }}
           <strong style="text-transform: capitalize">{{ project.name }}</strong>
         </template>
 
-        <div v-if="!dockerLoadingError" class="pa-4">
+        <!-- Show .Dockerfile section only if feature flag is enabled -->
+        <div v-if="isDockerFileEnabled && !dockerLoadingError" class="pa-4">
           <v-alert type="info" variant="tonal">
             <p v-for="i in 3">
               {{ t("pages.home.deploy.info." + i) }}
@@ -20,6 +27,7 @@
           </v-alert>
         </div>
 
+        <!-- Docker loading and error handling -->
         <v-row
           v-if="isDockerLoading"
           justify="center"
@@ -46,16 +54,10 @@
                 @click="handleClearDockerfile"
               >
                 <v-icon start icon="mdi-cancel"></v-icon>
-                {{
-                  !!originalDockerfile
-                    ? t("pages.home.deploy.resetOriginal")
-                    : t("pages.home.deploy.reset")
-                }}
+                {{ "Reset Dockerfile" }}
               </v-btn>
-
               <v-btn color="primary" variant="tonal">
                 {{ t("pages.home.deploy.template") }}
-
                 <v-menu activator="parent" location="bottom end">
                   <v-list>
                     <v-list-item
@@ -71,9 +73,7 @@
                           :content="l"
                           inline
                           color="primary"
-                          varian
-                        >
-                        </v-badge>
+                        ></v-badge>
                       </div>
                     </v-list-item>
                   </v-list>
@@ -222,13 +222,17 @@ import { useAuthStore } from "@/stores/auth";
 import axios, { AxiosError } from "axios";
 import dockerTemplates from "../templates/dockerfile-templates.json";
 import { env } from "@/config/env";
-import type { Project } from "@/views/index.vue";
 import AppLoader from "./AppLoader.vue";
 import { useLocale } from "vuetify";
+import type { Project } from "@/types/project";
 
 const { t } = useLocale();
 
 const { project } = defineProps<{ project: Project }>();
+
+const isDockerFileEnabled = ref(
+  !env.DISABLED_FEATURES_FLAGS.includes("dockerfile")
+);
 
 const dialog = ref(false);
 const confirmDeployDialog = ref(false);
@@ -251,6 +255,12 @@ type ManagedFiles = ".Dockerfile" | ".gitlab-ci.yml" | ".dockerignore";
 const deployFileInfo = ref<{ file: ManagedFiles; action: string }[]>([]);
 
 const handleDeployBtn = async () => {
+  if (!isDockerFileEnabled.value) {
+    // Open the confirmation dialog
+    handleDeploy();
+    return;
+  }
+
   isDockerLoading.value = true;
   dialog.value = true;
   dockerLoadingError.value = null;
@@ -294,17 +304,19 @@ const handleDeploy = async () => {
   // Prepare file changes info for the confirmation dialog
   deployFileInfo.value = [];
 
-  // Check if the Dockerfile has been changed
-  const isDockerfileChanged =
-    (editedDockerfile.value &&
-      editedDockerfile.value !== originalDockerfile.value) ||
-    (!originalDockerfile.value && editedDockerfile.value);
+  if (isDockerFileEnabled.value) {
+    // Check if the Dockerfile has been changed
+    const isDockerfileChanged =
+      (editedDockerfile.value &&
+        editedDockerfile.value !== originalDockerfile.value) ||
+      (!originalDockerfile.value && editedDockerfile.value);
 
-  if (isDockerfileChanged) {
-    deployFileInfo.value.push({
-      file: ".Dockerfile",
-      action: originalDockerfile.value ? "update" : "insert",
-    });
+    if (isDockerfileChanged) {
+      deployFileInfo.value.push({
+        file: ".Dockerfile",
+        action: originalDockerfile.value ? "update" : "insert",
+      });
+    }
   }
 
   const existingCiFileContent = await getFileContent(".gitlab-ci.yml");
@@ -341,7 +353,11 @@ const confirmDeploy = async () => {
 
   try {
     // Check if there is no Dockerfile to deploy
-    if (!editedDockerfile.value && !originalDockerfile.value) {
+    if (
+      isDockerFileEnabled &&
+      !editedDockerfile.value &&
+      !originalDockerfile.value
+    ) {
       snackbar.value = {
         show: true,
         text: "Error: No Dockerfile found. Please create a valid .Dockerfile in your repository.",
@@ -368,22 +384,24 @@ const confirmDeploy = async () => {
       encoding: string;
     }[] = [];
 
-    // Check for changes in .Dockerfile (compare original and edited contents)
-    const isDockerfileChanged =
-      (editedDockerfile.value &&
-        editedDockerfile.value !== originalDockerfile.value) ||
-      (!originalDockerfile.value && editedDockerfile.value);
+    if (isDockerFileEnabled) {
+      // Check for changes in .Dockerfile (compare original and edited contents)
+      const isDockerfileChanged =
+        (editedDockerfile.value &&
+          editedDockerfile.value !== originalDockerfile.value) ||
+        (!originalDockerfile.value && editedDockerfile.value);
 
-    // Add action for .Dockerfile if changed
-    if (isDockerfileChanged) {
-      commitActions.push({
-        action: originalDockerfile.value ? "update" : "create", // Update if exists, else create
-        file_path: ".Dockerfile",
-        content: encodeBase64(
-          editedDockerfile.value || originalDockerfile.value || ""
-        ),
-        encoding: "base64",
-      });
+      // Add action for .Dockerfile if changed
+      if (isDockerfileChanged) {
+        commitActions.push({
+          action: originalDockerfile.value ? "update" : "create", // Update if exists, else create
+          file_path: ".Dockerfile",
+          content: encodeBase64(
+            editedDockerfile.value || originalDockerfile.value || ""
+          ),
+          encoding: "base64",
+        });
+      }
     }
 
     // Get the existing content of the .gitlab-ci.yml file from GitLab (if it exists)
@@ -420,7 +438,7 @@ const confirmDeploy = async () => {
     if (commitActions.length === 0) {
       snackbar.value = {
         show: true,
-        text: "No changes detected in Dockerfile or .gitlab-ci.yml. No deployment needed.",
+        text: "No changes detected in .gitlab-ci.yml. No deployment needed.",
         color: "info",
       };
       return;
@@ -437,7 +455,7 @@ const confirmDeploy = async () => {
     await axios.post(
       commitUrl,
       {
-        branch: project.default_branch,
+        branch: project.repository.rootRef,
         commit_message: commitMessage,
         actions: commitActions,
       },
