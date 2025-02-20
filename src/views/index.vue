@@ -384,7 +384,6 @@ const fetchAllProjects = async (): Promise<Project[]> => {
 
       if (!res) break;
 
-      console.log(res.data);
       const projects = res.data.data.projects.edges;
       // Append the current page's projects to the allProjects array
       allProjects = allProjects.concat(
