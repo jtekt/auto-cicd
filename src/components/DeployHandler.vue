@@ -5,98 +5,123 @@
       {{ t("pages.home.deploy.deploy") }}
     </v-btn>
 
-    <v-dialog
-      v-if="isDockerFileEnabled"
-      v-model="dialog"
-      width="900"
-      max-width="90vw"
-      max-height="90vh"
-    >
+    <v-dialog v-model="dialog" width="900" max-width="90vw" max-height="90vh">
       <v-card style="height: 100%; width: 100%" prepend-icon="mdi-update">
-        <template v-slot:title>
-          {{ t("pages.home.deploy.deploy") }}
-          <strong style="text-transform: capitalize">{{ project.name }}</strong>
-        </template>
+        <template v-slot:title> Deploy </template>
 
-        <!-- Show .Dockerfile section only if feature flag is enabled -->
-        <div v-if="isDockerFileEnabled && !dockerLoadingError" class="pa-4">
-          <v-alert type="info" variant="tonal">
-            <p v-for="i in 3">
-              {{ t("pages.home.deploy.info." + i) }}
-            </p>
-          </v-alert>
-        </div>
-
-        <!-- Docker loading and error handling -->
-        <v-row
-          v-if="isDockerLoading"
-          justify="center"
-          align="center"
-          class="pa-4"
-        >
+        <!-- Loading and error handling -->
+        <v-row v-if="isLoading" justify="center" align="center" class="pa-4">
           <AppLoader />
         </v-row>
 
-        <div v-else-if="dockerLoadingError" class="pa-5">
+        <div v-else-if="error" class="pa-5">
           <v-alert type="error" variant="tonal">
-            <p>{{ dockerLoadingError }}</p>
+            <p>{{ error }}</p>
           </v-alert>
         </div>
 
         <template v-else>
-          <div class="px-4 flex-1">
-            <div class="d-flex justify-end align-center pb-4" style="gap: 8px">
-              <h3 class="mr-auto">.Dockerfile</h3>
-              <v-btn
-                v-if="originalDockerfile !== editedDockerfile"
-                color="error"
-                variant="tonal"
-                @click="handleClearDockerfile"
-              >
-                <v-icon start icon="mdi-cancel"></v-icon>
-                {{ "Reset Dockerfile" }}
-              </v-btn>
-              <v-btn color="primary" variant="tonal">
-                {{ t("pages.home.deploy.template") }}
-                <v-menu activator="parent" location="bottom end">
-                  <v-list>
-                    <v-list-item
-                      v-for="(item, index) in dockerTemplates.templates"
-                      :key="index"
-                      :value="index"
-                      @click="setEditDockerfile(item.raw)"
-                    >
-                      <v-list-item-title>{{ item.name }}</v-list-item-title>
-                      <div>
-                        <v-badge
-                          v-for="l in item.languages"
-                          :content="l"
-                          inline
-                          color="primary"
-                        ></v-badge>
-                      </div>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
-              </v-btn>
-            </div>
-
-            <CodeEditor
-              v-model="editedDockerfile"
-              :placeholder="t('pages.home.deploy.codeEditor.placeholder')"
-              max-height="400"
-            />
-
-            <p
-              :class="`text-body-2 ${
-                originalDockerfile && originalDockerfile !== editedDockerfile
-                  ? 'text-info'
-                  : 'text-transparent'
-              }`"
-              style="user-select: none"
+          <div
+            style="
+              margin-left: auto;
+              margin-right: auto;
+              max-width: 400px;
+              width: 100%;
+            "
+          >
+            <v-btn
+              variant="outlined"
+              :href="project.webUrl"
+              target="_blank"
+              width="100%"
+              height="60"
+              class="pa-4 mb-5 text-h6 font-weight-bold"
             >
-              {{ t("pages.home.deploy.codeEditor.originalChanged") }}
-            </p>
+              {{ project.name }}
+            </v-btn>
+            <v-select
+              v-model="frameworkSelector"
+              :items="frameworks"
+              item-title="name"
+              item-value="id"
+              label="Select Framework"
+              variant="outlined"
+              :error="projectConfig.id === 'unknown'"
+              @update:model-value="handleChangeConfig"
+            >
+              <template #selection="{ item }">
+                <div class="d-flex align-center" style="gap: 16px">
+                  <v-img
+                    :src="`${item.raw.image}`"
+                    alt="Framework Image"
+                    width="28"
+                  />
+                  {{ item.raw.name }}
+                </div>
+              </template>
+              <template v-slot:item="{ props, item }">
+                <v-list-item
+                  v-bind="props"
+                  class="d-flex align-center pa-2"
+                  style="gap: 16px"
+                  :prepend-avatar="item.raw.image"
+                >
+                </v-list-item>
+              </template>
+            </v-select>
+            <v-expansion-panels :disabled="projectConfig.id === 'unknown'">
+              <v-expansion-panel>
+                <v-expansion-panel-title
+                  >Build and Output Settings</v-expansion-panel-title
+                >
+                <v-expansion-panel-text>
+                  <v-text-field
+                    v-model="projectConfig.rootDir"
+                    label="Root Directory"
+                    variant="outlined"
+                    :class="
+                      projectConfig.rootDir ===
+                      selectedFrameworkOriginalConfig.rootDir
+                        ? 'font-weight-thin'
+                        : ''
+                    "
+                  ></v-text-field>
+                  <v-text-field
+                    v-model="projectConfig.buildCommand"
+                    label="Build Command"
+                    variant="outlined"
+                    :class="
+                      projectConfig.buildCommand ===
+                      selectedFrameworkOriginalConfig.buildCommand
+                        ? 'font-weight-thin'
+                        : ''
+                    "
+                  ></v-text-field>
+                  <v-text-field
+                    v-model="projectConfig.outputDir"
+                    label="Output Directory"
+                    variant="outlined"
+                    :class="
+                      projectConfig.outputDir ===
+                      selectedFrameworkOriginalConfig.outputDir
+                        ? 'font-weight-thin'
+                        : ''
+                    "
+                  ></v-text-field>
+                  <v-text-field
+                    v-model="projectConfig.installCommand"
+                    label="Install Command"
+                    variant="outlined"
+                    :class="
+                      projectConfig.installCommand ===
+                      selectedFrameworkOriginalConfig.installCommand
+                        ? 'font-weight-thin'
+                        : ''
+                    "
+                  ></v-text-field
+                ></v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
           </div>
         </template>
 
@@ -107,10 +132,7 @@
             variant="tonal"
             :text="t('pages.home.deploy.deploy')"
             @click="handleDeploy"
-            :disabled="
-              (!editedDockerfile || editedDockerfile.trim().length === 0) &&
-              !originalDockerfile
-            "
+            :disabled="projectConfig.id === 'unknown'"
           ></v-btn>
           <v-btn
             variant="tonal"
@@ -175,7 +197,6 @@
             v-if="deployFileInfo.length > 0"
             color="primary"
             variant="tonal"
-            @click="confirmDeploy()"
             >{{ t("pages.home.deploy.continue") }}</v-btn
           >
           <v-btn variant="tonal" @click="cancelDeploy()">{{
@@ -215,394 +236,362 @@
     </v-snackbar>
   </div>
 </template>
-
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import axios, { AxiosError } from "axios";
-import dockerTemplates from "../templates/dockerfile-templates.json";
 import { env } from "@/config/env";
 import AppLoader from "./AppLoader.vue";
 import { useLocale } from "vuetify";
 import type { Project } from "@/types/project";
+import { generateDockerfile } from "@/libs/templates/dockerfile-template";
+import { generateFiles } from "@/libs/templates";
 
 const { t } = useLocale();
 
 const { project } = defineProps<{ project: Project }>();
 
-const isDockerFileEnabled = ref(
-  !env.DISABLED_FEATURES_FLAGS.includes("dockerfile")
-);
-
 const dialog = ref(false);
 const confirmDeployDialog = ref(false);
 const nextStepsDialog = ref(false);
 
-const editedDockerfile = ref<string | null>(null);
-const originalDockerfile = ref<string | null>(null);
-const dockerLoadingError = ref<string | null>(null);
-const isDockerLoading = ref(false);
+type AcceptedFrameworks = "vite" | "fastapi" | "unknown";
+
+const frameworkSelector = ref<AcceptedFrameworks>("unknown");
+
+export type ManagedFile =
+  | "Dockerfile"
+  | ".gitlab-ci.yml"
+  | "nginx.conf"
+  | "kubernetes_manifest.yml";
+
+export type ProjectConfig = {
+  id: AcceptedFrameworks;
+  name: string;
+  image: string;
+
+  // Config
+  buildCommand: string;
+  installCommand: string;
+  outputDir: string;
+  rootDir: string;
+
+  // Deploy
+  files: ManagedFile[];
+};
+
+const viteConfig: ProjectConfig = {
+  id: "vite",
+  name: "Vite",
+  image: "/icons/Vite.js.svg",
+
+  buildCommand: "npm run build",
+  installCommand: "npm install",
+  outputDir: "dist",
+  rootDir: "./",
+
+  files: [
+    ".gitlab-ci.yml",
+    "Dockerfile",
+    "kubernetes_manifest.yml",
+    "nginx.conf",
+  ],
+};
+
+const fastapiConfig: ProjectConfig = {
+  id: "fastapi",
+  name: "FastAPI",
+  image: "/icons/FastAPI.svg",
+
+  buildCommand: "uvicorn app:app --reload",
+  installCommand: "pip install -r requirements.txt",
+  outputDir: "static",
+  rootDir: "./",
+
+  files: [".gitlab-ci.yml", "Dockerfile", "kubernetes_manifest.yml"],
+};
+
+const unknownConfig: ProjectConfig = {
+  id: "unknown",
+  name: "Unknown",
+  image: "react.png",
+
+  buildCommand: "npm run build",
+  installCommand: "npm install",
+  outputDir: "dist",
+  rootDir: "./",
+
+  files: [],
+};
+
+const frameworks: ProjectConfig[] = [viteConfig, fastapiConfig, unknownConfig];
+
+const projectConfig = ref<ProjectConfig>({
+  ...unknownConfig,
+});
+
+const selectedFrameworkOriginalConfig = computed(
+  () => frameworks.find((f) => f.id === projectConfig.value.id) || unknownConfig
+);
+
+const originalFiles = ref<{ fileName: ManagedFile; content: string }[]>([]);
+
+const injectFiles = ref<{ fileName: ManagedFile; content: string }[]>([]);
+
+const error = ref<string[] | null>(null);
+
+const isLoading = ref<boolean>(false);
+
 const snackbar = ref({
   show: false,
   text: "",
   color: "success",
 });
+
 const authStore = useAuthStore();
 
-type ManagedFiles = ".Dockerfile" | ".gitlab-ci.yml" | ".dockerignore";
-
 // Tracks the information of files that will be inserted or updated
-const deployFileInfo = ref<{ file: ManagedFiles; action: string }[]>([]);
+const deployFileInfo = ref<{ file: ManagedFile; action: string }[]>([]);
 
+// Called to open the dialg
 const handleDeployBtn = async () => {
-  if (!isDockerFileEnabled.value) {
-    // Open the confirmation dialog
-    handleDeploy();
-    return;
-  }
-
-  isDockerLoading.value = true;
-  dialog.value = true;
-  dockerLoadingError.value = null;
-
-  if (originalDockerfile.value) {
-    editedDockerfile.value = originalDockerfile.value;
-    isDockerLoading.value = false;
-    return;
-  }
-
-  // Check if original Dockerfile exists in the repository
-  const dockerFileUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/files/.Dockerfile/raw`;
-
-  try {
-    const response = await axios.get(dockerFileUrl, {
-      headers: {
-        Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
-      },
+  if (!authStore.session) {
+    return (snackbar.value = {
+      show: true,
+      text: "Error: Unauthorized",
+      color: "error",
     });
-
-    originalDockerfile.value = response.data;
-    editedDockerfile.value = response.data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 404) {
-        originalDockerfile.value = null;
-        editedDockerfile.value = null;
-      } else {
-        console.error(error);
-        // Comunication error
-        dockerLoadingError.value =
-          error.response?.data || `Error ${error.code}: ${error.message}`;
-      }
-    }
-  } finally {
-    isDockerLoading.value = false;
   }
+
+  dialog.value = true;
+  isLoading.value = true;
+
+  const projectConfigLang = await identifyProjectLanguage();
+
+  // Set the project config
+  projectConfig.value = projectConfigLang;
+
+  // Set the select
+  frameworkSelector.value = projectConfigLang.id;
+
+  isLoading.value = false;
 };
 
 const handleDeploy = async () => {
+  if (projectConfig.value.id === "unknown") {
+    return (snackbar.value = {
+      color: "warning",
+      show: true,
+      text: "You can only deploy if choose one framework",
+    });
+  }
   // Prepare file changes info for the confirmation dialog
   deployFileInfo.value = [];
 
-  if (isDockerFileEnabled.value) {
-    // Check if the Dockerfile has been changed
-    const isDockerfileChanged =
-      (editedDockerfile.value &&
-        editedDockerfile.value !== originalDockerfile.value) ||
-      (!originalDockerfile.value && editedDockerfile.value);
+  // Check if the files have been changed
+  const files = await getRepositoryFiles(projectConfig.value.files);
 
-    if (isDockerfileChanged) {
-      deployFileInfo.value.push({
-        file: ".Dockerfile",
-        action: originalDockerfile.value ? "update" : "insert",
-      });
-    }
-  }
-
-  const existingCiFileContent = await getFileContent(".gitlab-ci.yml");
-  if (!existingCiFileContent || existingCiFileContent !== autoCiFile) {
-    deployFileInfo.value.push({
-      file: ".gitlab-ci.yml",
-      action: existingCiFileContent ? "update" : "insert",
-    });
-  }
-
-  // Check if the .dockerignore file needs to be created/updated
-  const existsDockerignore = await getFileContent(".dockerignore");
-  if (!existsDockerignore) {
-    deployFileInfo.value.push({
-      file: ".dockerignore",
-      action: "insert",
-    });
-  }
-
-  confirmDeployDialog.value = true; // Open confirmation dialog
-};
-
-const confirmDeploy = async () => {
-  confirmDeployDialog.value = false;
-
-  if (!authStore.session) {
-    snackbar.value = {
-      show: true,
-      text: "Error: Unauthorized.",
+  if (!files.success) {
+    return (snackbar.value = {
       color: "error",
-    };
-    return;
+      show: true,
+      text: "Error: " + files.error,
+    });
   }
 
-  try {
-    // Check if there is no Dockerfile to deploy
-    if (
-      isDockerFileEnabled &&
-      !editedDockerfile.value &&
-      !originalDockerfile.value
-    ) {
-      snackbar.value = {
-        show: true,
-        text: "Error: No Dockerfile found. Please create a valid .Dockerfile in your repository.",
-        color: "error",
-      };
-      return;
-    }
+  originalFiles.value = files.data;
 
-    // Base64 encode the contents of the Dockerfile and .gitlab-ci.yml
-    const encodeBase64 = (str: string): string => {
-      const encoder = new TextEncoder();
-      const uint8Array = encoder.encode(str);
-      let binary = "";
-      uint8Array.forEach((byte) => {
-        binary += String.fromCharCode(byte);
-      });
-      return btoa(binary);
-    };
+  // Create the files to insert in the repository
+  injectFiles.value = generateFiles(projectConfig.value);
 
-    const commitActions: {
-      action: string;
-      file_path: string;
-      content: string;
-      encoding: string;
-    }[] = [];
-
-    if (isDockerFileEnabled) {
-      // Check for changes in .Dockerfile (compare original and edited contents)
-      const isDockerfileChanged =
-        (editedDockerfile.value &&
-          editedDockerfile.value !== originalDockerfile.value) ||
-        (!originalDockerfile.value && editedDockerfile.value);
-
-      // Add action for .Dockerfile if changed
-      if (isDockerfileChanged) {
-        commitActions.push({
-          action: originalDockerfile.value ? "update" : "create", // Update if exists, else create
-          file_path: ".Dockerfile",
-          content: encodeBase64(
-            editedDockerfile.value || originalDockerfile.value || ""
-          ),
-          encoding: "base64",
-        });
-      }
-    }
-
-    // Get the existing content of the .gitlab-ci.yml file from GitLab (if it exists)
-    const existingCiFileContent = await getFileContent(".gitlab-ci.yml");
-
-    // Check for changes in .gitlab-ci.yml
-    const isCiFileChanged =
-      !existingCiFileContent || existingCiFileContent !== autoCiFile;
-
-    // Add action for .gitlab-ci.yml if changed
-    if (isCiFileChanged) {
-      commitActions.push({
-        action: existingCiFileContent ? "update" : "create", // Update .gitlab-ci.yml if it exists, else create it
-        file_path: ".gitlab-ci.yml",
-        content: encodeBase64(autoCiFile),
-        encoding: "base64",
-      });
-    }
-
-    // Get the .dockerignore file from GitLab (if it exists)
-    const existsgDockerignore = !!(await getFileContent(".dockerignore"));
-
-    // Add action for .dockerignore
-    if (!existsgDockerignore) {
-      commitActions.push({
-        action: "create",
-        file_path: ".dockerignore",
-        content: encodeBase64(dockerignoreFile),
-        encoding: "base64",
-      });
-    }
-
-    // If no changes were made to either file, show a message to the user
-    if (commitActions.length === 0) {
-      snackbar.value = {
-        show: true,
-        text: "No changes detected in .gitlab-ci.yml. No deployment needed.",
-        color: "info",
-      };
-      return;
-    }
-
-    const commitMessage = `Auto-generated [${commitActions
-      .map((c) => c.file_path)
-      .join(", ")}] for auto CI/CD setup`;
-
-    // GitLab API endpoint to commit changes
-    const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
-
-    // Make API request to commit the Dockerfile and GitLab CI file
-    await axios.post(
-      commitUrl,
-      {
-        branch: project.repository.rootRef,
-        commit_message: commitMessage,
-        actions: commitActions,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      }
+  injectFiles.value.forEach((f, i) => {
+    const originalFile = originalFiles.value.find(
+      (f) => f.fileName === f.fileName
     );
 
-    // If commit is successful, show success message
-    snackbar.value = {
-      show: true,
-      text: commitMessage,
-      color: "success",
-    };
+    if (!originalFile) {
+      return deployFileInfo.value.push({
+        file: f.fileName,
+        action: "insert",
+      });
+    } else if (originalFile.content !== f.content) {
+      return deployFileInfo.value.push({
+        file: f.fileName,
+        action: "update",
+      });
+    }
+  });
 
-    // Close the dialog after deployment
-    dialog.value = false;
-
-    // Show the next steps dialog after a successful deployment
-    setTimeout(() => {
-      nextStepsDialog.value = true; // Show the next steps dialog
-    }, 2000);
-  } catch (err) {
-    console.error("Deployment error:", err);
-    snackbar.value = {
-      show: true,
-      text: "Failed to deploy. Please check the logs or try again.",
-      color: "error",
-    };
-  }
+  confirmDeployDialog.value = true; // Open confirmation dialog
 };
 
 const cancelDeploy = () => {
   confirmDeployDialog.value = false;
 };
 
-const handleClearDockerfile = () => {
-  if (originalDockerfile.value) {
-    // Reset editedDockerfile to the original content
-    editedDockerfile.value = originalDockerfile.value;
-  } else {
-    editedDockerfile.value = null;
-  }
+const handleChangeConfig = (id: string | null) => {
+  if (!id) return (projectConfig.value = { ...unknownConfig });
+
+  if (projectConfig.value.id === id) return;
+
+  projectConfig.value = {
+    ...(frameworks.find((f) => f.id === id) || unknownConfig),
+  };
 };
 
-const setEditDockerfile = (template?: string) => {
-  if (template) {
-    return (editedDockerfile.value =
-      "# This file is a template, and might need editing before it works on your project.\n" +
-      template);
+const getRepositoryFiles = async (
+  filesPaths: string[]
+): Promise<
+  | {
+      success: true;
+      data: { fileName: ManagedFile; content: string }[];
+      error: null;
+    }
+  | { success: false; data: null; error: string }
+> => {
+  if (!authStore.session) {
+    return {
+      success: false,
+      data: null,
+      error: "Unauthorized",
+    };
   }
-  editedDockerfile.value = `# Create your Dockerfile here\n`;
-};
 
-// Function to check if the .gitlab-ci.yml file exists and fetch its content
-const getFileContent = async (filePath: string): Promise<string | null> => {
-  const fileUrl = `${env.GITLAB_URL}/api/v4/projects/${
-    project.id
-  }/repository/files/${encodeURIComponent(filePath)}/raw`;
   try {
-    const response = await axios.get(fileUrl, {
-      headers: {
-        Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
-      },
-    });
-    return response.data;
+    const query = {
+      query: `{
+        project(fullPath: "${project.fullPath}") {
+          repository {
+            blobs(ref: "${
+              project.repository.rootRef
+            }", paths: ["${filesPaths.join('", "')}"]) {
+              edges {
+                node {
+                  name
+                  rawBlob
+                }
+              }
+            }
+          }
+        }
+      }`,
+    };
+
+    const res = await axios.post<{
+      data: {
+        project: {
+          repository: {
+            blobs: {
+              edges: Array<{
+                node: {
+                  name: ManagedFile;
+                  rawBlob: string; // Raw content of the file
+                };
+              }>;
+            };
+          };
+        };
+      };
+      correlationId: string;
+    }>(
+      `${env.GITLAB_URL}/api/graphql`,
+      query,
+
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return {
+      success: true,
+      data: res.data.data.project.repository.blobs.edges.map((n) => ({
+        fileName: n.node.name,
+        content: n.node.rawBlob,
+      })),
+      error: null,
+    };
   } catch (error) {
-    return null; // File doesn't exist
+    if (error instanceof AxiosError) {
+      return {
+        success: false,
+        data: null,
+        error: error.message,
+      };
+    }
+  }
+
+  return {
+    success: false,
+    data: null,
+    error: "Unknown",
+  };
+};
+
+const identifyProjectLanguage = async () => {
+  const langs = project.languages.sort((a, b) => b.share - a.share);
+  const mainLang = langs[0].name.toLowerCase();
+
+  // JavaScript-based projects
+  if (["vue", "tsx", "jsx", "javascript", "typescript"].includes(mainLang)) {
+    // Check if it's a JavaScript project with Vite
+    const packageJsonContent = await getFileContent("package.json");
+
+    if (packageJsonContent && packageJsonContent.includes("vite")) {
+      return (projectConfig.value = { ...viteConfig });
+    }
+  }
+
+  // Python-based projects
+  else if (["python"].includes(mainLang)) {
+    // Check if FastAPI is present in the project (e.g., in requirements.txt or setup.py)
+    const requirementsContent = await getFileContent("requirements.txt");
+
+    if (requirementsContent && requirementsContent.includes("fastapi")) {
+      return (projectConfig.value = { ...fastapiConfig });
+    }
+
+    const setupPyContent = await getFileContent("setup.py");
+    if (setupPyContent && setupPyContent.includes("fastapi")) {
+      return (projectConfig.value = { ...fastapiConfig });
+    }
+  }
+
+  // Default unknown framework
+  return (projectConfig.value = { ...unknownConfig });
+};
+
+const getFileContent = async (filePath: string): Promise<string> => {
+  try {
+    const res = await axios.get<string>(
+      `${env.GITLAB_URL}/api/v4/projects/${
+        project.id
+      }/repository/files/${encodeURIComponent(filePath)}/raw`,
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
+        },
+      }
+    );
+
+    return JSON.stringify(res.data);
+  } catch (error) {
+    if (error instanceof AxiosError && error.status === 404) {
+      return "";
+    }
+
+    throw error;
   }
 };
 
-// Auto gitlab-ci.yml file
-const autoCiFile = `image: moreillon/ci-dind:v1.0.4
-services:
-  - name: docker:24.0.7-dind
+const getDeployableFile = (fileName: ManagedFile) => {
+  const file = injectFiles.value.find((f) => f.fileName === fileName);
 
-deploy-job:
-  stage: deploy 
-  tags:
-    - dind
-  only:
-    - master
-    - main
-  script:
-    - bash <(curl -s http://10.115.1.14/on-premise-k8s-cluster/auto-cicd-provider/-/raw/main/script.sh)
-  environment:
-    name: on-premise
-    kubernetes:
-      namespace: auto-cicd`;
+  if (!file) return;
 
-// TODO: Check if there is no side effect in the containers. It was created with AI
-// General .dockerignore file
-const dockerignoreFile = `# Ignore all .git directories
-.git/
-
-# Ignore all node_modules directories (for Node.js projects)
-node_modules/
-
-# Ignore all log files
-*.log
-
-# Ignore all temporary files (e.g., created by IDEs or editors)
-*.swp
-*.bak
-*.tmp
-*.DS_Store
-Thumbs.db
-
-# Ignore build directories (e.g., for compiled languages)
-dist/
-build/
-target/
-
-# Ignore package manager lock files (to avoid re-installing dependencies unnecessarily)
-package-lock.json
-yarn.lock
-composer.lock
-
-# Ignore Python virtual environments (for Python projects)
-venv/
-env/
-
-# Ignore compiled binary files (e.g., .class for Java, .o for C/C++)
-*.class
-*.o
-
-# Ignore OS-specific files
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# Ignore Docker-related files
-.dockerignore
-Dockerfile
-`;
-
-const getDeployableFile = (fileName: ManagedFiles): string | null => {
-  switch (fileName) {
-    case ".Dockerfile":
-      return editedDockerfile.value;
-    case ".dockerignore":
-      return dockerignoreFile;
-    case ".gitlab-ci.yml":
-      return autoCiFile;
-  }
+  return file.content;
 };
 </script>
 

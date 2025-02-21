@@ -108,27 +108,6 @@
                 >
               </v-col>
             </v-row>
-            <!-- <v-row class="pa-4">
-              <div
-                v-for="(language, index) in project.languages"
-                :key="index"
-                :style="{ width: language.share + '%', padding: 0 }"
-              >
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ props }">
-                    <div
-                      v-bind="props"
-                      class="language-bar"
-                      :style="{
-                        backgroundColor: getLanguageColor(language.name),
-                        height: '20px',
-                      }"
-                    ></div>
-                  </template>
-                  <span>{{ language.name }}</span>
-                </v-tooltip>
-              </div>
-            </v-row> -->
           </v-card-text>
 
           <v-card-actions>
@@ -221,51 +200,6 @@ const getAccessLevelColor = (project: Project): string => {
   }
 };
 
-const getLanguageColor = (language: string): string => {
-  const languageColors: { [key: string]: string } = {
-    // Frontend Frameworks
-    Vue: "#42b883", // Vue.js
-    React: "#61dafb", // React.js (JS)
-    Angular: "#dd0031", // Angular (JS)
-    Svelte: "#ff3e00", // Svelte (JS)
-    Ember: "#f05e28", // Ember.js
-    // JS Languages/Types
-    TypeScript: "#3178c6", // TypeScript
-    JavaScript: "#f7df1e", // JavaScript
-    JSX: "#61dafb", // JSX
-    TSX: "#3178c6", // TSX
-    // Static Languages
-    HTML: "#e34c26", // HTML
-    Dockerfile: "#384d54", // Dockerfile
-    CSS: "#563d7c", // CSS
-    Python: "#306998", // Python
-    Ruby: "#e53e3e", // Ruby
-    Go: "#00add8", // Go
-    "C++": "#00599c", // C++
-    Swift: "#f05138", // Swift
-    PHP: "#4F5B93", // PHP
-    C: "#00599C", // C
-    Java: "#f8b800", // Java
-    Kotlin: "#7f52ff", // Kotlin
-    R: "#276DC3", // R
-    Scala: "#DC322F", // Scala
-    Rust: "#dea584", // Rust
-    Elixir: "#6e4a7e", // Elixir
-    Lua: "#000080", // Lua
-    Dart: "#00B4AB", // Dart
-    ObjectiveC: "#6766fb", // Objective-C
-    // More
-    Markdown: "#083fa1", // Markdown files
-    GraphQL: "#e10098", // GraphQL
-    JSON: "#f7df1e", // JSON (JavaScript Object Notation)
-    YAML: "#ffcc00", // YAML
-    XML: "#0060e2", // XML
-    SQL: "#f29111", // SQL
-    Shell: "#89e051", // Shell Script (Bash, etc.)
-  };
-  return languageColors[language] || "#cccccc"; // Default to gray if no match
-};
-
 const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString(undefined, {
     year: "numeric",
@@ -350,6 +284,7 @@ const fetchAllProjects = async (): Promise<Project[]> => {
                 description
                 name
                 webUrl
+                fullPath
                 languages {
                   name
                   share
@@ -357,6 +292,7 @@ const fetchAllProjects = async (): Promise<Project[]> => {
                 namespace {
                   name
                   fullPath
+                  path
                   webUrl
                 }
                 lastActivityAt
@@ -387,10 +323,14 @@ const fetchAllProjects = async (): Promise<Project[]> => {
       const projects = res.data.data.projects.edges;
       // Append the current page's projects to the allProjects array
       allProjects = allProjects.concat(
-        projects.map((project) => ({
-          ...project.node,
-          deploying: false, // Add any other properties you need
-        }))
+        projects.map((project) => {
+          const id = project.node.id.match(/\/(\d+)$/);
+          return {
+            ...project.node,
+            id: id ? id[1] : "",
+            deploying: false, // Add any other properties you need
+          };
+        })
       );
 
       // Update pagination info

@@ -20,7 +20,7 @@ interface Language {
 
 interface Namespace {
   name: string;
-  fullPath: string;
+  path: string;
   webUrl: string;
 }
 
@@ -34,6 +34,7 @@ interface ProjectNode {
   description: string | null;
   name: string;
   webUrl: string;
+  fullPath: string;
   languages: Language[];
   namespace: Namespace;
   lastActivityAt: string; // ISO 8601 date string
