@@ -27,5 +27,5 @@ spec:
   selector:
     app: ${APPLICATION_NAME}
   ports:
-    - port: ${PORT}
+    - port: 80
       nodePort: ${K8S_NODEPORT}
