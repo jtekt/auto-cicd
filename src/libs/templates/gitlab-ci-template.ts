@@ -17,7 +17,10 @@ export const generateGitLabCI = async (
 
     // Replace placeholders with the actual values
     let gitlabCI = template;
-    gitlabCI = gitlabCI.replace(/{ APPLICATION_NAME }/g, project.name); // Set application name from config
+    gitlabCI = gitlabCI.replace(
+      /{ APPLICATION_NAME }/g,
+      project.name.replace(/\s+/g, "-")
+    ); // Set application name from config
     gitlabCI = gitlabCI.replace(/{ NAMESPACE }/g, config.id); // Set application name from config
 
     return gitlabCI;
