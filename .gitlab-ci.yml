@@ -102,32 +102,32 @@ deploy-job:
     # Deploy the app to Kubernetes using the Kubernetes manifest
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 
-      KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
+    - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
 
+    - |
       if [[ -z "$KUBECTL_GET_SVC" ]]; then
         echo "Error: Could not find service port for $APPLICATION_NAME"
         exit 1
       fi
 
-      PORT=$(sed 's/.*80:\(.*\)\/TCP.*/\1/' <<< "$KUBECTL_GET_SVC")
+    - PORT=$(sed 's/.*80:\(.*\)\/TCP.*/\1/' <<< "$KUBECTL_GET_SVC")
 
-      echo "The APP is available at http://172.16.98.151:$PORT"
+    - echo "The APP is available at http://172.16.98.151:$PORT"
 
-      if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then 
-      
+    - |
+      if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
         echo "Deployment was newly created, Notifying user by email"
 
         docker run \
-        -e SMTP_PORT=$AWS_SES_PORT \
-        -e SMTP_HOST=$AWS_SES_HOST \
-        -e SMTP_USERNAME=$AWS_SES_USERNAME \
-        -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
-        -e SMTP_TO=$GITLAB_USER_EMAIL \
-        -e SMTP_FROM=$AWS_SES_FROM \
-        -e SMTP_SUBJECT="Auto CICD" \
-        -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://172.16.98.151:$PORT. Please note that it might take a few minutes for the application to start." \
-        moreillon/sendemail
-
+          -e SMTP_PORT=$AWS_SES_PORT \
+          -e SMTP_HOST=$AWS_SES_HOST \
+          -e SMTP_USERNAME=$AWS_SES_USERNAME \
+          -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
+          -e SMTP_TO=$GITLAB_USER_EMAIL \
+          -e SMTP_FROM=$AWS_SES_FROM \
+          -e SMTP_SUBJECT="Auto CICD" \
+          -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://172.16.98.151:$PORT. Please note that it might take a few minutes for the application to start." \
+          moreillon/sendemail
       else
         echo "Deployment was just updated, no need to notify user"
       fi
