@@ -1,5 +1,5 @@
 <template>
-  <v-card class="code-editor">
+  <v-card class="code-editor" style="padding: 0">
     <div class="editor-card-container">
       <div v-if="showLineNumbers" class="line-numbers pr-2">
         <div

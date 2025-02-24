@@ -5,28 +5,30 @@ import type {
 import { generateDockerfile } from "./dockerfile-template";
 import { generateGitLabCI } from "./gitlab-ci-template";
 import { generateKubernetesManifest } from "./kubernetes-manifest-template";
-import { generateNginxConfig } from "./nginx-template";
+import { generateNginxConf } from "./nginx-template";
+import type { Project } from "@/types/project";
 
-export const generateFiles = (
-  config: ProjectConfig
-): { fileName: ManagedFile; content: string }[] => {
+export const generateFiles = async (
+  config: ProjectConfig,
+  project: Project
+): Promise<{ fileName: ManagedFile; content: string }[]> => {
   const generatedFiles: { fileName: ManagedFile; content: string }[] = [];
 
   // Generate Dockerfile
   if (config.files.includes("Dockerfile")) {
-    const dockerfile = generateDockerfile(config);
+    const dockerfile = await generateDockerfile(config);
     generatedFiles.push({ fileName: "Dockerfile", content: dockerfile });
   }
 
   // Generate .gitlab-ci.yml
   if (config.files.includes(".gitlab-ci.yml")) {
-    const gitlabCi = generateGitLabCI(config);
+    const gitlabCi = await generateGitLabCI(config, project);
     generatedFiles.push({ fileName: ".gitlab-ci.yml", content: gitlabCi });
   }
 
   // Generate kubernetes_manifest.yml
   if (config.files.includes("kubernetes_manifest.yml")) {
-    const k8sManifest = generateKubernetesManifest(config);
+    const k8sManifest = await generateKubernetesManifest(config);
     generatedFiles.push({
       fileName: "kubernetes_manifest.yml",
       content: k8sManifest,
@@ -35,7 +37,7 @@ export const generateFiles = (
 
   // Generate nginx.conf
   if (config.files.includes("nginx.conf")) {
-    const nginxConf = generateNginxConfig(config);
+    const nginxConf = await generateNginxConf(config);
     generatedFiles.push({ fileName: "nginx.conf", content: nginxConf });
   }
 

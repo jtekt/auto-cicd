@@ -1,20 +1,23 @@
 import type { ProjectConfig } from "@/components/DeployHandler.vue";
 
-export const generateNginxConfig = (config: ProjectConfig): string => {
-  return `server {
-    listen 80;
-    server_name localhost;
-  
-    location / {
-      root /usr/share/nginx/html;
-      index index.html index.htm;
-      try_files $uri $uri/ /index.html;
+export const generateNginxConf = async (
+  config: ProjectConfig
+): Promise<string> => {
+  try {
+    // Fetch the nginx.conf template
+    const templatePath = `/templates/${config.id}/nginx.conf.template`;
+    const response = await fetch(templatePath);
+
+    if (!response.ok) {
+      console.error("Nginx template not found for framework:", config.id);
+      return "# Error: Template not found";
     }
-  
-    error_page  500 502 503 504  /50x.html;
-    location = /50x.html {
-      root /usr/share/nginx/html;
-    }
+
+    const template = await response.text();
+
+    return template;
+  } catch (error) {
+    console.error("Error loading Nginx config template:", error);
+    return "# Error loading Nginx config template";
   }
-  `;
 };

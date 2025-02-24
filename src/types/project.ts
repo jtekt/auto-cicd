@@ -22,6 +22,7 @@ interface Namespace {
   name: string;
   path: string;
   webUrl: string;
+  fullPath: string;
 }
 
 export interface MaxAccessLevel {

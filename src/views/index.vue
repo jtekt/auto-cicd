@@ -120,7 +120,7 @@
               <v-icon start icon="mdi-gitlab"></v-icon>
               GitLab
             </v-btn>
-            <DeployBtn v-if="!!project" :project="project" />
+            <DeployBtn :project="project" />
           </v-card-actions>
         </v-card>
       </v-col>
@@ -332,6 +332,8 @@ const fetchAllProjects = async (): Promise<Project[]> => {
           };
         })
       );
+
+      console.log(allProjects);
 
       // Update pagination info
       hasNextPage = res.data.data.projects.pageInfo.hasNextPage;

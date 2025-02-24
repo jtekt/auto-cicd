@@ -1,20 +1,28 @@
 import type { ProjectConfig } from "@/components/DeployHandler.vue";
+import type { Project } from "@/types/project";
 
-export const generateGitLabCI = (config: ProjectConfig): string => {
-  let gitlabCI = `stages:\n  - build\n  - deploy\n\n`;
-  gitlabCI += `build:\n`;
-  gitlabCI += `  stage: build\n`;
-  gitlabCI += `  script:\n`;
-  gitlabCI += `    - ${config.buildCommand}\n`;
-  gitlabCI += `    - docker build -t ${config.id} .\n`;
-  gitlabCI += `  artifacts:\n`;
-  gitlabCI += `    paths:\n`;
-  gitlabCI += `      - ${config.outputDir}\n\n`;
+export const generateGitLabCI = async (
+  config: ProjectConfig,
+  project: Project
+): Promise<string> => {
+  try {
+    const response = await fetch(`/templates/.gitlab-ci-template.yml`);
 
-  gitlabCI += `deploy:\n`;
-  gitlabCI += `  stage: deploy\n`;
-  gitlabCI += `  script:\n`;
-  gitlabCI += `    - docker push ${config.id}\n`;
+    if (!response.ok) {
+      console.error("Error gitlab ci template not found");
+      return "# Error: Template not found";
+    }
 
-  return gitlabCI;
+    const template = await response.text();
+
+    // Replace placeholders with the actual values
+    let gitlabCI = template;
+    gitlabCI = gitlabCI.replace(/{ APPLICATION_NAME }/g, project.name); // Set application name from config
+    gitlabCI = gitlabCI.replace(/{ NAMESPACE }/g, config.id); // Set application name from config
+
+    return gitlabCI;
+  } catch (error) {
+    console.error("Error loading GitLab CI template:", error);
+    return "# Error loading GitLab CI template";
+  }
 };
