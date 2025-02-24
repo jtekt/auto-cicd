@@ -259,13 +259,10 @@
     max-height="90vh"
   >
     <v-card>
-      <template v-slot:title>
-        {{ t("nextStepsTitle") }}
-      </template>
+      <template v-slot:title> Process Completed! </template>
       <v-card-text>
         <v-alert variant="tonal">
-          <p>{{ t("nextStepsMessage1") }}</p>
-          <p>{{ t("nextStepsMessage2") }}</p>
+          <p v-for="m in nextStepsMessages">{{ m }}</p>
         </v-alert>
       </v-card-text>
       <v-card-actions>
@@ -309,6 +306,8 @@ const actionNeeded = ref<
 >([]);
 const confirmDeployDialog = ref(false);
 const nextStepsDialog = ref(false);
+
+const nextStepsMessages = ref<string[]>([]);
 
 type AcceptedFrameworks = "vite" | "fastapi" | "unknown";
 
@@ -547,6 +546,12 @@ const confirmDeploy = async () => {
 
     // If commit is successful, show success message
     showSnackbar(commitMessage, "success");
+
+    nextStepsMessages.value = [
+      "The deployment has been successfully completed, and the following files have been inserted into your repository:",
+      ...commitActions.map((c, i) => `${i + 1}. ${c.file_path} - ${c.action}`),
+      "You can now review the changes by checking the job logs in GitLab. If this is your first deployment, you will also receive an email with the URL to your project.",
+    ];
 
     // Close the dialog after deployment
     dialog.value = false;
