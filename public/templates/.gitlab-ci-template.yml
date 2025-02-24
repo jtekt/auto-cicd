@@ -13,7 +13,7 @@ variables:
   CONTAINER_IMAGE_NAME: { APPLICATION_NAME }
   CONTAINER_IMAGE: ${AWS_ECR_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  K8S_NAMESPACE: { NAMESPACE }
+  K8S_NAMESPACE: auto-cicd
   K8S_ECR_SECRET_NAME: ecr-credentials
   PORT: 80
 
@@ -25,6 +25,10 @@ validate-job:
       echo "Validating environment variables..."
       if [ -z "$APPLICATION_NAME" ]; then
         echo "ERROR: APPLICATION_NAME is not set!"
+        exit 1
+      fi
+      if [ -z "$K8S_NAMESPACE" ]; then
+        echo "ERROR: K8S_NAMESPACE is not set!"
         exit 1
       fi
       if [ -z "$AWS_ECR_URL" ]; then
@@ -76,7 +80,7 @@ build-job:
       --password-stdin
       ${AWS_ECR_URL}
   script:
-    # Build the container image with Vite output
+    # Build the container image
     - docker build -t ${CONTAINER_IMAGE_TAGGED} .
     # Push container images to registry
     - docker push ${CONTAINER_IMAGE_TAGGED}
@@ -100,26 +104,36 @@ deploy-job:
       | kubectl apply -f -
   script:
     # Deploy the app to Kubernetes using the Kubernetes manifest
-    - envsubst < kubernetes_manifest.yml | kubectl apply -f -
-      KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
+    - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
+
+    - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
+
+    - |
+      if [[ -z "$KUBECTL_GET_SVC" ]]; then
+        echo "Error: Could not find service port for $APPLICATION_NAME"
+        exit 1
+      fi
+
+    - PORT=$(sed 's/.*80:\(.*\)\/TCP.*/\1/' <<< "$KUBECTL_GET_SVC")
+
+    - echo "The APP is available at http://172.16.98.151:$PORT"
+
+    - |
       if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
-      echo "Deployment was newly created, Notifying user by email"
-      KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
-      PORT=$(sed 's/.*80:\(.*\)\/TCP.*/\1/' <<< "$KUBECTL_GET_SVC")
+        echo "Deployment was newly created, Notifying user by email"
 
-      docker run \
-      -e SMTP_PORT=$AWS_SES_PORT \
-      -e SMTP_HOST=$AWS_SES_HOST \
-      -e SMTP_USERNAME=$AWS_SES_USERNAME \
-      -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
-      -e SMTP_TO=$GITLAB_USER_EMAIL \
-      -e SMTP_FROM=$AWS_SES_FROM \
-      -e SMTP_SUBJECT="Auto CICD" \
-      -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://172.16.98.151:$PORT. Please note that it might take a few minutes for the application to start." \
-      moreillon/sendemail
-
+        docker run \
+          -e SMTP_PORT=$AWS_SES_PORT \
+          -e SMTP_HOST=$AWS_SES_HOST \
+          -e SMTP_USERNAME=$AWS_SES_USERNAME \
+          -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
+          -e SMTP_TO=$GITLAB_USER_EMAIL \
+          -e SMTP_FROM=$AWS_SES_FROM \
+          -e SMTP_SUBJECT="Auto CICD" \
+          -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://172.16.98.151:$PORT. Please note that it might take a few minutes for the application to start." \
+          moreillon/sendemail
       else
-      echo "Deployment was just updated, no need to notify user"
+        echo "Deployment was just updated, no need to notify user"
       fi
 
   environment:

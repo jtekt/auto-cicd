@@ -21,7 +21,6 @@ export const generateGitLabCI = async (
       /{ APPLICATION_NAME }/g,
       project.name.replace(/\s+/g, "-")
     ); // Set application name from config
-    gitlabCI = gitlabCI.replace(/{ NAMESPACE }/g, config.id); // Set application name from config
 
     return gitlabCI;
   } catch (error) {
