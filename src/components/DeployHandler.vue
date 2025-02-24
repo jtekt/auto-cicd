@@ -238,7 +238,7 @@
       </v-card-text>
       <v-card-actions>
         <v-btn
-          v-if="deployFileInfo.length > 0"
+          v-if="injectFiles.length > 0"
           color="primary"
           variant="tonal"
           @click="confirmDeploy"
@@ -375,9 +375,6 @@ const snackbar = ref({
 const authStore = useAuthStore();
 
 type CommitActions = "create" | "update" | "delete" | "move" | "chmod";
-
-// Tracks the information of files that will be inserted or updated
-const deployFileInfo = ref<{ file: ManagedFile; action: CommitActions }[]>([]);
 
 // Called to open the dialog
 const handleDeployBtn = async () => {
