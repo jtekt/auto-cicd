@@ -102,10 +102,13 @@ deploy-job:
     # Deploy the app to Kubernetes using the Kubernetes manifest
     - envsubst < kubernetes_manifest.yml | kubectl apply -f -
       KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
-      if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
-      echo "Deployment was newly created, Notifying user by email"
+
+      if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then echo "Deployment was newly created, Notifying user by email"
+
       KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
       PORT=$(sed 's/.*80:\(.*\)\/TCP.*/\1/' <<< "$KUBECTL_GET_SVC")
+
+      echo "The APP url is http://172.16.98.151:$PORT"
 
       docker run \
       -e SMTP_PORT=$AWS_SES_PORT \
