@@ -16,14 +16,23 @@ export const generateDockerfile = async (
     if (config.installCommand)
       dockerfile = dockerfile.replace(
         /{installCommand}/g,
-        config.installCommand
+        config.installCommand.toLowerCase()
       );
     if (config.buildCommand)
-      dockerfile = dockerfile.replace(/{buildCommand}/g, config.buildCommand);
+      dockerfile = dockerfile.replace(
+        /{buildCommand}/g,
+        config.buildCommand.toLowerCase()
+      );
     if (config.outputDir)
-      dockerfile = dockerfile.replace(/{outputDir}/g, config.outputDir);
+      dockerfile = dockerfile.replace(
+        /{outputDir}/g,
+        config.outputDir.toLowerCase()
+      );
     if (config.rootDir)
-      dockerfile = dockerfile.replace(/{rootDir}/g, config.rootDir);
+      dockerfile = dockerfile.replace(
+        /{rootDir}/g,
+        config.rootDir.toLowerCase()
+      );
 
     return dockerfile;
   } catch (error) {
