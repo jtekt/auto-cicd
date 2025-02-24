@@ -14,21 +14,18 @@ spec:
     spec:
       containers:
         - name: ${APPLICATION_NAME}
-          image: ${CONTAINER_IMAGE}
-          envFrom:
-            - secretRef:
-                name: ${K8S_ENV_SECRET_NAME}
+          image: ${CONTAINER_IMAGE_TAGGED}
       imagePullSecrets:
         - name: ${K8S_ECR_SECRET_NAME}
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: ${APPLICATION_NAME}
 spec:
-  ports:
-    - port: ${PORT}
+  type: NodePort
   selector:
     app: ${APPLICATION_NAME}
-  type: NodePort
+  ports:
+    - port: ${PORT}
+      nodePort: ${K8S_NODEPORT}
