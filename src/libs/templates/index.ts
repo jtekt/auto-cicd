@@ -22,7 +22,7 @@ export const generateFiles = async (
 
   // Generate .gitlab-ci.yml
   if (config.files.includes(".gitlab-ci.yml")) {
-    const gitlabCi = await generateGitLabCI(config, project);
+    const gitlabCi = await generateGitLabCI(project);
     generatedFiles.push({ fileName: ".gitlab-ci.yml", content: gitlabCi });
   }
 

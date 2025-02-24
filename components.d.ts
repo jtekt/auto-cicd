@@ -11,7 +11,6 @@ declare module 'vue' {
     CodeEditor: typeof import('./src/components/CodeEditor.vue')['default']
     DefaultLayout: typeof import('./src/components/DefaultLayout.vue')['default']
     DeployHandler: typeof import('./src/components/DeployHandler.vue')['default']
-    HandleConfirmDeploy: typeof import('./src/components/HandleConfirmDeploy.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

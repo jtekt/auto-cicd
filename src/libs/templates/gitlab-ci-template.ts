@@ -1,10 +1,6 @@
-import type { ProjectConfig } from "@/components/DeployHandler.vue";
 import type { Project } from "@/types/project";
 
-export const generateGitLabCI = async (
-  config: ProjectConfig,
-  project: Project
-): Promise<string> => {
+export const generateGitLabCI = async (project: Project): Promise<string> => {
   try {
     const response = await fetch(`/templates/.gitlab-ci-template.yml`);
 

@@ -25,6 +25,9 @@
             >{{ action.posDescription }}.
           </v-list-item>
         </v-list>
+        <RouterLink to="/faq#move-project"
+          >How to move a project to another group</RouterLink
+        >
       </v-card-text>
       <v-card-actions>
         <v-btn color="primary" @click="actionNeededDialog = false">{{

@@ -40,7 +40,7 @@
     </v-row>
   </v-container>
 
-  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="4000">
+  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="5000">
     {{ snackbar.text }}
   </v-snackbar>
 </template>
