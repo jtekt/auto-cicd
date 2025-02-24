@@ -7,9 +7,13 @@
 // Composables
 import DefaultLayout from "@/components/DefaultLayout.vue";
 import { useAuthStore } from "@/stores/auth";
-import { createRouter, createWebHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  type RouteRecordRaw,
+} from "vue-router";
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: DefaultLayout,
@@ -18,6 +22,9 @@ const routes = [
         path: "",
         name: "Home",
         component: () => import("@/views/index.vue"),
+        meta: {
+          protected: true,
+        },
       },
       {
         path: "/auth",

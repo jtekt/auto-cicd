@@ -66,7 +66,9 @@
             <h3 class="h3">You are not Authenticated</h3>
           </div>
         </template>
-        <router-view />
+        <template v-if="!route.meta.protected || authStore.isAuthenticated()">
+          <router-view />
+        </template>
       </v-container>
     </v-main>
 
