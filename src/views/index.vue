@@ -263,7 +263,7 @@ const fetchAllProjects = async (): Promise<Project[]> => {
   let hasNextPage = true;
   let endCursor: string | null = null;
   let res: AxiosResponse<ProjectsResponse, any> | null = null;
-  // Loop until all pages are fetched
+
   while (hasNextPage) {
     try {
       res = await axios.post<ProjectsResponse>(
