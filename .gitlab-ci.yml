@@ -31,10 +31,6 @@ validate-job:
         echo "ERROR: AWS_ECR_URL is not set!"
         exit 1
       fi
-      if [ -z "$NAMESPACE" ]; then
-        echo "ERROR: NAMESPACE is not set!"
-        exit 1
-      fi
       if [ -z "$AWS_SES_PORT" ]; then
         echo "ERROR: AWS_SES_PORT is not set!"
         exit 1
