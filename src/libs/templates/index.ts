@@ -6,11 +6,11 @@ import { generateDockerfile } from "./dockerfile-template";
 import { generateGitLabCI } from "./gitlab-ci-template";
 import { generateKubernetesManifest } from "./kubernetes-manifest-template";
 import { generateNginxConf } from "./nginx-template";
-import type { Project } from "@/types/project";
+import type { ProjectNode } from "@/types/project";
 
 export const generateFiles = async (
   config: ProjectConfig,
-  project: Project
+  project: ProjectNode
 ): Promise<{ fileName: ManagedFile; content: string }[]> => {
   const generatedFiles: { fileName: ManagedFile; content: string }[] = [];
 
@@ -22,7 +22,7 @@ export const generateFiles = async (
 
   // Generate .gitlab-ci.yml
   if (config.files.includes(".gitlab-ci.yml")) {
-    const gitlabCi = await generateGitLabCI(project);
+    const gitlabCi = await generateGitLabCI(config, project);
     generatedFiles.push({ fileName: ".gitlab-ci.yml", content: gitlabCi });
   }
 

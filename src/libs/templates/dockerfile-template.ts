@@ -34,6 +34,9 @@ export const generateDockerfile = async (
         config.rootDir.toLowerCase()
       );
 
+    const port = config.port ? config.port.toString() : "80";
+    dockerfile = dockerfile.replace(/{PORT}/g, port);
+
     return dockerfile;
   } catch (error) {
     console.error("Error loading Dockerfile template:", error);

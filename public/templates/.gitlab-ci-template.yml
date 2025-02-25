@@ -15,7 +15,7 @@ variables:
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
   K8S_NAMESPACE: auto-cicd
   K8S_ECR_SECRET_NAME: ecr-credentials
-  PORT: 80
+  PORT: { PORT }
 
 # Validate the environment variables
 validate-job:

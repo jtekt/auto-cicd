@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { getSession, SessionSchema, type Session } from "@/libs/auth";
 import router from "@/router";
-import { refreshAccessToken } from "@/libs/gitlab";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({

@@ -4,10 +4,10 @@
     <v-expansion-panels>
       <!-- FAQ 1: How to Move a Repository -->
       <v-expansion-panel id="move-project">
-        <v-expansion-panel-title
-          >How to Move a Repository to Another Namespace in
-          GitLab</v-expansion-panel-title
-        >
+        <v-expansion-panel-title>
+          How to Move a Repository to Another Namespace in
+          GitLab
+        </v-expansion-panel-title>
         <v-expansion-panel-text>
           <v-list lines="one">
             <v-list-item>

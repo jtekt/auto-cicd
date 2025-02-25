@@ -19,7 +19,7 @@ http {
 
     # Basic server block to serve static files
   server {
-    listen 80;  # Port for Nginx to listen on
+    listen {PORT};  # Port for Nginx to listen on
     server_name localhost;  # Server name (use your domain name or IP address)
 
     root /usr/share/nginx/html;  # Path to the static files

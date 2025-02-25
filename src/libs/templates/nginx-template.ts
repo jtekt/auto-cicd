@@ -13,9 +13,11 @@ export const generateNginxConf = async (
       return "# Error: Template not found";
     }
 
-    const template = await response.text();
+    let nginx = await response.text();
 
-    return template;
+    nginx = nginx.replace(/{PORT}/g, config.port?.toString() || "80"); // Set application port from config
+
+    return nginx;
   } catch (error) {
     console.error("Error loading Nginx config template:", error);
     return "# Error loading Nginx config template";

@@ -1,35 +1,50 @@
 <template>
   <v-app :theme="theme">
-    <v-app-bar elevation="1" style="position: fixed">
+    <v-app-bar
+      elevation="1"
+      style="position: fixed"
+    >
       <v-container class="d-flex align-center">
         <RouterLink
           to="/"
           class="d-flex align-center mr-auto text-decoration-none"
         >
-          <v-img src="/JTEKT_logo.jpg" alt="JTEK logo" width="120" contain />
+          <v-img
+            src="/JTEKT_logo.jpg"
+            alt="JTEK logo"
+            width="120"
+            contain
+          />
         </RouterLink>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           :icon="theme === 'light' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
           @click="toggleTheme"
-        ></v-btn>
+        />
         <v-btn
           :text="current === 'en' ? '日本語' : 'EN'"
           @click="setLanguage(current === 'en' ? 'ja' : 'en')"
-        ></v-btn>
+        />
         <v-btn
           v-if="!!authStore.session"
           icon="mdi-logout"
           class="ml-4"
           @click="authStore.logout"
-        >
-        </v-btn>
+        />
       </v-container>
     </v-app-bar>
 
     <v-main>
-      <v-container style="height: 100%" class="py-8 d-flex flex-column">
-        <v-row v-if="isLoading" justify="center" align="center" style="flex: 1">
+      <v-container
+        style="height: 100%"
+        class="py-8 d-flex flex-column"
+      >
+        <v-row
+          v-if="isLoading"
+          justify="center"
+          align="center"
+          style="flex: 1"
+        >
           <AppLoader />
         </v-row>
         <template v-else-if="authStore.session">
@@ -39,13 +54,18 @@
         </template>
         <template v-else-if="route.meta.protected">
           <div class="d-flex justify-center">
-            <h3 class="h3">You are not Authenticated</h3>
+            <h3 class="h3">
+              You are not Authenticated
+            </h3>
           </div>
         </template>
       </v-container>
     </v-main>
 
-    <v-footer app class="d-flex flex-column bg-black">
+    <v-footer
+      app
+      class="d-flex flex-column bg-black"
+    >
       <div class="px-4 py-2 text-center w-100">
         {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
       </div>

@@ -1,5 +1,7 @@
 import type { ProjectConfig } from "@/components/DeployHandler.vue";
 
+export type AcceptedFrameworks = "vite" | "nuxt" | "unknown";
+
 const frameworksConfig: Record<string, ProjectConfig> = {
   vite: {
     id: "vite",
@@ -19,25 +21,33 @@ const frameworksConfig: Record<string, ProjectConfig> = {
       "kubernetes_manifest.yml",
       "nginx.conf",
     ],
-    configFile: "package.json",
-    checkFor: "vite",
+    configFiles: [
+      {
+        file: "package.json",
+        checkFor: "vite",
+      },
+    ],
   },
-  // fastapi: {
-  //   id: "fastapi",
-  //   name: "FastAPI",
-  //   image: {
-  //     type: "img",
-  //     value: "/icons/FastAPI.svg",
-  //   },
-  //   langs: ["python"],
-  //   buildCommand: "uvicorn app:app --reload",
-  //   installCommand: "pip install -r requirements.txt",
-  //   outputDir: "static",
-  //   rootDir: "./",
-  //   files: [".gitlab-ci.yml", "Dockerfile", "kubernetes_manifest.yml"],
-  //   configFiles: ["requirements.txt", "setup.py"],
-  //   checkFor: "fastapi",
-  // },
+  nuxt: {
+    id: "nuxt",
+    name: "Nuxt",
+    image: {
+      type: "img",
+      value: "/icons/Nuxt.svg",
+    },
+    langs: ["vue", "typescript", "javascript"],
+    buildCommand: "npm run build",
+    installCommand: "npm install",
+    outputDir: ".output",
+    rootDir: "./",
+    files: [".gitlab-ci.yml", "Dockerfile", "kubernetes_manifest.yml"],
+    configFiles: [
+      {
+        file: "package.json",
+        checkFor: "nuxt",
+      },
+    ],
+  },
   unknown: {
     id: "unknown",
     name: "Unknown Framework",

@@ -1,6 +1,10 @@
-import type { Project } from "@/types/project";
+import type { ProjectConfig } from "@/components/DeployHandler.vue";
+import type { ProjectNode } from "@/types/project";
 
-export const generateGitLabCI = async (project: Project): Promise<string> => {
+export const generateGitLabCI = async (
+  config: ProjectConfig,
+  project: ProjectNode
+): Promise<string> => {
   try {
     const response = await fetch(`/templates/.gitlab-ci-template.yml`);
 
@@ -9,14 +13,14 @@ export const generateGitLabCI = async (project: Project): Promise<string> => {
       return "# Error: Template not found";
     }
 
-    const template = await response.text();
+    let gitlabCI = await response.text();
 
     // Replace placeholders with the actual values
-    let gitlabCI = template;
     gitlabCI = gitlabCI.replace(
       /{ APPLICATION_NAME }/g,
       project.name.toLowerCase().replace(/[\s_]+/g, "-")
     ); // Set application name from config
+    gitlabCI = gitlabCI.replace(/{ PORT }/g, config.port?.toString() || "80"); // Set application port from config
 
     return gitlabCI;
   } catch (error) {

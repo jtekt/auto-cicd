@@ -1,6 +1,6 @@
 <template>
   <v-btn :color="'success'" variant="tonal" @click="handleDeployBtn()">
-    <v-icon start icon="mdi-rocket-launch-outline"></v-icon>
+    <v-icon start icon="mdi-rocket-launch-outline" />
     {{ t("pages.home.deploy.deploy") }}
   </v-btn>
 
@@ -13,7 +13,7 @@
   >
     <v-card>
       <!-- <template v-slot:title>{{ t("actionNeededTitle") }}</template> -->
-      <template v-slot:title>Actions needed to deploy the app</template>
+      <template #title> Actions needed to deploy the app </template>
       <v-card-text>
         <v-list>
           <v-list-item v-for="(action, index) in actionNeeded" :key="index">
@@ -25,21 +25,21 @@
             >{{ action.posDescription }}.
           </v-list-item>
         </v-list>
-        <RouterLink to="/faq#move-project"
-          >How to move a project to another group</RouterLink
-        >
+        <RouterLink to="/faq#move-project">
+          How to move a project to another group
+        </RouterLink>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" @click="actionNeededDialog = false">{{
-          t("close")
-        }}</v-btn>
+        <v-btn color="primary" @click="actionNeededDialog = false">
+          {{ t("close") }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
   <v-dialog v-model="dialog" width="500" max-width="90vw" max-height="90vh">
     <v-card style="height: 100%; width: 100%">
-      <template v-slot:title>
+      <template #title>
         <h3 class="text-lg-center">Deploy Project</h3>
       </template>
 
@@ -93,9 +93,9 @@
                   width="28"
                   height="28"
                 />
-                <v-icon style="font-size: 28px" v-else>{{
-                  item.raw.image.value
-                }}</v-icon>
+                <v-icon v-else style="font-size: 28px">
+                  {{ item.raw.image.value }}
+                </v-icon>
                 {{ item.raw.name }}
               </div>
             </template>
@@ -113,16 +113,21 @@
                     : undefined
                 "
                 style="font-size: 28px"
-              >
-              </v-list-item>
+              />
             </template>
           </v-select>
-          <v-expansion-panels :disabled="projectConfig.id === 'unknown'">
+          <v-expansion-panels v-if="projectConfig.id !== 'unknown'">
             <v-expansion-panel>
-              <v-expansion-panel-title
-                >Build and Output Settings</v-expansion-panel-title
-              >
+              <v-expansion-panel-title>
+                Build and Output Settings
+              </v-expansion-panel-title>
               <v-expansion-panel-text>
+                <p class="mb-4 text-subtitle-2 font-weight-light">
+                  These are the default configurations for a
+                  <strong>{{ projectConfig.name }}</strong> project. If your
+                  project requires different settings, you can modify them as
+                  needed
+                </p>
                 <v-text-field
                   v-model="projectConfig.rootDir"
                   label="Root Directory"
@@ -130,10 +135,10 @@
                   :class="
                     projectConfig.rootDir ===
                     selectedFrameworkOriginalConfig.rootDir
-                      ? 'font-weight-thin'
-                      : ''
+                      ? ''
+                      : 'text-warning'
                   "
-                ></v-text-field>
+                />
                 <v-text-field
                   v-model="projectConfig.buildCommand"
                   label="Build Command"
@@ -141,10 +146,10 @@
                   :class="
                     projectConfig.buildCommand ===
                     selectedFrameworkOriginalConfig.buildCommand
-                      ? 'font-weight-thin'
-                      : ''
+                      ? ''
+                      : 'text-warning'
                   "
-                ></v-text-field>
+                />
                 <v-text-field
                   v-model="projectConfig.outputDir"
                   label="Output Directory"
@@ -152,10 +157,10 @@
                   :class="
                     projectConfig.outputDir ===
                     selectedFrameworkOriginalConfig.outputDir
-                      ? 'font-weight-thin'
-                      : ''
+                      ? ''
+                      : 'text-warning'
                   "
-                ></v-text-field>
+                />
                 <v-text-field
                   v-model="projectConfig.installCommand"
                   label="Install Command"
@@ -163,30 +168,32 @@
                   :class="
                     projectConfig.installCommand ===
                     selectedFrameworkOriginalConfig.installCommand
-                      ? 'font-weight-thin'
-                      : ''
+                      ? ''
+                      : 'text-warning'
                   "
-                ></v-text-field
-              ></v-expansion-panel-text>
+                >
+                  <p />
+                </v-text-field>
+              </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
         </div>
       </template>
 
       <!-- Actions and Deploy Button -->
-      <template v-slot:actions>
+      <template #actions>
         <v-btn
           color="success"
           variant="tonal"
           :text="t('pages.home.deploy.deploy')"
-          @click="handleDeploy"
           :disabled="projectConfig.id === 'unknown'"
-        ></v-btn>
+          @click="handleDeploy"
+        />
         <v-btn
           variant="tonal"
           :text="t('pages.home.deploy.cancel')"
           @click="dialog = false"
-        ></v-btn>
+        />
       </template>
     </v-card>
   </v-dialog>
@@ -200,7 +207,7 @@
     max-height="90vh"
   >
     <v-card prepend-icon="mdi-check-all">
-      <template v-slot:title>
+      <template #title>
         {{ t("pages.home.deploy.confirmDeployTitle") }}
       </template>
       <v-card-text>
@@ -211,7 +218,7 @@
               v-for="(fileInfo, index) in injectFiles"
               :key="index"
             >
-              <template v-slot:title>
+              <template #title>
                 <div class="d-flex flex-column">
                   <h4
                     :class="`font-weight-bold ${
@@ -224,9 +231,9 @@
                   </h4>
                 </div>
               </template>
-              <template v-slot:text>
+              <template #text>
                 <CodeEditor
-                  :defaultValue="fileInfo.content"
+                  :default-value="fileInfo.content"
                   max-height="300"
                   readonly
                   style="font-size: 12px"
@@ -245,11 +252,12 @@
           color="primary"
           variant="tonal"
           @click="confirmDeploy"
-          >{{ t("pages.home.deploy.continue") }}</v-btn
         >
-        <v-btn variant="tonal" @click="cancelDeploy">{{
-          t("pages.home.deploy.cancel")
-        }}</v-btn>
+          {{ t("pages.home.deploy.continue") }}
+        </v-btn>
+        <v-btn variant="tonal" @click="cancelDeploy">
+          {{ t("pages.home.deploy.cancel") }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -262,16 +270,18 @@
     max-height="90vh"
   >
     <v-card>
-      <template v-slot:title> Process Completed! </template>
+      <template #title> Process Completed! </template>
       <v-card-text>
         <v-alert variant="tonal">
-          <p v-for="m in nextStepsMessages">{{ m }}</p>
+          <p v-for="m in nextStepsMessages" :key="m">
+            {{ m }}
+          </p>
         </v-alert>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" @click="nextStepsDialog = false">{{
-          t("close")
-        }}</v-btn>
+        <v-btn color="primary" @click="nextStepsDialog = false">
+          {{ t("close") }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -289,7 +299,9 @@ import AppLoader from "./AppLoader.vue";
 import { useLocale } from "vuetify";
 import type { ProjectNode } from "@/types/project";
 import { generateFiles } from "@/libs/templates";
-import frameworksConfig from "@/config/frameworks-config";
+import frameworksConfig, {
+  type AcceptedFrameworks,
+} from "@/config/frameworks-config";
 
 const { t } = useLocale();
 
@@ -312,8 +324,6 @@ const nextStepsDialog = ref(false);
 
 const nextStepsMessages = ref<string[]>([]);
 
-type AcceptedFrameworks = "vite" | "fastapi" | "unknown";
-
 const frameworkSelector = ref<AcceptedFrameworks>("unknown");
 
 export type ManagedFile =
@@ -335,15 +345,17 @@ export type ProjectConfig = {
   installCommand?: string;
   outputDir?: string;
   rootDir?: string;
+  port?: number;
 
   // Deploy
   files: ManagedFile[];
 
   // Framework-specific properties
   langs?: string[];
-  configFile?: string;
-  configFiles?: string[];
-  checkFor?: string;
+  configFiles?: {
+    file: string;
+    checkFor: string;
+  }[];
 };
 
 const frameworks = Object.values(frameworksConfig);
@@ -352,11 +364,15 @@ const projectConfig = ref<ProjectConfig>({
   ...frameworksConfig.unknown,
 });
 
-const selectedFrameworkOriginalConfig = computed(
-  () =>
-    frameworks.find((f) => f.id === projectConfig.value.id) ||
-    frameworksConfig.unknown
-);
+const selectedFrameworkOriginalConfig = computed(() => {
+  const originalConfig = frameworks.find(
+    (f) => f.id === projectConfig.value.id
+  );
+
+  if (originalConfig) return originalConfig;
+
+  return frameworksConfig.unknown;
+});
 
 const originalFiles = ref<{ fileName: ManagedFile; content: string }[]>([]);
 
@@ -638,17 +654,12 @@ const getRepositoryFiles = async (
         };
       };
       correlationId: string;
-    }>(
-      `${env.GITLAB_URL}/api/graphql`,
-      query,
-
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    }>(`${env.GITLAB_URL}/api/graphql`, query, {
+      headers: {
+        Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     return {
       success: true,
@@ -676,7 +687,7 @@ const getRepositoryFiles = async (
 };
 
 const identifyProjectLanguage = async () => {
-  const langs = project.languages.sort((a, b) => b.share - a.share);
+  const langs = [...project.languages].sort((a, b) => b.share - a.share);
   const mainLang = langs[0].name.toLowerCase();
 
   // Loop through all frameworks in frameworksConfig to find a match
@@ -688,25 +699,23 @@ const identifyProjectLanguage = async () => {
       let isFrameworkMatch = false;
 
       // Check framework-specific conditions
-      if (frameworkConfig.configFile) {
-        const configFileContent = await getFileContent(
-          frameworkConfig.configFile
+      if (frameworkConfig.configFiles) {
+        const configFileContent = await getRepositoryFiles(
+          frameworkConfig.configFiles.map((f) => f.file)
         );
-        if (
-          !frameworkConfig.checkFor ||
-          (configFileContent &&
-            configFileContent.includes(frameworkConfig.checkFor))
-        ) {
-          isFrameworkMatch = true;
-        }
-      } else if (frameworkConfig.configFiles) {
-        // Check multiple config files for Python frameworks (e.g., FastAPI)
-        for (const configFile of frameworkConfig.configFiles) {
-          const fileContent = await getFileContent(configFile);
-          if (
-            !frameworkConfig.checkFor ||
-            (fileContent && fileContent.includes(frameworkConfig.checkFor))
-          ) {
+
+        if (configFileContent.success) {
+          for (let i = 0; i < configFileContent.data.length; i++) {
+            const element = configFileContent.data[i];
+
+            const lookFor = frameworkConfig.configFiles?.find(
+              (e) => e.file === element.fileName
+            );
+
+            if (!lookFor) continue;
+
+            if (!element.content.includes(lookFor.checkFor)) continue;
+
             isFrameworkMatch = true;
             break;
           }
@@ -723,37 +732,6 @@ const identifyProjectLanguage = async () => {
   return (projectConfig.value = {
     ...frameworksConfig.unknown,
   });
-};
-
-const getFileContent = async (filePath: string): Promise<string> => {
-  try {
-    const res = await axios.get<string>(
-      `${env.GITLAB_URL}/api/v4/projects/${
-        project.id
-      }/repository/files/${encodeURIComponent(filePath)}/raw`,
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session?.auth_token.access_token}`,
-        },
-      }
-    );
-
-    return JSON.stringify(res.data);
-  } catch (error) {
-    if (error instanceof AxiosError && error.status === 404) {
-      return "";
-    }
-
-    throw error;
-  }
-};
-
-const getDeployableFile = (fileName: ManagedFile) => {
-  const file = injectFiles.value.find((f) => f.fileName === fileName);
-
-  if (!file) return;
-
-  return file.content;
 };
 
 // Helper function to show snackbar messages

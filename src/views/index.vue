@@ -1,16 +1,24 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4"
+      >
         <v-text-field
           v-model="searchQuery"
           :label="t('pages.home.searchLabel')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           @input="updateDebouncedUrlParams"
-        ></v-text-field>
+        />
       </v-col>
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4"
+      >
         <v-select
           v-model="sortBy"
           :items="sortOptions"
@@ -21,10 +29,10 @@
           variant="outlined"
           @update:model-value="updateUrlParams"
         >
-          <template v-slot:item="{ item, props }">
+          <template #item="{ item, props }">
             <v-list-item v-bind="props">
-              <template v-slot:prepend>
-                <v-icon :icon="item.raw.icon"></v-icon>
+              <template #prepend>
+                <v-icon :icon="item.raw.icon" />
               </template>
             </v-list-item>
           </template>
@@ -34,7 +42,11 @@
 
     <v-row v-if="error">
       <v-col cols="12">
-        <v-alert type="error" variant="tonal" prominent>
+        <v-alert
+          type="error"
+          variant="tonal"
+          prominent
+        >
           {{ error }}
         </v-alert>
       </v-col>
@@ -42,7 +54,10 @@
 
     <v-row v-else-if="!isLoading && projects.length < 1">
       <v-col cols="12">
-        <v-alert variant="tonal" class="text-center">
+        <v-alert
+          variant="tonal"
+          class="text-center"
+        >
           {{ t("pages.home.projects.noFound") }}
         </v-alert>
       </v-col>
@@ -58,20 +73,26 @@
           md="4"
           lg="3"
         >
-          <v-card class="project-card" elevation="2">
+          <v-card
+            class="project-card"
+            elevation="2"
+          >
             <v-card-item>
-              <template v-slot:prepend>
-                <v-avatar color="primary" size="48">
+              <template #prepend>
+                <v-avatar
+                  color="primary"
+                  size="48"
+                >
                   {{ project.name.charAt(0).toUpperCase() }}
                 </v-avatar>
               </template>
-              <v-card-title style="text-transform: capitalize">{{
-                project.name
-              }}</v-card-title>
+              <v-card-title style="text-transform: capitalize">
+                {{ project.name }}
+              </v-card-title>
               <v-card-subtitle v-if="project.namespace">
                 {{ project.namespace.name }}
               </v-card-subtitle>
-              <template v-slot:append>
+              <template #append>
                 <v-chip
                   :color="getAccessLevelColor(project)"
                   size="small"
@@ -88,20 +109,22 @@
                   project.description || t("pages.home.projects.noDescription")
                 }}
               </p>
-              <v-divider class="my-2"></v-divider>
-              <v-row no-gutters align="center" class="mt-2">
+              <v-divider class="my-2" />
+              <v-row
+                no-gutters
+                align="center"
+                class="mt-2"
+              >
                 <v-col cols="auto">
                   <v-icon
                     icon="mdi-clock-outline"
                     size="small"
                     class="mr-1"
-                  ></v-icon>
+                  />
                 </v-col>
                 <v-col>
-                  <span class="text-caption"
-                    >{{ t("pages.home.projects.lastActivity") }}
-                    {{ formatDate(project.updatedAt) }}</span
-                  >
+                  <span class="text-caption">{{ t("pages.home.projects.lastActivity") }}
+                    {{ formatDate(project.updatedAt) }}</span>
                 </v-col>
               </v-row>
             </v-card-text>
@@ -113,7 +136,10 @@
                 :href="project.webUrl"
                 target="_blank"
               >
-                <v-icon start icon="mdi-gitlab"></v-icon>
+                <v-icon
+                  start
+                  icon="mdi-gitlab"
+                />
                 GitLab
               </v-btn>
               <DeployBtn :project="project" />
@@ -123,11 +149,17 @@
       </v-row>
 
       <!-- The last element that will trigger the fetch -->
-      <div ref="loadMoreTrigger" class="load-more-trigger"></div>
+      <div
+        ref="loadMoreTrigger"
+        class="load-more-trigger"
+      />
 
       <!-- Loading indicator -->
       <v-row v-if="isLoading">
-        <v-col cols="12" class="text-center">
+        <v-col
+          cols="12"
+          class="text-center"
+        >
           <AppLoader />
         </v-col>
       </v-row>
@@ -135,12 +167,15 @@
 
     <v-row>
       <v-col cols="12">
-        <v-alert variant="tonal" class="text-center">
+        <v-alert
+          variant="tonal"
+          class="text-center"
+        >
           If your project is not listed here, please ensure it is transferred to
           the auto-cicd group or its subgroup in GitLab.
-          <RouterLink to="/faq#move-project"
-            >Learn how to transfer your project</RouterLink
-          >
+          <RouterLink to="/faq#move-project">
+            Learn how to transfer your project
+          </RouterLink>
           for automatic integration.
         </v-alert>
       </v-col>
@@ -290,7 +325,7 @@ const fetchProjects = async (clear?: boolean) => {
           membership: true,
           searchNamespaces: true,
           archived: EXCLUDE,
-          search: "on-premise-k8s-cluster/auto-cicd/${searchQuery.value}",
+          search: "on-premise-k8s-cluster/${searchQuery.value}",
           sort: "${sortBy.value}",
           first: ${pageSize},
           after: "${lastCursor.value || ""}"
@@ -379,8 +414,8 @@ const updateUrlParams = () => {
 
 let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const debounce = (func: Function, delay: number) => {
-  return (...args: any[]) => {
+const debounce = (func: (...args: unknown[]) => unknown, delay: number) => {
+  return (...args: unknown[]) => {
     if (debounceTimeout) clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => func(...args), delay);
   };

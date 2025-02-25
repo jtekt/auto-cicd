@@ -1,7 +1,13 @@
 <template>
-  <v-card class="code-editor" style="padding: 0">
+  <v-card
+    class="code-editor"
+    style="padding: 0"
+  >
     <div class="editor-card-container">
-      <div v-if="showLineNumbers" class="line-numbers pr-2">
+      <div
+        v-if="showLineNumbers"
+        class="line-numbers pr-2"
+      >
         <div
           v-for="i in lineCount"
           :key="i"
@@ -19,24 +25,26 @@
               border-radius: 50%;
               transform: translate(-50%, -50%);
             "
-          ></div>
+          />
           {{ i }}
         </div>
       </div>
       <div class="code-container">
-        <div class="longest-line">{{ longestLine }}</div>
+        <div class="longest-line">
+          {{ longestLine }}
+        </div>
         <div class="code-input-container">
           <textarea
+            ref="textarea"
             v-model="code"
             :placeholder="placeholder"
             :readonly="readonly"
             class="code-input"
             spellcheck="false"
+            no-resize
             @input="handleInput"
             @keydown="handleKeyDown"
-            no-resize
-            ref="textarea"
-          ></textarea>
+          />
         </div>
       </div>
     </div>
