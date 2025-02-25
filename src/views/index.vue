@@ -1,13 +1,13 @@
 <template>
   <v-container>
-    <v-row v-if="projects.length > 0">
+    <v-row>
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="searchQuery"
           :label="t('pages.home.searchLabel')"
           prepend-icon="mdi-magnify"
-          clearable
           variant="outlined"
+          @input="updateDebouncedUrlParams"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="6" md="4">
@@ -19,6 +19,7 @@
           :label="t('pages.home.sortLabel')"
           prepend-icon="mdi-sort"
           variant="outlined"
+          @update:model-value="updateUrlParams"
         >
           <template v-slot:item="{ item, props }">
             <v-list-item v-bind="props">
@@ -31,13 +32,7 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="isLoading">
-      <v-col cols="12" class="text-center">
-        <AppLoader />
-      </v-col>
-    </v-row>
-
-    <v-row v-else-if="error">
+    <v-row v-if="error">
       <v-col cols="12">
         <v-alert type="error" variant="tonal" prominent>
           {{ error }}
@@ -45,7 +40,7 @@
       </v-col>
     </v-row>
 
-    <v-row v-else-if="filteredProjects.length < 1">
+    <v-row v-else-if="!isLoading && projects.length < 1">
       <v-col cols="12">
         <v-alert variant="tonal" class="text-center">
           {{ t("pages.home.projects.noFound") }}
@@ -53,76 +48,101 @@
       </v-col>
     </v-row>
 
-    <v-row v-else>
-      <v-col
-        v-for="project in filteredProjects"
-        :key="project.id"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-      >
-        <v-card class="project-card" elevation="2">
-          <v-card-item>
-            <template v-slot:prepend>
-              <v-avatar color="primary" size="48">
-                {{ project.name.charAt(0).toUpperCase() }}
-              </v-avatar>
-            </template>
-            <v-card-title style="text-transform: capitalize">{{
-              project.name
-            }}</v-card-title>
-            <v-card-subtitle>
-              {{ project.namespace.name }}
-            </v-card-subtitle>
-            <template v-slot:append>
-              <v-chip
-                :color="getAccessLevelColor(project)"
-                size="small"
-                class="font-weight-bold"
-              >
-                {{ project.maxAccessLevel.humanAccess }}
-              </v-chip>
-            </template>
-          </v-card-item>
-
-          <v-card-text>
-            <p class="text-body-2 text-medium-emphasis">
-              {{
-                project.description || t("pages.home.projects.noDescription")
-              }}
-            </p>
-            <v-divider class="my-2"></v-divider>
-            <v-row no-gutters align="center" class="mt-2">
-              <v-col cols="auto">
-                <v-icon
-                  icon="mdi-clock-outline"
+    <template v-else>
+      <v-row class="mb-4">
+        <v-col
+          v-for="project in projects"
+          :key="project.id"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+        >
+          <v-card class="project-card" elevation="2">
+            <v-card-item>
+              <template v-slot:prepend>
+                <v-avatar color="primary" size="48">
+                  {{ project.name.charAt(0).toUpperCase() }}
+                </v-avatar>
+              </template>
+              <v-card-title style="text-transform: capitalize">{{
+                project.name
+              }}</v-card-title>
+              <v-card-subtitle v-if="project.namespace">
+                {{ project.namespace.name }}
+              </v-card-subtitle>
+              <template v-slot:append>
+                <v-chip
+                  :color="getAccessLevelColor(project)"
                   size="small"
-                  class="mr-1"
-                ></v-icon>
-              </v-col>
-              <v-col>
-                <span class="text-caption"
-                  >{{ t("pages.home.projects.lastActivity") }}
-                  {{ formatDate(project.lastActivityAt) }}</span
+                  class="font-weight-bold"
                 >
-              </v-col>
-            </v-row>
-          </v-card-text>
+                  {{ project.maxAccessLevel.humanAccess }}
+                </v-chip>
+              </template>
+            </v-card-item>
 
-          <v-card-actions>
-            <v-btn
-              color="primary"
-              variant="tonal"
-              :href="project.webUrl"
-              target="_blank"
-            >
-              <v-icon start icon="mdi-gitlab"></v-icon>
-              GitLab
-            </v-btn>
-            <DeployBtn :project="project" />
-          </v-card-actions>
-        </v-card>
+            <v-card-text>
+              <p class="text-body-2 text-medium-emphasis">
+                {{
+                  project.description || t("pages.home.projects.noDescription")
+                }}
+              </p>
+              <v-divider class="my-2"></v-divider>
+              <v-row no-gutters align="center" class="mt-2">
+                <v-col cols="auto">
+                  <v-icon
+                    icon="mdi-clock-outline"
+                    size="small"
+                    class="mr-1"
+                  ></v-icon>
+                </v-col>
+                <v-col>
+                  <span class="text-caption"
+                    >{{ t("pages.home.projects.lastActivity") }}
+                    {{ formatDate(project.updatedAt) }}</span
+                  >
+                </v-col>
+              </v-row>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-btn
+                color="primary"
+                variant="tonal"
+                :href="project.webUrl"
+                target="_blank"
+              >
+                <v-icon start icon="mdi-gitlab"></v-icon>
+                GitLab
+              </v-btn>
+              <DeployBtn :project="project" />
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- The last element that will trigger the fetch -->
+      <div ref="loadMoreTrigger" class="load-more-trigger"></div>
+
+      <!-- Loading indicator -->
+      <v-row v-if="isLoading">
+        <v-col cols="12" class="text-center">
+          <AppLoader />
+        </v-col>
+      </v-row>
+    </template>
+
+    <v-row>
+      <v-col cols="12">
+        <v-alert variant="tonal" class="text-center">
+          If your project is not listed here, please ensure it is transferred to
+          the auto-cicd group or its subgroup in GitLab.
+          <RouterLink to="/faq#move-project"
+            >Learn how to transfer your project</RouterLink
+          >
+          for automatic integration.
+        </v-alert>
       </v-col>
     </v-row>
   </v-container>
@@ -131,52 +151,90 @@
 <script lang="ts" setup>
 import { env } from "@/config/env";
 import { useAuthStore } from "@/stores/auth";
-import axios, { type AxiosResponse } from "axios";
-import { onMounted, ref, computed } from "vue";
+import axios from "axios";
+import { ref, computed, onMounted, watch } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
 import DeployBtn from "@/components/DeployHandler.vue";
 import { useLocale } from "vuetify";
 import {
   AccessLevel,
-  type Project,
+  type ProjectNode,
   type ProjectsResponse,
 } from "@/types/project";
+import { useRoute, useRouter } from "vue-router";
 
 const { t } = useLocale();
+const router = useRouter();
+const route = useRoute();
 
 const authStore = useAuthStore();
 
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const searchQuery = ref("");
-const sortBy = ref("last_activity_at-dsc");
+const searchQuery = ref(
+  typeof route.query.search === "string" ? route.query.search : ""
+);
+
+enum Sortoptions {
+  updated_desc = "updated_desc",
+  updated_asc = "updated_asc",
+  name_desc = "name_desc",
+  name_asc = "name_asc",
+}
+
+const sortBy = ref(
+  typeof route.query.sort === "string" && route.query.sort in Sortoptions
+    ? route.query.sort
+    : Sortoptions.updated_desc
+);
+
+const lastCursor = ref<string | null>(null);
+const hasNextPage = ref<boolean | null>(null);
+const loadMoreTrigger = ref<HTMLElement | null>(null);
+
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting && hasNextPage.value && !isLoading.value) {
+        fetchProjects(); // Trigger the fetch when the trigger element is visible
+      }
+    });
+  },
+  { threshold: 1.0 } // 100% of the element must be visible
+);
+
+onMounted(() => {
+  if (loadMoreTrigger.value) {
+    observer.observe(loadMoreTrigger.value); // Start observing the trigger element
+  }
+});
 
 const sortOptions = computed(() => [
   {
     text: t("pages.home.projects.sort.nameAscText"),
-    value: "name-asc",
+    value: Sortoptions.name_asc,
     icon: "mdi-sort-alphabetical-ascending",
   },
   {
     text: t("pages.home.projects.sort.nameDscText"),
-    value: "name-dsc",
+    value: Sortoptions.name_desc,
     icon: "mdi-sort-alphabetical-descending",
   },
   {
     text: t("pages.home.projects.sort.editedAscText"),
-    value: "last_activity_at-dsc",
+    value: Sortoptions.updated_desc,
     icon: "mdi-sort-clock-descending",
   },
   {
     text: t("pages.home.projects.sort.editedDscText"),
-    value: "last_activity_at-asc",
+    value: Sortoptions.updated_asc,
     icon: "mdi-sort-clock-ascending",
   },
 ]);
 
-const projects = ref<Project[]>([]);
+const projects = ref<ProjectNode[]>([]);
 
-const getAccessLevelColor = (project: Project): string => {
+const getAccessLevelColor = (project: ProjectNode): string => {
   const accessLevel = project.maxAccessLevel.stringValue;
 
   switch (accessLevel) {
@@ -211,142 +269,153 @@ const formatDate = (dateString: string): string => {
   });
 };
 
-const filteredProjects = computed(() => {
-  let result = projects.value;
-
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter(
-      (project) =>
-        project.name.toLowerCase().includes(query) ||
-        project.namespace.name.toLowerCase().includes(query)
-    );
-  }
-
-  const [sortField, sortDirection] = sortBy.value.split("-");
-
-  result.sort((a, b) => {
-    let comparison = 0;
-    if (sortField === "name") {
-      comparison = a.name.localeCompare(b.name);
-    } else if (sortField === "last_activity_at") {
-      comparison =
-        new Date(a.lastActivityAt).getTime() -
-        new Date(b.lastActivityAt).getTime();
-    }
-    return sortDirection === "asc" ? comparison : -comparison;
-  });
-
-  return result;
-});
-
-onMounted(async () => {
+const fetchProjects = async (clear?: boolean) => {
   try {
-    if (!authStore.session) {
-      error.value = t("pages.home.projects.errors.noSession");
-      return;
+    if (!authStore.session || (hasNextPage.value === false && !clear)) return;
+
+    isLoading.value = true;
+
+    if (clear) {
+      // Reset all projects data
+      projects.value = [];
+      lastCursor.value = null;
     }
 
-    projects.value = await fetchAllProjects();
-  } catch (err) {
-    console.error(err);
-    error.value = t("pages.home.projects.errors.fetchProjects");
-  } finally {
-    isLoading.value = false;
-  }
-});
+    const pageSize = 16;
 
-const fetchAllProjects = async (): Promise<Project[]> => {
-  if (!authStore.session) return [];
-
-  let allProjects: Project[] = [];
-  let hasNextPage = true;
-  let endCursor: string | null = null;
-  let res: AxiosResponse<ProjectsResponse, any> | null = null;
-
-  while (hasNextPage) {
-    try {
-      res = await axios.post<ProjectsResponse>(
-        `${env.GITLAB_URL}/api/graphql`,
-        {
-          query: `
-        {
-          projects(minAccessLevel: DEVELOPER, archived: EXCLUDE${
-            endCursor ? `, after: ${endCursor}` : ""
-          }) {
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-            edges {
-              node {
-                id
-                description
+    const query = `
+      {
+        projects(
+          minAccessLevel: DEVELOPER,
+          membership: true,
+          searchNamespaces: true,
+          archived: EXCLUDE,
+          search: "on-premise-k8s-cluster/auto-cicd/${searchQuery.value}",
+          sort: "${sortBy.value}",
+          first: ${pageSize},
+          after: "${lastCursor.value || ""}"
+        ) {
+          count
+          pageInfo {
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            startCursor
+          }
+          edges {
+            cursor
+            node {
+              id
+              description
+              name
+              webUrl
+              fullPath
+              languages {
                 name
-                webUrl
+                share
+              }
+              namespace {
+                name
                 fullPath
-                languages {
-                  name
-                  share
-                }
-                namespace {
-                  name
-                  fullPath
-                  path
-                  webUrl
-                }
-                lastActivityAt
-                avatarUrl
-                maxAccessLevel {
-                  humanAccess
-                  stringValue
-                }
-                repository {
-                  rootRef
-                }
+                path
+                webUrl
+              }
+              updatedAt
+              avatarUrl
+              maxAccessLevel {
+                humanAccess
+                stringValue
+              }
+              repository {
+                rootRef
               }
             }
           }
         }
-      `,
+      }
+    `;
+
+    const res = await axios.post<ProjectsResponse>(
+      `${env.GITLAB_URL}/api/graphql`,
+      {
+        query,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+          "Content-Type": "application/json",
         },
-        {
-          headers: {
-            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      }
+    );
 
-      if (!res) break;
+    const { edges, pageInfo } = res.data.data.projects;
 
-      const projects = res.data.data.projects.edges;
-      // Append the current page's projects to the allProjects array
-      allProjects = allProjects.concat(
-        projects.map((project) => {
-          const id = project.node.id.match(/\/(\d+)$/);
-          return {
-            ...project.node,
-            id: id ? id[1] : "",
-            deploying: false, // Add any other properties you need
-          };
-        })
-      );
-
-      console.log(allProjects);
-
-      // Update pagination info
-      hasNextPage = res.data.data.projects.pageInfo.hasNextPage;
-      endCursor = res.data.data.projects.pageInfo.endCursor;
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      break;
+    if (edges) {
+      projects.value.push(...edges.map((edge) => edge.node)); // Append new projects
+      lastCursor.value = pageInfo.endCursor; // Update the cursor for the next request
+      hasNextPage.value = pageInfo.hasNextPage;
     }
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const updateUrlParams = () => {
+  const newQuery: { [key: string]: string } = {};
+
+  if (searchQuery.value) {
+    newQuery.search = searchQuery.value;
+  }
+  if (sortBy.value) {
+    newQuery.sort = sortBy.value;
   }
 
-  // Return the aggregated list of all projects
-  return allProjects;
+  router.push({
+    query: newQuery,
+  });
 };
+
+let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const debounce = (func: Function, delay: number) => {
+  return (...args: any[]) => {
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => func(...args), delay);
+  };
+};
+
+// Debounced updateUrlParams
+const updateDebouncedUrlParams = debounce(() => {
+  const newQuery: { [key: string]: string } = {};
+
+  if (searchQuery.value) {
+    newQuery.search = searchQuery.value;
+  }
+  if (sortBy.value) {
+    newQuery.sort = sortBy.value;
+  }
+
+  router.push({
+    query: newQuery,
+  });
+}, 600);
+
+watch(
+  () => route.query,
+  async () => {
+    searchQuery.value =
+      typeof route.query.search === "string" ? route.query.search : "";
+    sortBy.value =
+      typeof route.query.sort === "string" && route.query.sort in Sortoptions
+        ? route.query.sort
+        : Sortoptions.updated_desc;
+
+    await fetchProjects(true); // Fetch the first set of projects
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>

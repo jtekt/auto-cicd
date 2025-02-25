@@ -30,15 +30,15 @@ export interface MaxAccessLevel {
   stringValue: AccessLevel; // Using the AccessLevel enum here
 }
 
-interface ProjectNode {
+export interface ProjectNode {
   id: string;
   description: string | null;
   name: string;
   webUrl: string;
   fullPath: string;
   languages: Language[];
-  namespace: Namespace;
-  lastActivityAt: string; // ISO 8601 date string
+  namespace: Namespace | null;
+  updatedAt: string; // ISO 8601 date string
   avatarUrl: string | null;
   maxAccessLevel: MaxAccessLevel;
   repository: {
@@ -48,10 +48,13 @@ interface ProjectNode {
 
 interface PageInfo {
   hasNextPage: boolean;
+  hasPreviousPage: boolean;
   endCursor: string | null;
+  startCursor: string | null;
 }
 
 interface ProjectEdge {
+  cursor: string;
   node: ProjectNode;
 }
 
@@ -60,10 +63,7 @@ export interface ProjectsResponse {
     projects: {
       count: number;
       pageInfo: PageInfo;
-      edges: ProjectEdge[];
+      edges: ProjectEdge[] | null;
     };
   };
 }
-
-// Define a generic type for the project data
-export type Project = ProjectNode & { deploying: boolean }; // Adding "deploying" field to each project

@@ -1,6 +1,6 @@
 <template>
   <v-app :theme="theme">
-    <v-app-bar elevation="1">
+    <v-app-bar elevation="1" style="position: fixed">
       <v-container class="d-flex align-center">
         <RouterLink
           to="/"
@@ -28,46 +28,19 @@
     </v-app-bar>
 
     <v-main>
-      <v-container class="py-8">
-        <v-row
-          v-if="isLoading"
-          justify="center"
-          align="center"
-          style="height: 80vh"
-        >
+      <v-container style="height: 100%" class="py-8 d-flex flex-column">
+        <v-row v-if="isLoading" justify="center" align="center" style="flex: 1">
           <AppLoader />
         </v-row>
         <template v-else-if="authStore.session">
-          <v-row class="mb-6" align="center">
-            <v-col cols="auto">
-              <v-avatar
-                v-if="authStore.session.user.picture"
-                size="48"
-                color="primary"
-              >
-                <v-img
-                  :src="authStore.session.user.picture"
-                  alt="User Avatar"
-                />
-              </v-avatar>
-              <v-avatar v-else size="48" color="primary">
-                {{ authStore.session.user.name.charAt(0).toUpperCase() }}
-              </v-avatar>
-            </v-col>
-            <v-col>
-              <h2 class="text-h5">
-                Welcome, {{ authStore.session.user.name }}!
-              </h2>
-            </v-col>
-          </v-row>
+          <div style="flex: 1; display: flex; flex-direction: column">
+            <router-view />
+          </div>
         </template>
-        <template v-else-if="route.name !== 'Auth'">
+        <template v-else-if="route.meta.protected">
           <div class="d-flex justify-center">
             <h3 class="h3">You are not Authenticated</h3>
           </div>
-        </template>
-        <template v-if="!route.meta.protected || authStore.isAuthenticated()">
-          <router-view />
         </template>
       </v-container>
     </v-main>

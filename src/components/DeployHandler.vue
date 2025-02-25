@@ -287,13 +287,13 @@ import axios, { AxiosError } from "axios";
 import { env } from "@/config/env";
 import AppLoader from "./AppLoader.vue";
 import { useLocale } from "vuetify";
-import type { Project } from "@/types/project";
+import type { ProjectNode } from "@/types/project";
 import { generateFiles } from "@/libs/templates";
 import frameworksConfig from "@/config/frameworks-config";
 
 const { t } = useLocale();
 
-const { project } = defineProps<{ project: Project }>();
+const { project } = defineProps<{ project: ProjectNode }>();
 
 const dialog = ref(false);
 const actionNeededDialog = ref(false);
@@ -387,6 +387,7 @@ const handleDeployBtn = async () => {
   // Determine if and what actions the user needs to take
   actionNeeded.value = [];
   if (
+    !project.namespace ||
     !env.ALLOWED_NAMESPACES.includes(project.namespace.fullPath.split("/")[0])
   ) {
     actionNeeded.value.push({
