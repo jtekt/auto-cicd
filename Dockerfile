@@ -5,10 +5,10 @@ FROM node:22-slim as build-stage
 WORKDIR /app
 
 # Install pnpm, yarn, bun, and deno
-RUN npm install -g pnpm yarn bun
+RUN npm install -g pnpm bun
 
 # Install dependencies
-COPY package.json package-lock.json ./
+COPY package.json ./
 RUN pnpm install
 
 # Copy all source code
