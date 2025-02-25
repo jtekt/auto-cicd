@@ -1,21 +1,24 @@
 # Start from an appropriate base image
-FROM node:22-alpine as build-stage
+FROM node:22-slim as build-stage
 
 # Set the working directory for building
 WORKDIR /app
 
+# Install pnpm, yarn, bun, and deno
+RUN npm install -g pnpm yarn bun
+
 # Install dependencies
 COPY package.json package-lock.json ./
-RUN npm install
+RUN pnpm install
 
 # Copy all source code
 COPY . .
 
 # Build the project
-RUN npm run build
+RUN pnpm build
 
 # Deploy the app
-FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-slim as production-stage
 
 # Set working directory for nginx
 WORKDIR /usr/share/nginx/
