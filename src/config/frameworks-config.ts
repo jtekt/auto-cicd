@@ -75,7 +75,7 @@ const frameworksConfig: Record<string, ProjectConfig> = {
     installCommand: "npm install",
     outputDir: ".output",
     rootDir: "./",
-    port: 3000,
+    port: 80,
     managers: ["npm", "yarn"],
     files: [".gitlab-ci.yml", "Dockerfile", "kubernetes_manifest.yml"],
     configFiles: [

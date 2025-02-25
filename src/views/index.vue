@@ -344,15 +344,29 @@ const fetchProjects = async (clear?: boolean) => {
       }
     );
 
+    const notIdentifingLang = ["dockerfile"]; // TODO: Add more languages to filter
+
     const { edges, pageInfo } = res.data.data.projects;
 
     if (edges) {
       projects.value.push(
         ...edges.map((project) => {
           const id = project.node.id.match(/\/(\d+)$/);
+
+          const languages = project.node.languages
+            .reduce<{ name: string; share: number }[]>((acc, l) => {
+              const lowercasedName = l.name.toLowerCase();
+              if (!notIdentifingLang.includes(lowercasedName)) {
+                acc.push({ name: lowercasedName, share: l.share });
+              }
+              return acc;
+            }, [])
+            .sort((a, b) => b.share - a.share);
+
           return {
             ...project.node,
             id: id ? id[1] : "",
+            languages,
             deploying: false, // Add any other properties you need
           };
         })

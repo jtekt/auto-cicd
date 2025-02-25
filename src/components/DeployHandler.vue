@@ -705,15 +705,13 @@ const getRepositoryFiles = async (
 };
 
 const identifyProjectLanguage = async () => {
-  const langs = [...project.languages].sort((a, b) => b.share - a.share);
-
-  if (langs.length === 0) {
+  if (project.languages.length === 0) {
     return (projectConfig.value = {
       ...frameworksConfig.unknown,
     });
   }
 
-  const mainLang = langs[0].name.toLowerCase();
+  const mainLang = project.languages[0].name;
 
   // Loop through all frameworks in frameworksConfig to find a match
   for (const framework of Object.keys(frameworksConfig)) {
