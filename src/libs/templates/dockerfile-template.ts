@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "@/components/DeployHandler.vue";
+import type { ProjectConfig } from "@/config/frameworks-config";
 
 export const generateDockerfile = async (
   config: ProjectConfig

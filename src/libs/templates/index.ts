@@ -1,7 +1,4 @@
-import type {
-  ManagedFile,
-  ProjectConfig,
-} from "@/components/DeployHandler.vue";
+import type { ManagedFile, ProjectConfig } from "@/config/frameworks-config";
 import { generateDockerfile } from "./dockerfile-template";
 import { generateGitLabCI } from "./gitlab-ci-template";
 import { generateKubernetesManifest } from "./kubernetes-manifest-template";

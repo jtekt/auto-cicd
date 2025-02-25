@@ -286,7 +286,7 @@
     </v-card>
   </v-dialog>
 
-  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="6000">
+  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="5000">
     {{ snackbar.text }}
   </v-snackbar>
 </template>
@@ -300,7 +300,10 @@ import { useLocale } from "vuetify";
 import type { ProjectNode } from "@/types/project";
 import { generateFiles } from "@/libs/templates";
 import frameworksConfig, {
+  acceptedJavascriptManagers,
   type AcceptedFrameworks,
+  type ManagedFile,
+  type ProjectConfig,
 } from "@/config/frameworks-config";
 
 const { t } = useLocale();
@@ -325,38 +328,6 @@ const nextStepsDialog = ref(false);
 const nextStepsMessages = ref<string[]>([]);
 
 const frameworkSelector = ref<AcceptedFrameworks>("unknown");
-
-export type ManagedFile =
-  | "Dockerfile"
-  | ".gitlab-ci.yml"
-  | "nginx.conf"
-  | "kubernetes_manifest.yml";
-
-export type ProjectConfig = {
-  id: AcceptedFrameworks;
-  name: string;
-  image: {
-    type: "img" | "icon";
-    value: string;
-  };
-
-  // Config
-  buildCommand?: string;
-  installCommand?: string;
-  outputDir?: string;
-  rootDir?: string;
-  port?: number;
-
-  // Deploy
-  files: ManagedFile[];
-
-  // Framework-specific properties
-  langs?: string[];
-  configFiles?: {
-    file: string;
-    checkFor: string;
-  }[];
-};
 
 const frameworks = Object.values(frameworksConfig);
 
@@ -443,6 +414,15 @@ const handleDeploy = async () => {
       "warning"
     );
   }
+
+  // Validate commands
+  const res = invalidCommands();
+  if (res.length > 0)
+    return showSnackbar(
+      "The commands are not accepted: " + res.join(", "),
+      "warning"
+    );
+
   injectFiles.value = [];
 
   // Check if the files have been changed
@@ -484,6 +464,44 @@ const handleDeploy = async () => {
   }, []);
 
   confirmDeployDialog.value = true; // Open confirmation dialog
+};
+
+const invalidCommands = (): string[] => {
+  const errors: string[] = [];
+
+  // TODO: Add to other languages
+  if (["vite", "express", "nuxt"].includes(projectConfig.value.id)) {
+    // Validate install
+    const installPackageManager =
+      projectConfig.value.installCommand?.split(" ")[0];
+    if (
+      !installPackageManager ||
+      !acceptedJavascriptManagers.includes(installPackageManager)
+    ) {
+      errors.push(
+        `JavaScript package manager "${installPackageManager}"" is not accepted for install`
+      );
+    }
+
+    // Validate build
+    const buildPackageManager = projectConfig.value.buildCommand?.split(" ")[0];
+    if (
+      !buildPackageManager ||
+      !acceptedJavascriptManagers.includes(buildPackageManager)
+    ) {
+      errors.push(
+        `JavaScript package manager "${buildPackageManager}"" is not accepted for build`
+      );
+    }
+
+    // Validate root
+    const rootDir = projectConfig.value.rootDir?.split(" ")[0];
+    if (!rootDir || !rootDir.startsWith("./")) {
+      errors.push(`Root Directory "${rootDir}"" is not accepted`);
+    }
+  }
+
+  return errors;
 };
 
 const cancelDeploy = () => {
@@ -688,6 +706,13 @@ const getRepositoryFiles = async (
 
 const identifyProjectLanguage = async () => {
   const langs = [...project.languages].sort((a, b) => b.share - a.share);
+
+  if (langs.length === 0) {
+    return (projectConfig.value = {
+      ...frameworksConfig.unknown,
+    });
+  }
+
   const mainLang = langs[0].name.toLowerCase();
 
   // Loop through all frameworks in frameworksConfig to find a match

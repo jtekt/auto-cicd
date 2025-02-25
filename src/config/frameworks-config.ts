@@ -1,6 +1,39 @@
-import type { ProjectConfig } from "@/components/DeployHandler.vue";
-
 export type AcceptedFrameworks = "vite" | "nuxt" | "unknown";
+
+export type ManagedFile =
+  | "Dockerfile"
+  | ".gitlab-ci.yml"
+  | "nginx.conf"
+  | "kubernetes_manifest.yml";
+
+export type ProjectConfig = {
+  id: AcceptedFrameworks;
+  name: string;
+  image: {
+    type: "img" | "icon";
+    value: string;
+  };
+
+  // Config
+  buildCommand?: string;
+  installCommand?: string;
+  outputDir?: string;
+  rootDir?: string;
+  port?: number;
+  managers: string[];
+
+  // Deploy
+  files: ManagedFile[];
+
+  // Framework-specific properties
+  langs?: string[];
+  configFiles?: {
+    file: string;
+    checkFor: string;
+  }[];
+};
+
+export const acceptedJavascriptManagers = ["npm", "yarn"];
 
 const frameworksConfig: Record<string, ProjectConfig> = {
   vite: {
@@ -15,6 +48,8 @@ const frameworksConfig: Record<string, ProjectConfig> = {
     installCommand: "npm install",
     outputDir: "dist",
     rootDir: "./",
+    port: 80,
+    managers: ["npm", "yarn"],
     files: [
       ".gitlab-ci.yml",
       "Dockerfile",
@@ -40,6 +75,8 @@ const frameworksConfig: Record<string, ProjectConfig> = {
     installCommand: "npm install",
     outputDir: ".output",
     rootDir: "./",
+    port: 80,
+    managers: ["npm", "yarn"],
     files: [".gitlab-ci.yml", "Dockerfile", "kubernetes_manifest.yml"],
     configFiles: [
       {
@@ -60,6 +97,7 @@ const frameworksConfig: Record<string, ProjectConfig> = {
     installCommand: "npm install",
     outputDir: "dist",
     rootDir: "./",
+    managers: [],
     files: [],
   },
 };

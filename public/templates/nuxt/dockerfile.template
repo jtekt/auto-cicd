@@ -4,9 +4,6 @@ FROM node:22-slim as build-stage
 # Set the working directory for building
 WORKDIR /app
 
-# Install pnpm, yarn, bun, and deno
-RUN npm install -g pnpm yarn bun
-
 # Install dependencies
 COPY package.json {rootDir}
 RUN {installCommand}
@@ -16,6 +13,9 @@ COPY . .
 
 # Build the project
 RUN {buildCommand}
+
+# Set the environment variable for the port to 80
+ENV PORT={PORT}
 
 # Create a new stage for the production image
 FROM node:22-slim as production-stage

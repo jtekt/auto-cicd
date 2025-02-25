@@ -4,9 +4,6 @@ FROM node:22-alpine as build-stage
 # Set the working directory for building
 WORKDIR /app
 
-# Install pnpm, yarn, bun, and deno
-RUN npm install -g pnpm yarn bun
-
 # Install dependencies
 COPY package.json {rootDir}
 RUN {installCommand}
