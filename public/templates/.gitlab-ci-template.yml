@@ -15,6 +15,7 @@ variables:
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
   K8S_NAMESPACE: auto-cicd
   K8S_ECR_SECRET_NAME: ecr-credentials
+  K8S_ENV_SECRET_NAME: { APPLICATION_NAME }-env
   PORT: { PORT }
 
 # Validate the environment variables
@@ -104,6 +105,10 @@ deploy-job:
       | kubectl apply -f -
   script:
     # Deploy the app to Kubernetes using the Kubernetes manifest
+
+    # Environment secret
+    - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
+
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 
     - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
