@@ -347,7 +347,16 @@ const fetchProjects = async (clear?: boolean) => {
     const { edges, pageInfo } = res.data.data.projects;
 
     if (edges) {
-      projects.value.push(...edges.map((edge) => edge.node)); // Append new projects
+      projects.value.push(
+        ...edges.map((project) => {
+          const id = project.node.id.match(/\/(\d+)$/);
+          return {
+            ...project.node,
+            id: id ? id[1] : "",
+            deploying: false, // Add any other properties you need
+          };
+        })
+      ); // Append new projects
       lastCursor.value = pageInfo.endCursor; // Update the cursor for the next request
       hasNextPage.value = pageInfo.hasNextPage;
     }
