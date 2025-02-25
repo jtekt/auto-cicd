@@ -4,21 +4,18 @@ FROM node:22-slim as build-stage
 # Set the working directory for building
 WORKDIR /app
 
-# Install pnpm, yarn, bun, and deno
-RUN npm install -g pnpm bun
-
 # Install dependencies
 COPY package.json ./
-RUN pnpm install
+RUN npm run install
 
 # Copy all source code
 COPY . .
 
 # Build the project
-RUN pnpm build
+RUN npm run build
 
 # Deploy the app
-FROM nginx:stable-slim as production-stage
+FROM nginx:stable as production-stage
 
 # Set working directory for nginx
 WORKDIR /usr/share/nginx/
