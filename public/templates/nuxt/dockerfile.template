@@ -1,18 +1,18 @@
 # Start from an appropriate base image
-FROM node:22-slim as build-stage
+FROM node:22-slim as base
 
 # Set the working directory for building
 WORKDIR /app
 
 # Install dependencies
-COPY package.json {rootDir}
-RUN {installCommand}
+COPY package.json {ROOT_DIR}
+RUN {INSTALL_COMMAND}
 
 # Copy all source code
 COPY . .
 
 # Build the project
-RUN {buildCommand}
+RUN {BUILD_COMMAND}
 
 # Define environment variables
 ENV NODE_ENV=production

@@ -28,32 +28,8 @@ validate-job:
         echo "ERROR: APPLICATION_NAME is not set!"
         exit 1
       fi
-      if [ -z "$K8S_NAMESPACE" ]; then
-        echo "ERROR: K8S_NAMESPACE is not set!"
-        exit 1
-      fi
-      if [ -z "$AWS_ECR_URL" ]; then
-        echo "ERROR: AWS_ECR_URL is not set!"
-        exit 1
-      fi
-      if [ -z "$AWS_SES_PORT" ]; then
-        echo "ERROR: AWS_SES_PORT is not set!"
-        exit 1
-      fi
-      if [ -z "$AWS_SES_HOST" ]; then
-        echo "ERROR: AWS_SES_HOST is not set!"
-        exit 1
-      fi
-      if [ -z "$AWS_SES_USERNAME" ]; then
-        echo "ERROR: AWS_SES_USERNAME is not set!"
-        exit 1
-      fi
-      if [ -z "$AWS_SES_PASSWORD" ]; then
-        echo "ERROR: AWS_SES_PASSWORD is not set!"
-        exit 1
-      fi
-      if [ -z "$AWS_SES_FROM" ]; then
-        echo "ERROR: AWS_SES_FROM is not set!"
+      if [ -z "$PORT" ]; then
+        echo "ERROR: PORT is not set!"
         exit 1
       fi
       if [ -z "$GITLAB_USER_EMAIL" ]; then

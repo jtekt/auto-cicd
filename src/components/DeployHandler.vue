@@ -12,22 +12,20 @@
     max-height="90vh"
   >
     <v-card>
-      <!-- <template v-slot:title>{{ t("actionNeededTitle") }}</template> -->
-      <template #title> Actions needed to deploy the app </template>
+      <template #title>Actions needed to deploy the app</template>
       <v-card-text>
         <v-list>
           <v-list-item v-for="(action, index) in actionNeeded" :key="index">
-            {{ index + 1 }}.
-            {{ action.descripton }}
+            {{ index + 1 }}. {{ action.descripton }}
             <a v-if="action.link" :href="action.link.url" target="_blank">{{
               action.link.text
             }}</a
             >{{ action.posDescription }}.
           </v-list-item>
         </v-list>
-        <RouterLink to="/faq#move-project">
-          How to move a project to another group
-        </RouterLink>
+        <RouterLink to="/faq#move-project"
+          >How to move a project to another group</RouterLink
+        >
       </v-card-text>
       <v-card-actions>
         <v-btn color="primary" @click="actionNeededDialog = false">
@@ -37,6 +35,7 @@
     </v-card>
   </v-dialog>
 
+  <!-- Deploy Dialog -->
   <v-dialog v-model="dialog" width="500" max-width="90vw" max-height="90vh">
     <v-card style="height: 100%; width: 100%">
       <template #title>
@@ -47,13 +46,13 @@
       <v-row v-if="isLoading" justify="center" align="center" class="pa-4">
         <AppLoader />
       </v-row>
-
       <div v-else-if="error" class="pa-5">
         <v-alert type="error" variant="tonal">
           <p>{{ error }}</p>
         </v-alert>
       </div>
 
+      <!-- Configuration Form -->
       <template v-else>
         <div
           style="
@@ -74,6 +73,8 @@
           >
             {{ project.name }}
           </v-btn>
+
+          <!-- Framework Selector -->
           <v-select
             v-model="frameworkSelector"
             :items="frameworks"
@@ -81,14 +82,14 @@
             item-value="id"
             label="Select Framework"
             variant="outlined"
-            :error="projectConfig.id === 'unknown'"
-            @update:model-value="handleChangeConfig"
+            :error="frameworkSelector === 'unknown'"
+            @update:model-value="handleChangeFramework"
           >
             <template #selection="{ item }">
               <div class="d-flex align-center" style="gap: 16px">
                 <v-img
                   v-if="item.raw.image.type === 'img'"
-                  :src="`${item.raw.image.value}`"
+                  :src="item.raw.image.value"
                   alt="Framework Image"
                   width="28"
                   height="28"
@@ -116,17 +117,32 @@
               />
             </template>
           </v-select>
-          <v-expansion-panels v-if="projectConfig.id !== 'unknown'">
+
+          <!-- Package Manager Selector -->
+          <v-select
+            v-model="managerSelector"
+            :items="packageManagersOptions"
+            item-title="title"
+            item-value="value"
+            label="Select Package Manager"
+            variant="outlined"
+            @update:model-value="handleChangeManager"
+          />
+
+          <!-- Build and Output Settings -->
+          <v-expansion-panels v-if="frameworkSelector !== 'unknown'">
             <v-expansion-panel>
-              <v-expansion-panel-title>
-                Build and Output Settings
-              </v-expansion-panel-title>
+              <v-expansion-panel-title
+                >Build and Output Settings</v-expansion-panel-title
+              >
               <v-expansion-panel-text>
                 <p class="mb-4 text-subtitle-2 font-weight-light">
                   These are the default configurations for a
-                  <strong>{{ projectConfig.name }}</strong> project. If your
-                  project requires different settings, you can modify them as
-                  needed
+                  <strong>{{
+                    frameworksConfig[frameworkSelector].name
+                  }}</strong>
+                  project. If your project requires different settings, you can
+                  modify them as needed.
                 </p>
                 <v-text-field
                   v-model="projectConfig.rootDir"
@@ -134,18 +150,7 @@
                   variant="outlined"
                   :class="
                     projectConfig.rootDir ===
-                    selectedFrameworkOriginalConfig.rootDir
-                      ? ''
-                      : 'text-warning'
-                  "
-                />
-                <v-text-field
-                  v-model="projectConfig.buildCommand"
-                  label="Build Command"
-                  variant="outlined"
-                  :class="
-                    projectConfig.buildCommand ===
-                    selectedFrameworkOriginalConfig.buildCommand
+                    frameworksConfig[frameworkSelector].rootDir
                       ? ''
                       : 'text-warning'
                   "
@@ -156,7 +161,7 @@
                   variant="outlined"
                   :class="
                     projectConfig.outputDir ===
-                    selectedFrameworkOriginalConfig.outputDir
+                    frameworksConfig[frameworkSelector].outputDir
                       ? ''
                       : 'text-warning'
                   "
@@ -167,26 +172,36 @@
                   variant="outlined"
                   :class="
                     projectConfig.installCommand ===
-                    selectedFrameworkOriginalConfig.installCommand
+                    packageManagers[managerSelector].commands.install
                       ? ''
                       : 'text-warning'
                   "
-                >
-                  <p />
-                </v-text-field>
+                />
+                <v-text-field
+                  v-if="projectConfig.language === 'javascript'"
+                  v-model="projectConfig.buildCommand"
+                  label="Build Command"
+                  variant="outlined"
+                  :class="
+                    projectConfig.buildCommand ===
+                    packageManagers[managerSelector].commands.build
+                      ? ''
+                      : 'text-warning'
+                  "
+                />
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
         </div>
       </template>
 
-      <!-- Actions and Deploy Button -->
+      <!-- Actions -->
       <template #actions>
         <v-btn
           color="success"
           variant="tonal"
           :text="t('pages.home.deploy.deploy')"
-          :disabled="projectConfig.id === 'unknown'"
+          :disabled="frameworkSelector === 'unknown'"
           @click="handleDeploy"
         />
         <v-btn
@@ -207,9 +222,9 @@
     max-height="90vh"
   >
     <v-card prepend-icon="mdi-check-all">
-      <template #title>
-        {{ t("pages.home.deploy.confirmDeployTitle") }}
-      </template>
+      <template #title>{{
+        t("pages.home.deploy.confirmDeployTitle")
+      }}</template>
       <v-card-text>
         <template v-if="injectFiles.length > 0">
           <p>{{ t("pages.home.deploy.confirmDeployMessage") }}</p>
@@ -262,26 +277,57 @@
     </v-card>
   </v-dialog>
 
-  <!-- Next Steps Dialog (show after deployment) -->
-  <v-dialog
-    v-model="nextStepsDialog"
-    width="500"
-    max-width="90vw"
-    max-height="90vh"
-  >
+  <!-- Next Steps Dialog -->
+  <v-dialog v-model="nextStepsDialog" max-width="600px">
     <v-card>
-      <template #title> Process Completed! </template>
-      <v-card-text>
-        <v-alert variant="tonal">
-          <p v-for="m in nextStepsMessages" :key="m">
-            {{ m }}
-          </p>
-        </v-alert>
+      <v-card-title class="headline">
+        Deployment Completed Successfully! 🎉
+      </v-card-title>
+      <v-card-text v-if="deploymentInfo">
+        <v-row>
+          <v-col>
+            <strong>Files Committed:</strong>
+            <v-list>
+              <v-list-item>
+                <v-list-item-title
+                  v-for="f in deploymentInfo.filesCommitted"
+                  :key="f"
+                  >{{ f }}</v-list-item-title
+                >
+              </v-list-item>
+            </v-list>
+          </v-col>
+        </v-row>
+
+        <v-divider></v-divider>
+
+        <v-row>
+          <v-col>
+            <strong>Important Notes:</strong>
+            <v-list dense>
+              <v-list-item v-for="f in deploymentInfo.messages" :key="f">
+                <v-list-item-title>{{ f }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-col>
+        </v-row>
+
+        <v-divider></v-divider>
+
+        <v-row>
+          <v-col>
+            <strong>Next Steps:</strong>
+            <v-list dense>
+              <v-list-item v-for="s in deploymentInfo.nextSteps" :key="s">
+                <v-list-item-title>{{ s }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-col>
+        </v-row>
       </v-card-text>
+
       <v-card-actions>
-        <v-btn color="primary" @click="nextStepsDialog = false">
-          {{ t("close") }}
-        </v-btn>
+        <v-btn color="primary" @click="dialog = false">Close</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -290,143 +336,140 @@
     {{ snackbar.text }}
   </v-snackbar>
 </template>
+
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { env } from "@/config/env";
 import AppLoader from "./AppLoader.vue";
 import { useLocale } from "vuetify";
 import type { ProjectNode } from "@/types/project";
 import { generateFiles } from "@/libs/templates";
-import frameworksConfig, {
-  acceptedJavascriptManagers,
-  type AcceptedFrameworks,
-  type ManagedFile,
+import {
+  frameworksConfig,
+  packageManagers,
+  getDefaultProjectConfig,
+  type AcceptedFramework,
   type ProjectConfig,
+  type AcceptedPackageManager,
+  type FrameworkConfig,
 } from "@/config/frameworks-config";
+import type { CommitAction } from "@/libs/gitlab";
 
 const { t } = useLocale();
-
 const { project } = defineProps<{ project: ProjectNode }>();
 
 const dialog = ref(false);
 const actionNeededDialog = ref(false);
 const actionNeeded = ref<
   {
-    link?: {
-      text: string;
-      url: string;
-    };
     descripton: string;
+    link?: { text: string; url: string };
     posDescription?: string;
   }[]
 >([]);
 const confirmDeployDialog = ref(false);
 const nextStepsDialog = ref(false);
+const deploymentInfo = ref<{
+  filesCommitted: string[];
+  messages: string[];
+  nextSteps: string[];
+} | null>(null);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+const snackbar = ref({ show: false, text: "", color: "success" });
 
-const nextStepsMessages = ref<string[]>([]);
-
-const frameworkSelector = ref<AcceptedFrameworks>("unknown");
-
-const frameworks = Object.values(frameworksConfig);
-
-const projectConfig = ref<ProjectConfig>({
-  ...frameworksConfig.unknown,
-});
-
-const selectedFrameworkOriginalConfig = computed(() => {
-  const originalConfig = frameworks.find(
-    (f) => f.id === projectConfig.value.id
-  );
-
-  if (originalConfig) return originalConfig;
-
-  return frameworksConfig.unknown;
-});
-
-const originalFiles = ref<{ fileName: ManagedFile; content: string }[]>([]);
-
+const frameworkSelector = ref<AcceptedFramework>("unknown");
+const managerSelector = ref<AcceptedPackageManager>("npm");
+const projectConfig = ref<ProjectConfig>(getDefaultProjectConfig("unknown"));
+const originalFiles = ref<{ fileName: string; content: string }[]>([]);
 const injectFiles = ref<
-  { fileName: ManagedFile; content: string; action?: CommitActions }[]
+  { fileName: string; content: string; action: CommitAction }[]
 >([]);
-
-const error = ref<string[] | null>(null);
-
-const isLoading = ref<boolean>(false);
-
-const snackbar = ref({
-  show: false,
-  text: "",
-  color: "success",
-});
 
 const authStore = useAuthStore();
 
-type CommitActions = "create" | "update" | "delete" | "move" | "chmod";
+// Framework and package manager options
+const frameworks = Object.values(frameworksConfig);
+const packageManagersOptions = computed(() =>
+  frameworksConfig[frameworkSelector.value].supportedManagers.map((m) => ({
+    title: m,
+    value: m,
+  }))
+);
 
-// Called to open the dialog
+// Open deploy dialog and detect framework/language
 const handleDeployBtn = async () => {
-  if (!authStore.session) {
-    return showSnackbar("Error: Unauthorized", "error");
-  }
+  if (!authStore.session) return showSnackbar("Error: Unauthorized", "error");
 
-  // Determine if and what actions the user needs to take
-  actionNeeded.value = [];
+  // Check namespace (example logic, adjust as needed)
   if (
     !project.namespace ||
     !env.ALLOWED_NAMESPACES.includes(project.namespace.fullPath.split("/")[0])
   ) {
-    actionNeeded.value.push({
-      descripton:
-        "The project is not in an allowed group. Please transfer the project to an approved group. If you do not have access to the allowed group, request access using the following link:",
-      link: {
-        url: `${env.GITLAB_URL}/${env.ALLOWED_NAMESPACES[0]}`,
-        text: "Allowed Group",
+    actionNeeded.value = [
+      {
+        descripton:
+          "The project is not in an allowed group. Please transfer the project to an approved group:",
+        link: {
+          url: `${env.GITLAB_URL}/${env.ALLOWED_NAMESPACES[0]}`,
+          text: "Allowed Group",
+        },
+        posDescription: ", then move your project to the new group",
       },
-      posDescription: ", then move your project to the new group",
-    });
-    // actionNeeded.value.push(t("actionNeeded.changeNamespace"));
-  }
-
-  if (actionNeeded.value.length > 0) {
-    return (actionNeededDialog.value = true);
+    ];
+    actionNeededDialog.value = true;
+    return;
   }
 
   dialog.value = true;
   isLoading.value = true;
 
-  const projectConfigLang = await identifyProjectLanguage();
-
-  // Set the project config
-  projectConfig.value = projectConfigLang;
-
-  // Set the select
-  frameworkSelector.value = projectConfigLang.id;
+  const detectedConfig = await identifyProject();
+  frameworkSelector.value = detectedConfig.framework;
+  managerSelector.value = detectedConfig.manager;
+  projectConfig.value = detectedConfig;
 
   isLoading.value = false;
 };
 
-const handleDeploy = async () => {
-  if (projectConfig.value.id === "unknown") {
-    return showSnackbar(
-      "You can only deploy if choose one framework",
-      "warning"
-    );
-  }
+// Handle framework change
+const handleChangeFramework = (id: AcceptedFramework) => {
+  const newConfig = getDefaultProjectConfig(id);
+  managerSelector.value = newConfig.manager; // Reset to default manager
+  projectConfig.value = { ...newConfig };
+};
 
-  // Validate commands
-  const res = invalidCommands();
-  if (res.length > 0)
-    return showSnackbar(
-      "The commands are not accepted: " + res.join(", "),
-      "warning"
-    );
+// Handle package manager change
+const handleChangeManager = (manager: AcceptedPackageManager) => {
+  const managerConfig = packageManagers[manager];
+  projectConfig.value = {
+    ...projectConfig.value,
+    manager,
+    installCommand: managerConfig.commands.install,
+    buildCommand:
+      projectConfig.value.language === "javascript"
+        ? managerConfig.commands.build
+        : undefined,
+  };
+};
+
+// Deploy logic
+const handleDeploy = async () => {
+  if (!authStore.session) {
+    return showSnackbar("Error: Unauthorized", "error");
+  }
 
   injectFiles.value = [];
 
   // Check if the files have been changed
-  const files = await getRepositoryFiles(projectConfig.value.files);
+  const files = await getRepositoryFiles([
+    "Dockerfile",
+    ".gitlab-ci.yml",
+    "kubernetes_manifest.yml",
+    ...projectConfig.value.files,
+  ]);
 
   if (!files.success) {
     return showSnackbar("Error: " + files.error, "error");
@@ -439,9 +482,9 @@ const handleDeploy = async () => {
 
   injectFiles.value = generatedFiles.reduce<
     {
-      fileName: ManagedFile;
+      fileName: string;
       content: string;
-      action: CommitActions;
+      action: CommitAction;
     }[]
   >((fs, file) => {
     const originalFile = originalFiles.value.find(
@@ -466,113 +509,29 @@ const handleDeploy = async () => {
   confirmDeployDialog.value = true; // Open confirmation dialog
 };
 
-const invalidCommands = (): string[] => {
-  const errors: string[] = [];
-
-  // TODO: Add to other languages
-  if (["vite", "express", "nuxt"].includes(projectConfig.value.id)) {
-    // Validate install
-    const installPackageManager =
-      projectConfig.value.installCommand?.split(" ")[0];
-    if (
-      !installPackageManager ||
-      !acceptedJavascriptManagers.includes(installPackageManager)
-    ) {
-      errors.push(
-        `JavaScript package manager "${installPackageManager}"" is not accepted for install`
-      );
-    }
-
-    // Validate build
-    const buildPackageManager = projectConfig.value.buildCommand?.split(" ")[0];
-    if (
-      !buildPackageManager ||
-      !acceptedJavascriptManagers.includes(buildPackageManager)
-    ) {
-      errors.push(
-        `JavaScript package manager "${buildPackageManager}"" is not accepted for build`
-      );
-    }
-
-    // Validate root
-    const rootDir = projectConfig.value.rootDir?.split(" ")[0];
-    if (!rootDir || !rootDir.startsWith("./")) {
-      errors.push(`Root Directory "${rootDir}"" is not accepted`);
-    }
-  }
-
-  return errors;
-};
-
-const cancelDeploy = () => {
-  confirmDeployDialog.value = false;
-};
-
+// Confirm deployment
 const confirmDeploy = async () => {
   confirmDeployDialog.value = false;
+  if (!authStore.session) return showSnackbar("Error: Unauthorized", "error");
 
-  if (!authStore.session) {
-    return showSnackbar("Error: Unauthorized.", "error");
-  }
+  const encodeBase64 = (str: string) => btoa(unescape(encodeURIComponent(str)));
+  const commitActions = injectFiles.value.map((f) => ({
+    action: f.action || "create",
+    file_path: f.fileName,
+    content: encodeBase64(f.content),
+    encoding: "base64",
+  }));
 
-  if (projectConfig.value.id === "unknown") {
-    return showSnackbar(
-      "You can only deploy if choose one framework",
-      "warning"
-    );
-  }
-
-  // Base64 encode the contents of the Dockerfile and .gitlab-ci.yml
-  const encodeBase64 = (str: string): string => {
-    const encoder = new TextEncoder();
-    const uint8Array = encoder.encode(str);
-    let binary = "";
-    uint8Array.forEach((byte) => {
-      binary += String.fromCharCode(byte);
-    });
-    return btoa(binary);
-  };
-
-  const commitActions: {
-    action: CommitActions;
-    file_path: string;
-    content: string;
-    encoding: string;
-  }[] = [];
-
-  injectFiles.value.forEach((f) => {
-    if (!f.action) return;
-
-    return commitActions.push({
-      action: f.action, // Update if exists, else create
-      file_path: f.fileName,
-      content: encodeBase64(f.content),
-      encoding: "base64",
-    });
-  });
+  if (commitActions.length === 0)
+    return showSnackbar("No changes to deploy", "info");
 
   try {
-    // If no changes were made to either file, show a message to the user
-    if (commitActions.length === 0) {
-      return showSnackbar(
-        "No changes detected, there is no need for a deployment",
-        "info"
-      );
-    }
-
-    const commitMessage = `Auto-generated [${commitActions
-      .map((c) => c.file_path)
-      .join(", ")}] for auto CI/CD setup`;
-
-    // GitLab API endpoint to commit changes
     const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
-
-    // Make API request to commit the Dockerfile and GitLab CI file
     await axios.post(
       commitUrl,
       {
         branch: project.repository.rootRef,
-        commit_message: commitMessage,
+        commit_message: `Auto-generated deployment files`,
         actions: commitActions,
       },
       {
@@ -582,79 +541,107 @@ const confirmDeploy = async () => {
       }
     );
 
-    // If commit is successful, show success message
-    showSnackbar(commitMessage, "success");
+    showSnackbar("Deployment successful", "success");
 
-    nextStepsMessages.value = [
-      "The deployment has been successfully completed, and the following files have been inserted into your repository:",
-      ...commitActions.map((c, i) => `${i + 1}. ${c.file_path} - ${c.action}`),
-      "You can now review the changes by checking the job logs in GitLab. If this is your first deployment, you will also receive an email with the URL to your project.",
-    ];
+    deploymentInfo.value = {
+      filesCommitted: commitActions.map((a) => a.file_path),
+      messages: [
+        "Your project will be deployed within a few minutes.",
+        "If this is your first auto deployment, you will receive an email with the URL of your application.",
+        "You can track the progress of your build by accessing the GitLab project under Build > Pipelines.",
+      ],
+      nextSteps: [
+        "Make sure to pull from GitLab into your local branch to stay updated with the latest changes.",
+      ],
+    };
 
-    // Close the dialog after deployment
     dialog.value = false;
-
-    // Show the next steps dialog after a successful deployment
-    setTimeout(() => {
-      nextStepsDialog.value = true; // Show the next steps dialog
-    }, 2000);
+    nextStepsDialog.value = true;
   } catch (err) {
-    console.error("Deployment error:", err);
-    snackbar.value = {
-      show: true,
-      text: "Failed to deploy. Please check the logs or try again.",
-      color: "error",
-    };
+    showSnackbar("Deployment failed", "error");
+    console.error(err);
   }
 };
 
-const handleChangeConfig = (id: string | null) => {
-  if (!id) return (projectConfig.value = { ...frameworksConfig.unknown });
-
-  if (projectConfig.value.id === id) return;
-
-  projectConfig.value = {
-    ...(frameworksConfig[id] || frameworksConfig.unknown),
-  };
+// Cancel deployment
+const cancelDeploy = () => {
+  confirmDeployDialog.value = false;
 };
 
-const getRepositoryFiles = async (
-  filesPaths: string[]
-): Promise<
-  | {
-      success: true;
-      data: { fileName: ManagedFile; content: string }[];
-      error: null;
-    }
-  | { success: false; data: null; error: string }
-> => {
-  if (!authStore.session) {
-    return {
-      success: false,
-      data: null,
-      error: "Unauthorized",
-    };
+// Identify project language and framework
+const identifyProject = async (): Promise<ProjectConfig> => {
+  if (!project.languages.length) return getDefaultProjectConfig("unknown");
+  const mainLang = project.languages[0].name;
+
+  const allConfigFiles = new Set<string>();
+  const frameworkFileMap = new Map<string, FrameworkConfig>();
+
+  for (const framework of Object.values(frameworksConfig)) {
+    if (!framework.configFiles || !framework.langs?.includes(mainLang))
+      continue;
+
+    framework.configFiles.forEach((config) => {
+      allConfigFiles.add(config.file);
+      frameworkFileMap.set(framework.id, framework);
+    });
   }
 
-  try {
-    const query = {
-      query: `{
-        project(fullPath: "${project.fullPath}") {
-          repository {
-            blobs(ref: "${
-              project.repository.rootRef
-            }", paths: ["${filesPaths.join('", "')}"]) {
-              edges {
-                node {
-                  name
-                  rawBlob
-                }
-              }
-            }
-          }
+  if (allConfigFiles.size === 0) return getDefaultProjectConfig("unknown");
+
+  for (const framework of Object.values(frameworksConfig)) {
+    if (!framework.langs?.includes(mainLang)) continue;
+    framework.supportedManagers.forEach((manager) => {
+      packageManagers[manager].detectionFiles.forEach((df) =>
+        allConfigFiles.add(df.file)
+      );
+    });
+  }
+
+  const files = await getRepositoryFiles(Array.from(allConfigFiles));
+  if (!files.success) return getDefaultProjectConfig("unknown");
+
+  for (const framework of Object.values(frameworksConfig)) {
+    if (!framework.configFiles || !framework.langs?.includes(mainLang))
+      continue;
+
+    const hasFramework = framework.configFiles.some((configFile) => {
+      const file = files.data.find((f) => f.fileName === configFile.file);
+      return (
+        file &&
+        configFile.checkFor.some((check) => file.content.includes(check))
+      );
+    });
+
+    if (hasFramework) {
+      let detectedManager: AcceptedPackageManager | undefined;
+      for (const manager of framework.supportedManagers) {
+        const pmConfig = packageManagers[manager];
+        const hasManager = pmConfig.detectionFiles.some((df) => {
+          const file = files.data.find((f) => f.fileName === df.file);
+          return file && (!df.checkFor || file.content.includes(df.checkFor));
+        });
+        if (hasManager) {
+          detectedManager = manager;
+          break;
         }
-      }`,
-    };
+      }
+
+      const packageManager =
+        detectedManager && framework.supportedManagers.includes(detectedManager)
+          ? detectedManager
+          : framework.defaultManager;
+
+      return getDefaultProjectConfig(framework.id, packageManager);
+    }
+  }
+
+  return getDefaultProjectConfig("unknown");
+};
+
+// Fetch repository files
+const getRepositoryFiles = async (paths: string[]) => {
+  try {
+    if (!authStore.session) throw new Error("Unauthorized");
 
     const res = await axios.post<{
       data: {
@@ -663,7 +650,7 @@ const getRepositoryFiles = async (
             blobs: {
               edges: Array<{
                 node: {
-                  name: ManagedFile;
+                  name: string;
                   rawBlob: string; // Raw content of the file
                 };
               }>;
@@ -672,101 +659,42 @@ const getRepositoryFiles = async (
         };
       };
       correlationId: string;
-    }>(`${env.GITLAB_URL}/api/graphql`, query, {
-      headers: {
-        Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        "Content-Type": "application/json",
+    }>(
+      `${env.GITLAB_URL}/api/graphql`,
+      {
+        query: `{
+          project(fullPath: "${project.fullPath}") {
+            repository {
+              blobs(ref: "${
+                project.repository.rootRef
+              }", paths: ${JSON.stringify(paths)}) {
+                edges { node { name rawBlob } }
+              }
+            }
+          }
+        }`,
       },
-    });
-
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+        },
+      }
+    );
     return {
       success: true,
-      data: res.data.data.project.repository.blobs.edges.map((n) => ({
-        fileName: n.node.name,
-        content: n.node.rawBlob,
+      data: res.data.data.project.repository.blobs.edges.map((e) => ({
+        fileName: e.node.name,
+        content: e.node.rawBlob,
       })),
-      error: null,
     };
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      return {
-        success: false,
-        data: null,
-        error: error.message,
-      };
-    }
+  } catch (err) {
+    return { success: false, data: [], error: (err as Error).message };
   }
-
-  return {
-    success: false,
-    data: null,
-    error: "Unknown",
-  };
 };
 
-const identifyProjectLanguage = async () => {
-  if (project.languages.length === 0) {
-    return (projectConfig.value = {
-      ...frameworksConfig.unknown,
-    });
-  }
-
-  const mainLang = project.languages[0].name;
-
-  // Loop through all frameworks in frameworksConfig to find a match
-  for (const framework of Object.keys(frameworksConfig)) {
-    const frameworkConfig = frameworksConfig[framework];
-
-    // Check if the main language matches any of the supported languages for this framework
-    if (frameworkConfig.langs && frameworkConfig.langs.includes(mainLang)) {
-      let isFrameworkMatch = false;
-
-      // Check framework-specific conditions
-      if (frameworkConfig.configFiles) {
-        const configFileContent = await getRepositoryFiles(
-          frameworkConfig.configFiles.map((f) => f.file)
-        );
-
-        if (configFileContent.success) {
-          for (let i = 0; i < configFileContent.data.length; i++) {
-            const element = configFileContent.data[i];
-
-            const lookFor = frameworkConfig.configFiles?.find(
-              (e) => e.file === element.fileName
-            );
-
-            if (!lookFor) continue;
-
-            if (!element.content.includes(lookFor.checkFor)) continue;
-
-            isFrameworkMatch = true;
-            break;
-          }
-        }
-      }
-
-      if (isFrameworkMatch) {
-        return (projectConfig.value = { ...frameworkConfig });
-      }
-    }
-  }
-
-  // Default unknown framework if no match
-  return (projectConfig.value = {
-    ...frameworksConfig.unknown,
-  });
-};
-
-// Helper function to show snackbar messages
-const showSnackbar = (
-  message: string,
-  color: "success" | "error" | "warning" | "info"
-) => {
-  snackbar.value = {
-    show: true,
-    text: message,
-    color: color,
-  };
+// Snackbar helper
+const showSnackbar = (text: string, color: string) => {
+  snackbar.value = { show: true, text, color };
 };
 </script>
 

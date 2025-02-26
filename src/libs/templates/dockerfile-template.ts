@@ -4,42 +4,26 @@ export const generateDockerfile = async (
   config: ProjectConfig
 ): Promise<string> => {
   try {
-    const response = await fetch(`/templates/${config.id}/dockerfile.template`);
-
+    const response = await fetch(
+      `/templates/${config.framework}/dockerfile.template`
+    );
     if (!response.ok) {
-      console.error("Dockerfile template not found for framework:", config.id);
-      return "# Error: Template not found";
+      return `# Error: Template not found for ${config.framework}`;
     }
 
     let dockerfile = await response.text();
 
-    if (config.installCommand)
-      dockerfile = dockerfile.replace(
-        /{installCommand}/g,
-        config.installCommand.toLowerCase()
-      );
-    if (config.buildCommand)
-      dockerfile = dockerfile.replace(
-        /{buildCommand}/g,
-        config.buildCommand.toLowerCase()
-      );
-    if (config.outputDir)
-      dockerfile = dockerfile.replace(
-        /{outputDir}/g,
-        config.outputDir.toLowerCase()
-      );
-    if (config.rootDir)
-      dockerfile = dockerfile.replace(
-        /{rootDir}/g,
-        config.rootDir.toLowerCase()
-      );
-
-    const port = config.port ? config.port.toString() : "80";
-    dockerfile = dockerfile.replace(/{PORT}/g, port);
+    // Replace placeholders with the appropriate values, skipping empty ones
+    dockerfile = dockerfile
+      .replace(/{ROOT_DIR}/g, config.rootDir)
+      .replace(/{INSTALL_COMMAND}/g, config.installCommand)
+      .replace(/{BUILD_COMMAND}/g, config.buildCommand || "")
+      .replace(/{OUTPUT_DIR}/g, config.outputDir)
+      .replace(/{PORT}/g, config.port.toString());
 
     return dockerfile;
   } catch (error) {
     console.error("Error loading Dockerfile template:", error);
-    return "# Error loading Dockerfile template";
+    return "";
   }
 };

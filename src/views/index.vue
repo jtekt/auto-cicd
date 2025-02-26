@@ -344,7 +344,7 @@ const fetchProjects = async (clear?: boolean) => {
       }
     );
 
-    const notIdentifingLang = ["dockerfile"]; // TODO: Add more languages to filter
+    const notIdentifingLang = ["dockerfile", "html", "css", "scss"]; // TODO: Add more languages to filter
 
     const { edges, pageInfo } = res.data.data.projects;
 
