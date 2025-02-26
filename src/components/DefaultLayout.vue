@@ -1,20 +1,12 @@
 <template>
   <v-app :theme="theme">
-    <v-app-bar
-      elevation="1"
-      style="position: fixed"
-    >
+    <v-app-bar elevation="1" style="position: fixed">
       <v-container class="d-flex align-center">
         <RouterLink
           to="/"
           class="d-flex align-center mr-auto text-decoration-none"
         >
-          <v-img
-            src="/JTEKT_logo.jpg"
-            alt="JTEK logo"
-            width="120"
-            contain
-          />
+          <v-img src="/JTEKT_logo.jpg" alt="JTEK logo" width="120" contain />
         </RouterLink>
         <v-spacer />
         <v-btn
@@ -35,37 +27,24 @@
     </v-app-bar>
 
     <v-main>
-      <v-container
-        style="height: 100%"
-        class="py-8 d-flex flex-column"
-      >
-        <v-row
-          v-if="isLoading"
-          justify="center"
-          align="center"
-          style="flex: 1"
-        >
+      <v-container style="height: 100%" class="py-8 d-flex flex-column">
+        <v-row v-if="isLoading" justify="center" align="center" style="flex: 1">
           <AppLoader />
         </v-row>
-        <template v-else-if="authStore.session">
+        <template v-else-if="!route.meta.protected || authStore.session">
           <div style="flex: 1; display: flex; flex-direction: column">
             <router-view />
           </div>
         </template>
         <template v-else-if="route.meta.protected">
           <div class="d-flex justify-center">
-            <h3 class="h3">
-              You are not Authenticated
-            </h3>
+            <h3 class="h3">You are not Authenticated</h3>
           </div>
         </template>
       </v-container>
     </v-main>
 
-    <v-footer
-      app
-      class="d-flex flex-column bg-black"
-    >
+    <v-footer app class="d-flex flex-column bg-black">
       <div class="px-4 py-2 text-center w-100">
         {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
       </div>
