@@ -503,6 +503,7 @@ const handleDeploy = async () => {
         action: "create",
       });
     } else if (originalFile.content !== file.content) {
+      console.log({ original: originalFile.content, new: file.content });
       fs.push({
         ...file,
         action: "update",
