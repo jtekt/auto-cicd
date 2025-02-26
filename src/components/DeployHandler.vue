@@ -120,6 +120,10 @@
 
           <!-- Package Manager Selector -->
           <v-select
+            v-if="
+              packageManagersOptions.length > 0 &&
+              frameworkSelected.id !== 'unknown'
+            "
             v-model="managerSelector"
             :items="packageManagersOptions"
             item-title="title"
@@ -130,7 +134,7 @@
           />
 
           <!-- Build and Output Settings -->
-          <v-expansion-panels v-if="frameworkSelector !== 'unknown'">
+          <v-expansion-panels v-if="!!frameworkSelected.userConfigurable">
             <v-expansion-panel>
               <v-expansion-panel-title
                 >Build and Output Settings</v-expansion-panel-title
@@ -138,13 +142,12 @@
               <v-expansion-panel-text>
                 <p class="mb-4 text-subtitle-2 font-weight-light">
                   These are the default configurations for a
-                  <strong>{{
-                    frameworksConfig[frameworkSelector].name
-                  }}</strong>
+                  <strong>{{ frameworkSelected.name }}</strong>
                   project. If your project requires different settings, you can
                   modify them as needed.
                 </p>
                 <v-text-field
+                  v-if="frameworkSelected.userConfigurable.rootDir"
                   v-model="projectConfig.rootDir"
                   label="Root Directory"
                   variant="outlined"
@@ -156,6 +159,7 @@
                   "
                 />
                 <v-text-field
+                  v-if="frameworkSelected.userConfigurable.outputDir"
                   v-model="projectConfig.outputDir"
                   label="Output Directory"
                   variant="outlined"
@@ -167,6 +171,7 @@
                   "
                 />
                 <v-text-field
+                  v-if="frameworkSelected.userConfigurable.installCommand"
                   v-model="projectConfig.installCommand"
                   label="Install Command"
                   variant="outlined"
@@ -178,7 +183,7 @@
                   "
                 />
                 <v-text-field
-                  v-if="projectConfig.language === 'javascript'"
+                  v-if="frameworkSelected.userConfigurable.buildCommand"
                   v-model="projectConfig.buildCommand"
                   label="Build Command"
                   variant="outlined"
@@ -280,7 +285,7 @@
   <!-- Next Steps Dialog -->
   <v-dialog v-model="nextStepsDialog" max-width="600px">
     <v-card>
-      <v-card-title class="headline">
+      <v-card-title class="headline text-center text-h5">
         Deployment Completed Successfully! 🎉
       </v-card-title>
       <v-card-text v-if="deploymentInfo">
@@ -288,12 +293,10 @@
           <v-col>
             <strong>Files Committed:</strong>
             <v-list>
-              <v-list-item>
-                <v-list-item-title
-                  v-for="f in deploymentInfo.filesCommitted"
-                  :key="f"
-                  >{{ f }}</v-list-item-title
-                >
+              <v-list-item v-for="f in deploymentInfo.filesCommitted" :key="f">
+                <p>
+                  {{ f }}
+                </p>
               </v-list-item>
             </v-list>
           </v-col>
@@ -306,7 +309,7 @@
             <strong>Important Notes:</strong>
             <v-list dense>
               <v-list-item v-for="f in deploymentInfo.messages" :key="f">
-                <v-list-item-title>{{ f }}</v-list-item-title>
+                <p>{{ f }}</p>
               </v-list-item>
             </v-list>
           </v-col>
@@ -319,7 +322,7 @@
             <strong>Next Steps:</strong>
             <v-list dense>
               <v-list-item v-for="s in deploymentInfo.nextSteps" :key="s">
-                <v-list-item-title>{{ s }}</v-list-item-title>
+                <p>{{ s }}</p>
               </v-list-item>
             </v-list>
           </v-col>
@@ -327,7 +330,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn color="primary" @click="dialog = false">Close</v-btn>
+        <v-btn variant="tonal" @click="nextStepsDialog = false">Close</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -397,6 +400,9 @@ const packageManagersOptions = computed(() =>
     title: m,
     value: m,
   }))
+);
+const frameworkSelected = computed(
+  () => frameworksConfig[frameworkSelector.value]
 );
 
 // Open deploy dialog and detect framework/language

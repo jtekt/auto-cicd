@@ -1,6 +1,6 @@
 // Types
 export type AcceptedFramework = "vite" | "nuxt" | "streamlit" | "unknown";
-export type AcceptedPackageManager = "npm" | "yarn" | "pip" | "poetry";
+export type AcceptedPackageManager = "npm" | "yarn" | "pip";
 export type Language = "javascript" | "python";
 export type OptionalFiles = "nginx.conf"; // Optional files exclusive to some frameworks
 export type ManagedFile =
@@ -43,6 +43,12 @@ export type FrameworkConfig = {
   language: Language;
   image: { type: "img" | "icon"; value: string };
   langs?: string[];
+  userConfigurable?: {
+    installCommand?: true;
+    buildCommand?: true;
+    outputDir?: true;
+    rootDir?: true;
+  };
   outputDir?: string;
   rootDir?: string;
   port?: number;
@@ -69,13 +75,8 @@ export const packageManagers: Record<
   },
   pip: {
     name: "pip",
-    commands: { install: "pip install -r requirements.txt" },
+    commands: { install: "pip install --no-cache-dir -r requirements.txt" },
     detectionFiles: [{ file: "requirements.txt" }],
-  },
-  poetry: {
-    name: "poetry",
-    commands: { install: "poetry install" },
-    detectionFiles: [{ file: "pyproject.toml", checkFor: "[tool.poetry]" }],
   },
 };
 
@@ -86,6 +87,12 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     language: "javascript",
     image: { type: "img", value: "/icons/Vite.js.svg" },
     langs: ["vue", "typescript", "javascript", "tsx", "jsx"],
+    userConfigurable: {
+      buildCommand: true,
+      installCommand: true,
+      outputDir: true,
+      rootDir: true,
+    },
     outputDir: "dist",
     rootDir: "./",
     port: 80,
@@ -100,6 +107,12 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     language: "javascript",
     image: { type: "img", value: "/icons/Nuxt.svg" },
     langs: ["vue", "typescript", "javascript"],
+    userConfigurable: {
+      buildCommand: true,
+      installCommand: true,
+      outputDir: true,
+      rootDir: true,
+    },
     outputDir: ".output",
     rootDir: "./",
     port: 80,
@@ -114,11 +127,14 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     language: "python",
     image: { type: "img", value: "/icons/Streamlit.svg" },
     langs: ["python"],
+    userConfigurable: {
+      installCommand: true,
+    },
     rootDir: "./",
     port: 8501,
     files: [],
     configFiles: [{ file: "requirements.txt", checkFor: ["streamlit"] }],
-    supportedManagers: ["pip", "poetry"],
+    supportedManagers: ["pip"],
     defaultManager: "pip",
     runtimeDependencies: ["gunicorn"],
   },
