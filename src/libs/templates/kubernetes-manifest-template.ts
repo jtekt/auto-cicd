@@ -9,7 +9,10 @@ export const generateKubernetesManifest = async (
     const response = await fetch(templatePath);
 
     if (!response.ok) {
-      console.error("Kubernetes template not found for framework:", config.id);
+      console.error(
+        "Kubernetes template not found for framework:",
+        config.framework
+      );
       return "# Error: Template not found";
     }
 

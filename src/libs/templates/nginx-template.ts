@@ -5,11 +5,14 @@ export const generateNginxConf = async (
 ): Promise<string> => {
   try {
     // Fetch the nginx.conf template
-    const templatePath = `/templates/${config.id}/nginx.conf.template`;
+    const templatePath = `/templates/${config.framework}/nginx.conf.template`;
     const response = await fetch(templatePath);
 
     if (!response.ok) {
-      console.error("Nginx template not found for framework:", config.id);
+      console.error(
+        "Nginx template not found for framework:",
+        config.framework
+      );
       return "# Error: Template not found";
     }
 
