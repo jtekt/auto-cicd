@@ -125,7 +125,6 @@ deploy-job:
 
     - |
       if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
-        echo "Deployment was newly created, Notifying user by email"
 
         docker run \
           -e SMTP_PORT=$AWS_SES_PORT \
@@ -138,7 +137,7 @@ deploy-job:
           -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://172.16.98.151:$PORT. Please note that it might take a few minutes for the application to start." \
           moreillon/sendemail
       else
-        echo "Deployment was just updated, no need to notify user"
+        echo "Please note that it might take a few minutes for the application to start."
       fi
 
   environment:

@@ -22,4 +22,4 @@ ENV NITRO_PORT={PORT}
 EXPOSE {PORT}
 
 # Start the application
-CMD [ "npm", "run", "start" ]
+CMD ["node", "{outputDir}/server/index.mjs"]
