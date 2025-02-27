@@ -117,8 +117,10 @@ deploy-job:
           -e SMTP_SUBJECT="Auto CICD" \
           -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://172.16.98.151:$PORT. Please note that it might take a few minutes for the application to start." \
           moreillon/sendemail
+
+        echo "Email was sent to: $GITLAB_USER_EMAIL"
       else
-        echo "Please note that it might take a few minutes for the application to start."
+        echo "Please note that it might take a few minutes for the application to update."
       fi
 
   environment:
