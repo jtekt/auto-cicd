@@ -248,7 +248,11 @@
                     <v-icon>mdi-delete</v-icon>
                   </v-btn>
                 </div>
-
+                <p class="text-caption text-center mt-2 mb-2">
+                  You can paste the contents of a valid .env file directly into
+                  one of the key input fields, and it will automatically
+                  populate the corresponding values for you.
+                </p>
                 <v-btn color="primary" variant="tonal" @click="addEnv"
                   >Add More</v-btn
                 >
@@ -377,11 +381,6 @@
               <span class="font-weight-medium">{{ env.key }}</span>
             </v-list-item>
           </v-list>
-          <p class="text-caption text-center">
-            You can paste the contents of a valid .env file directly into one of
-            the key input fields, and it will automatically populate the
-            corresponding values for you.
-          </p>
         </div>
       </v-card-text>
 
