@@ -1,11 +1,13 @@
 import type { ProjectConfig } from "@/config/frameworks-config";
 
+const PUBLIC_BASE = (globalThis as any).BASE_PUBLIC_URL || "";
+
 export const generateDockerfile = async (
   config: ProjectConfig
 ): Promise<string> => {
   try {
     const response = await fetch(
-      `/templates/${config.framework}/dockerfile.template`
+      `${PUBLIC_BASE}/templates/${config.framework}/dockerfile.template`
     );
     if (!response.ok) {
       return `# Error: Template not found for ${config.framework}`;
@@ -17,13 +19,18 @@ export const generateDockerfile = async (
     dockerfile = dockerfile
       .replace(/{ROOT_DIR}/g, config.rootDir)
       .replace(/{INSTALL_COMMAND}/g, config.installCommand)
-      .replace(/{BUILD_COMMAND}/g, config.buildCommand || "")
+      .replace(
+        /{BUILD_COMMAND}/g,
+        config.buildCommand
+          ? `\n# Build the project\nRUN ${config.buildCommand}\n`
+          : ""
+      )
       .replace(/{OUTPUT_DIR}/g, config.outputDir)
       .replace(/{PORT}/g, config.port.toString());
 
     return dockerfile;
   } catch (error) {
     console.error("Error loading Dockerfile template:", error);
-    return "";
+    return "# Error loading Dockerfile template";
   }
 };

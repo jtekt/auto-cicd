@@ -44,6 +44,9 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    fs: {
+      allow: ["public", "."], // Allow access to public folder
+    },
   },
   css: {
     preprocessorOptions: {

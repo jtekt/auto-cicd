@@ -1,5 +1,5 @@
 # Start from an appropriate base image
-FROM node:22-alpine as base
+FROM node:22-slim as base
 
 # Set the working directory for building
 WORKDIR /app
@@ -10,10 +10,7 @@ RUN {INSTALL_COMMAND}
 
 # Copy all source code
 COPY . .
-
-# Build the project
-RUN {BUILD_COMMAND}
-
+{BUILD_COMMAND}
 # Deploy the app
 FROM nginx:stable-alpine as production-stage
 

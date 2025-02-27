@@ -13,8 +13,7 @@ COPY . .
 {BUILD_COMMAND}
 # Define environment variables
 ENV NODE_ENV=production
-ENV NITRO_PORT={PORT}
-ENV HOST=0.0.0.0
+ENV PORT={PORT}
 
 # Expose the port the application will run on
 EXPOSE {PORT}

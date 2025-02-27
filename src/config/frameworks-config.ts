@@ -1,5 +1,10 @@
 // Types
-export type AcceptedFramework = "vite" | "nuxt" | "streamlit" | "unknown";
+export type AcceptedFramework =
+  | "vite"
+  | "nuxt"
+  | "streamlit"
+  | "express"
+  | "unknown";
 export type AcceptedPackageManager = "npm" | "yarn" | "pip";
 export type Language = "javascript" | "python";
 export type OptionalFiles = "nginx.conf"; // Optional files exclusive to some frameworks
@@ -45,7 +50,9 @@ export type FrameworkConfig = {
   langs?: string[];
   userConfigurable?: {
     installCommand?: true;
-    buildCommand?: true;
+    buildCommand?: {
+      defaultEmpty: boolean;
+    };
     outputDir?: true;
     rootDir?: true;
   };
@@ -53,7 +60,7 @@ export type FrameworkConfig = {
   rootDir?: string;
   port?: number;
   files?: OptionalFiles[];
-  configFiles?: { file: string; checkFor: string[] }[]; // Still needed for framework detection
+  configFiles?: { file: string; checkFor: string[] }[]; // What files to check and what key workds to look for
   supportedManagers: AcceptedPackageManager[];
   defaultManager: AcceptedPackageManager;
   runtimeDependencies?: string[];
@@ -88,7 +95,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     image: { type: "img", value: "/icons/Vite.js.svg" },
     langs: ["vue", "typescript", "javascript", "tsx", "jsx"],
     userConfigurable: {
-      buildCommand: true,
+      buildCommand: { defaultEmpty: false },
       installCommand: true,
       outputDir: true,
       rootDir: true,
@@ -108,16 +115,38 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     image: { type: "img", value: "/icons/Nuxt.svg" },
     langs: ["vue", "typescript", "javascript"],
     userConfigurable: {
-      buildCommand: true,
+      buildCommand: { defaultEmpty: false },
       installCommand: true,
       outputDir: true,
       rootDir: true,
     },
-    outputDir: ".output",
+    outputDir: ".output/server/index.mjs",
     rootDir: "./",
     port: 80,
     files: [],
     configFiles: [{ file: "package.json", checkFor: ["nuxt"] }],
+    supportedManagers: ["npm", "yarn"],
+    defaultManager: "npm",
+  },
+  express: {
+    id: "express",
+    name: "Express",
+    language: "javascript",
+    image: { type: "img", value: "/icons/Express.svg" },
+    langs: ["javascript", "typescript"],
+    userConfigurable: {
+      buildCommand: {
+        defaultEmpty: true,
+      },
+      installCommand: true,
+      outputDir: true,
+      rootDir: true,
+    },
+    outputDir: "app.js",
+    rootDir: "./",
+    port: 80,
+    files: [],
+    configFiles: [{ file: "package.json", checkFor: ["express"] }],
     supportedManagers: ["npm", "yarn"],
     defaultManager: "npm",
   },
@@ -166,14 +195,20 @@ export const getDefaultProjectConfig = (
     framework: framework.id,
     manager: manager,
     installCommand: managerConfig.commands.install,
-    buildCommand:
-      framework.language === "javascript"
-        ? managerConfig.commands.build
-        : undefined,
+    buildCommand: !framework.userConfigurable?.buildCommand?.defaultEmpty
+      ? managerConfig.commands.build
+      : undefined,
     outputDir: framework.outputDir || "dist",
     rootDir: framework.rootDir || "./",
     port: framework.port || 80,
     files: framework.files || [],
     runtimeDependencies: framework.runtimeDependencies,
   };
+};
+
+// Helper to get supported frameworks
+export const getSupportedFrameworks = (): AcceptedFramework[] => {
+  return Object.keys(frameworksConfig).filter(
+    (framework) => framework !== "unknown"
+  ) as AcceptedFramework[];
 };
