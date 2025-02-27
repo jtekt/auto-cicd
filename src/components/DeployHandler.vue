@@ -739,21 +739,21 @@ const confirmDeploy = async () => {
   }
 
   try {
-    // const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
+    const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
 
-    // await axios.post(
-    //   commitUrl,
-    //   {
-    //     branch: project.repository.rootRef,
-    //     commit_message: `Auto-generated deployment files`,
-    //     actions: commitActions,
-    //   },
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-    //     },
-    //   }
-    // );
+    await axios.post(
+      commitUrl,
+      {
+        branch: project.repository.rootRef,
+        commit_message: `Auto-generated deployment files`,
+        actions: commitActions,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+        },
+      }
+    );
 
     showSnackbar("Deployment successful", "success");
 
