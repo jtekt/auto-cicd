@@ -36,44 +36,47 @@
   </v-dialog>
 
   <!-- Deploy Dialog -->
-  <v-dialog v-model="dialog" width="500" max-width="90vw" max-height="90vh">
-    <v-card style="height: 100%; width: 100%">
-      <template #title>
-        <h3 class="text-lg-center">Deploy Project</h3>
-      </template>
+  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
+    <v-card :loading="isLoading" style="height: 100%">
+      <v-toolbar style="position: relative">
+        <v-btn
+          style="position: absolute; left: 0"
+          icon="mdi-close"
+          @click="dialog = false"
+        ></v-btn>
 
-      <!-- Loading and error handling -->
-      <v-row v-if="isLoading" justify="center" align="center" class="pa-4">
-        <AppLoader />
-      </v-row>
-      <div v-else-if="error" class="pa-5">
-        <v-alert type="error" variant="tonal">
-          <p>{{ error }}</p>
-        </v-alert>
-      </div>
-
-      <!-- Configuration Form -->
-      <template v-else>
-        <div
-          style="
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 400px;
-            width: 100%;
-            margin-bottom: 24px;
-          "
+        <v-toolbar-items
+          style="display: flex; justify-content: center; width: 100%"
         >
-          <v-btn
-            variant="outlined"
+          <a
             :href="project.webUrl"
             target="_blank"
-            width="100%"
-            height="60"
-            class="pa-4 mb-5 text-h6 font-weight-bold"
+            rel="noopener noreferrer"
+            style="text-decoration: inherit; color: inherit"
           >
-            {{ project.name }}
-          </v-btn>
+            <p class="text-caption">Deploying from GitLab</p>
+            <div class="d-flex ga-2 align-center">
+              <v-avatar image="/icons/GitLab.svg" size="24"></v-avatar>
+              <p class="text-body-1 font-weight-medium">
+                {{ project.fullPath }}
+              </p>
+              <span class="d-flex align-center" style="color: gray">
+                <v-icon size="18">mdi-source-branch</v-icon>
+                <p>{{ project.repository.rootRef }}</p>
+              </span>
+            </div>
+          </a>
+        </v-toolbar-items>
+      </v-toolbar>
+      <div style="padding: 24px; width: 100%; max-width: 800px; margin: 0 auto">
+        <div v-if="error" class="pa-5">
+          <v-alert type="error" variant="tonal">
+            <p>{{ error }}</p>
+          </v-alert>
+        </div>
 
+        <!-- Configuration Form -->
+        <template v-else>
           <!-- Framework Selector -->
           <v-select
             v-model="frameworkSelector"
@@ -196,24 +199,91 @@
                 />
               </v-expansion-panel-text>
             </v-expansion-panel>
-          </v-expansion-panels>
-        </div>
-      </template>
+            <v-expansion-panel>
+              <v-expansion-panel-title
+                >Environment Variables</v-expansion-panel-title
+              >
+              <v-expansion-panel-text>
+                <p class="mb-4 text-subtitle-2 font-weight-light">
+                  Add environment variables for your project. Sensitive values
+                  will be hidden.
+                </p>
 
-      <!-- Actions -->
+                <div
+                  class="d-flex ga-4 align-center mb-4"
+                  v-for="(env, index) in environmentVariables"
+                  :key="index"
+                >
+                  <v-text-field
+                    v-model="env.key"
+                    label="Key"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    :error="!!env.value && !env.key"
+                    @paste="handlePaste($event, index)"
+                    :disabled="env.protected"
+                  />
+                  <v-text-field
+                    v-model="env.value"
+                    label="Value"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    :disabled="env.protected"
+                    :append-inner-icon="env.visible ? 'mdi-eye-off' : 'mdi-eye'"
+                    :type="env.visible && !env.protected ? 'text' : 'password'"
+                    @click:append-inner="
+                      env.visible = !env.protected && !env.visible
+                    "
+                  />
+                  <v-btn
+                    :disabled="env.protected"
+                    density="comfortable"
+                    icon
+                    variant="tonal"
+                    color="error"
+                    @click="removeEnv(index)"
+                  >
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+
+                <v-btn color="primary" variant="tonal" @click="addEnv"
+                  >Add More</v-btn
+                >
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </template>
+
+        <!-- Actions -->
+      </div>
       <template #actions>
-        <v-btn
-          color="success"
-          variant="tonal"
-          :text="t('pages.home.deploy.deploy')"
-          :disabled="frameworkSelector === 'unknown'"
-          @click="handleDeploy"
-        />
-        <v-btn
-          variant="tonal"
-          :text="t('pages.home.deploy.cancel')"
-          @click="dialog = false"
-        />
+        <div
+          class="d-flex justify-end ga-2"
+          style="
+            padding: 24px;
+            width: 100%;
+            max-width: 800px;
+            margin-top: auto;
+            margin-left: auto;
+            margin-right: auto;
+          "
+        >
+          <v-btn
+            color="success"
+            variant="tonal"
+            :text="t('pages.home.deploy.deploy')"
+            :disabled="frameworkSelector === 'unknown'"
+            @click="handleDeploy"
+          />
+          <v-btn
+            variant="tonal"
+            :text="t('pages.home.deploy.cancel')"
+            @click="dialog = false"
+          />
+        </div>
       </template>
     </v-card>
   </v-dialog>
@@ -226,29 +296,47 @@
     max-width="90vw"
     max-height="90vh"
   >
-    <v-card prepend-icon="mdi-check-all">
-      <template #title>{{
-        t("pages.home.deploy.confirmDeployTitle")
-      }}</template>
-      <v-card-text>
-        <template v-if="injectFiles.length > 0">
-          <p>{{ t("pages.home.deploy.confirmDeployMessage") }}</p>
-          <v-expansion-panels variant="accordion">
+    <v-card prepend-icon="mdi-check-all" class="pa-2">
+      <template #title>
+        <span class="text-h6 font-weight-bold">
+          {{ t("pages.home.deploy.confirmDeployTitle") }}
+        </span>
+      </template>
+
+      <v-card-text class="mt-4">
+        <!-- Main instruction message -->
+        <p class="text-body-1 mb-4">
+          {{ t("pages.home.deploy.confirmDeployMessage") }}
+        </p>
+
+        <!-- Files Section -->
+        <div class="mb-6">
+          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+            Files to be Deployed
+          </h3>
+          <v-expansion-panels
+            v-if="injectFiles.length"
+            variant="accordion"
+            elevation="1"
+            class="rounded-lg"
+          >
             <v-expansion-panel
               v-for="(fileInfo, index) in injectFiles"
               :key="index"
+              class="mb-1"
             >
               <template #title>
-                <div class="d-flex flex-column">
-                  <h4
-                    :class="`font-weight-bold ${
-                      fileInfo.action === 'update'
-                        ? 'text-info'
-                        : 'text-success'
-                    }`"
+                <div class="d-flex align-center gap-2">
+                  <v-chip
+                    :color="fileInfo.action === 'update' ? 'info' : 'success'"
+                    size="small"
+                    class="font-weight-bold"
                   >
+                    {{ fileInfo.action === "update" ? "Update" : "Create" }}
+                  </v-chip>
+                  <span class="font-weight-medium">
                     {{ fileInfo.fileName }}
-                  </h4>
+                  </span>
                 </div>
               </template>
               <template #text>
@@ -256,26 +344,54 @@
                   :default-value="fileInfo.content"
                   max-height="300"
                   readonly
-                  style="font-size: 12px"
+                  class="mt-2 text-body-2"
                 />
               </template>
             </v-expansion-panel>
           </v-expansion-panels>
-        </template>
-        <p v-else class="text-warning">
-          {{ t("pages.home.deploy.noChangesMade") }}
-        </p>
+          <v-alert
+            v-else
+            type="warning"
+            variant="tonal"
+            density="compact"
+            class="mt-2"
+          >
+            {{ t("pages.home.deploy.noChangesMade") }}
+          </v-alert>
+        </div>
+
+        <!-- Environment Variables Section -->
+        <div v-if="environmentVariables.length" class="mb-6">
+          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+            Included Environment Variables
+          </h3>
+          <p class="text-body-2 text-grey-darken-1 mb-2">
+            These variables will be available in your deployment:
+          </p>
+          <v-list density="compact" class="bg-grey-lighten-4 rounded-lg py-1">
+            <v-list-item
+              v-for="(env, index) in environmentVariables"
+              :key="index"
+              class="text-body-2"
+            >
+              <span class="font-weight-medium">{{ env.key }}</span>
+            </v-list-item>
+          </v-list>
+        </div>
       </v-card-text>
-      <v-card-actions>
+
+      <v-card-actions class="pa-4">
+        <v-spacer />
         <v-btn
           v-if="injectFiles.length > 0"
-          color="primary"
+          color="success"
+          class="px-4"
           variant="tonal"
           @click="confirmDeploy"
         >
           {{ t("pages.home.deploy.continue") }}
         </v-btn>
-        <v-btn variant="tonal" @click="cancelDeploy">
+        <v-btn variant="tonal" class="px-4" @click="cancelDeploy">
           {{ t("pages.home.deploy.cancel") }}
         </v-btn>
       </v-card-actions>
@@ -284,59 +400,67 @@
 
   <!-- Next Steps Dialog -->
   <v-dialog v-model="nextStepsDialog" max-width="600px">
-    <v-card>
-      <v-card-title class="headline text-center text-h5">
+    <v-card class="pa-2">
+      <v-card-title class="text-h5 font-weight-bold text-center py-4">
+        <v-icon left color="success">mdi-check-circle</v-icon>
         Deployment Completed Successfully! 🎉
       </v-card-title>
-      <v-card-text v-if="deploymentInfo">
-        <v-row>
-          <v-col>
-            <strong>Files Committed:</strong>
-            <v-list>
-              <v-list-item v-for="f in deploymentInfo.filesCommitted" :key="f">
-                <p>
-                  {{ f }}
-                </p>
-              </v-list-item>
-            </v-list>
-          </v-col>
-        </v-row>
 
-        <v-divider></v-divider>
+      <v-card-text v-if="deploymentInfo" class="py-4">
+        <!-- Files Committed Section -->
+        <div v-if="deploymentInfo.filesCommitted.length" class="mb-6">
+          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+            Files Committed to Repository
+          </h3>
+          <v-alert type="info" variant="tonal" density="compact" class="mb-3">
+            These changes have been pushed to your GitLab repository. Please
+            pull the latest updates.
+          </v-alert>
+          <v-list density="compact" class="bg-grey-lighten-4 rounded-lg py-1">
+            <v-list-item v-for="f in deploymentInfo.filesCommitted" :key="f">
+              <span class="text-body-2">{{ f }}</span>
+            </v-list-item>
+          </v-list>
+        </div>
 
-        <v-row>
-          <v-col>
-            <strong>Important Notes:</strong>
-            <v-list dense>
-              <v-list-item v-for="f in deploymentInfo.messages" :key="f">
-                <p>{{ f }}</p>
-              </v-list-item>
-            </v-list>
-          </v-col>
-        </v-row>
-
-        <v-divider></v-divider>
-
-        <v-row>
-          <v-col>
-            <strong>Next Steps:</strong>
-            <v-list dense>
-              <v-list-item v-for="s in deploymentInfo.nextSteps" :key="s">
-                <p>{{ s }}</p>
-              </v-list-item>
-            </v-list>
-          </v-col>
-        </v-row>
+        <!-- Important Notes Section -->
+        <div v-if="deploymentInfo.messages.length" class="mb-6">
+          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+            Important Notes
+          </h3>
+          <v-list density="compact">
+            <v-list-item v-for="f in deploymentInfo.messages" :key="f">
+              <span class="text-body-2">{{ f }}</span>
+            </v-list-item>
+          </v-list>
+        </div>
       </v-card-text>
 
-      <v-card-actions>
-        <v-btn variant="tonal" @click="nextStepsDialog = false">Close</v-btn>
+      <v-card-actions class="pa-4">
+        <v-spacer />
+        <v-btn
+          color="primary"
+          variant="tonal"
+          class="px-4"
+          @click="nextStepsDialog = false"
+        >
+          Close
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="5000">
-    {{ snackbar.text }}
+  <!-- Multiple Snackbars -->
+  <v-snackbar
+    v-for="(snack, index) in snackbarQueue"
+    :key="index"
+    v-model="snack.show"
+    :color="snack.color"
+    :timeout="5000"
+    :style="{ 'margin-bottom': `${index * 60}px`, zIndex: 1000 }"
+    location="bottom"
+  >
+    {{ snack.text }}
   </v-snackbar>
 </template>
 
@@ -345,7 +469,6 @@ import { computed, ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
 import { env } from "@/config/env";
-import AppLoader from "./AppLoader.vue";
 import { useLocale } from "vuetify";
 import type { ProjectNode } from "@/types/project";
 import { generateFiles } from "@/libs/templates";
@@ -360,8 +483,15 @@ import {
 } from "@/config/frameworks-config";
 import type { CommitAction } from "@/libs/gitlab";
 
+const authStore = useAuthStore();
+
 const { t } = useLocale();
 const { project } = defineProps<{ project: ProjectNode }>();
+
+// Define the snackbar queue as a reactive array
+const snackbarQueue = ref<
+  Array<{ show: boolean; text: string; color: string }>
+>([]);
 
 const dialog = ref(false);
 const actionNeededDialog = ref(false);
@@ -377,11 +507,9 @@ const nextStepsDialog = ref(false);
 const deploymentInfo = ref<{
   filesCommitted: string[];
   messages: string[];
-  nextSteps: string[];
 } | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
-const snackbar = ref({ show: false, text: "", color: "success" });
 
 const frameworkSelector = ref<AcceptedFramework>("unknown");
 const managerSelector = ref<AcceptedPackageManager>("npm");
@@ -391,7 +519,80 @@ const injectFiles = ref<
   { fileName: string; content: string; action: CommitAction }[]
 >([]);
 
-const authStore = useAuthStore();
+const envKey = "ENV";
+const environmentVariables = ref<
+  { key: string; value: string; visible: boolean; protected?: boolean }[]
+>([]);
+
+const addEnv = () => {
+  environmentVariables.value.push({ key: "", value: "", visible: false });
+};
+
+const removeEnv = (index: number) => {
+  environmentVariables.value.splice(index, 1);
+};
+
+const handlePaste = (event: ClipboardEvent, index: number) => {
+  // Prevent default paste action
+  event.preventDefault();
+
+  // Get pasted text
+  const pastedText = event.clipboardData?.getData("text");
+
+  if (!pastedText) return;
+
+  // Normalize the pasted text: Remove carriage return characters (\r) and normalize line breaks
+  const normalizedText = pastedText.replace(/\r/g, ""); // Remove \r characters
+  const envLines = normalizedText
+    .split("\n")
+    .filter((line) => line.trim() !== "");
+
+  const newVariables: { key: string; value: string; visible: boolean }[] = [];
+  let isValidEnv = true;
+
+  // Validate if the pasted lines are in valid .env format
+  for (const line of envLines) {
+    const match = line.match(/^([^#=]+)\s*=\s*(.*)$/); // Match key=value pairs and ignore comments
+    if (match) {
+      const key = match[1].trim();
+      const value = match[2].trim().replace(/^["']|["']$/g, ""); // Remove surrounding quotes
+      newVariables.push({ key, value, visible: false });
+    } else {
+      // If any line is not valid .env format, we flag as invalid
+      isValidEnv = false;
+      break;
+    }
+  }
+
+  // If the paste is a valid .env format, update the environment variables
+  if (isValidEnv && newVariables.length > 0) {
+    // If there is a focus on a particular key (index is provided), update that key
+    if (index !== undefined && environmentVariables.value[index]) {
+      environmentVariables.value[index] = newVariables[0]; // Only update the first line
+    } else {
+      // If no index, or this is the first key, clear previous and set new variables
+      environmentVariables.value = [...newVariables]; // Replace old values with new ones
+    }
+
+    // If there are more than one key-value pairs, add the rest as new entries
+    if (newVariables.length > 1) {
+      // Append the remaining new variables
+      environmentVariables.value.push(...newVariables.slice(1));
+    }
+  } else {
+    // If the .env format is invalid, let the browser handle the paste normally
+    const focusedElement = document.activeElement as HTMLInputElement;
+    if (focusedElement) {
+      const value = focusedElement.value;
+      const cursorPosition = focusedElement.selectionStart || 0;
+      const textBefore = value.slice(0, cursorPosition);
+      const textAfter = value.slice(cursorPosition);
+
+      // Insert the pasted text at the cursor position
+      focusedElement.value = textBefore + pastedText + textAfter;
+    }
+  }
+};
 
 // Framework and package manager options
 const frameworks = Object.values(frameworksConfig);
@@ -429,10 +630,14 @@ const handleDeployBtn = async () => {
     return;
   }
 
+  // Get envs
+  environmentVariables.value = (await getEnvs()) || [];
+
   dialog.value = true;
   isLoading.value = true;
 
   const detectedConfig = await identifyProject();
+
   frameworkSelector.value = detectedConfig.framework;
   managerSelector.value = detectedConfig.manager;
   projectConfig.value = detectedConfig;
@@ -529,26 +734,30 @@ const confirmDeploy = async () => {
     encoding: "base64",
   }));
 
-  if (commitActions.length === 0)
+  if (commitActions.length === 0) {
     return showSnackbar("No changes to deploy", "info");
+  }
 
   try {
-    const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
-    await axios.post(
-      commitUrl,
-      {
-        branch: project.repository.rootRef,
-        commit_message: `Auto-generated deployment files`,
-        actions: commitActions,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      }
-    );
+    // const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
+
+    // await axios.post(
+    //   commitUrl,
+    //   {
+    //     branch: project.repository.rootRef,
+    //     commit_message: `Auto-generated deployment files`,
+    //     actions: commitActions,
+    //   },
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+    //     },
+    //   }
+    // );
 
     showSnackbar("Deployment successful", "success");
+
+    await updateEnvs();
 
     deploymentInfo.value = {
       filesCommitted: commitActions.map((a) => a.file_path),
@@ -557,15 +766,49 @@ const confirmDeploy = async () => {
         "If this is your first auto deployment, you will receive an email with the URL of your application.",
         "You can track the progress of your build by accessing the GitLab project under Build > Pipelines.",
       ],
-      nextSteps: [
-        "Make sure to pull from GitLab into your local branch to stay updated with the latest changes.",
-      ],
     };
 
     dialog.value = false;
     nextStepsDialog.value = true;
   } catch (err) {
     showSnackbar("Deployment failed", "error");
+    console.error(err);
+  }
+};
+
+// Update or create environment variables in GitLab
+const updateEnvs = async () => {
+  try {
+    if (!authStore.session) throw new Error("Unauthorized");
+
+    const existingEnvs = await getEnvs();
+
+    // Add or update new variables
+    const method = existingEnvs ? "put" : "post";
+    const url = existingEnvs
+      ? `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables/${envKey}`
+      : `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables`;
+
+    await axios[method](
+      url,
+      {
+        key: envKey,
+        value: environmentVariables.value
+          .map((e) => `${e.key}=${e.value}`)
+          .join("\n"),
+        description: "Generated in the Auto CI/CD App",
+        variable_type: "file",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+        },
+      }
+    );
+
+    showSnackbar("Environment variables updated successfully", "success");
+  } catch (err) {
+    showSnackbar("Failed to update environment variables", "error");
     console.error(err);
   }
 };
@@ -699,9 +942,66 @@ const getRepositoryFiles = async (paths: string[]) => {
   }
 };
 
+// Fetch envs
+const getEnvs = async () => {
+  if (!authStore.session) return;
+
+  const apiUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables/${envKey}`;
+
+  try {
+    // Check if the variable already exists
+    const response = await axios.get<{
+      description: string | null;
+      environment_scope: string;
+      hidden: boolean;
+      key: string;
+      masked: boolean;
+      protected: boolean;
+      raw: boolean;
+      value: string; // KEY=VALUE\nKEY=VALUE
+      variable_type: "file" | "env_var";
+    }>(apiUrl, {
+      headers: {
+        Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+      },
+    });
+
+    if (response.data.variable_type === "file") {
+      const vars = response.data.value.split("\n").map((e) => {
+        const [key, value] = e.split("=");
+
+        return {
+          key,
+          value,
+          protected:
+            response.data.masked ||
+            response.data.hidden ||
+            response.data.protected,
+          visible: false,
+        };
+      });
+
+      return vars;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 // Snackbar helper
 const showSnackbar = (text: string, color: string) => {
-  snackbar.value = { show: true, text, color };
+  // Add new snackbar to the queue
+  snackbarQueue.value.push({ show: true, text, color });
+
+  // Optional: Auto-remove after timeout to prevent memory buildup
+  setTimeout(() => {
+    const index = snackbarQueue.value.findIndex(
+      (s) => s.text === text && s.color === color
+    );
+    if (index !== -1) {
+      snackbarQueue.value.splice(index, 1);
+    }
+  }, 5500); // Slightly longer than timeout to ensure it disappears smoothly
 };
 </script>
 

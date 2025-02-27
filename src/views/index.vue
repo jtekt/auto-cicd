@@ -61,8 +61,20 @@
           <v-card class="project-card" elevation="2">
             <v-card-item>
               <template #prepend>
-                <v-avatar color="primary" size="48">
-                  {{ project.name.charAt(0).toUpperCase() }}
+                <v-avatar
+                  :color="!project.avatarUrl ? 'primary' : undefined"
+                  size="48"
+                >
+                  <v-img
+                    v-if="project.avatarUrl"
+                    :src="project.avatarUrl"
+                    :alt="project.name"
+                  >
+                    <template #error>
+                      {{ project.name.charAt(0).toUpperCase() }}
+                    </template>
+                  </v-img>
+                  <span v-else>{{ project.name.charAt(0).toUpperCase() }}</span>
                 </v-avatar>
               </template>
               <v-card-title style="text-transform: capitalize">
