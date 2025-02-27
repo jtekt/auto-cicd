@@ -377,6 +377,11 @@
               <span class="font-weight-medium">{{ env.key }}</span>
             </v-list-item>
           </v-list>
+          <p class="text-caption text-center">
+            You can paste the contents of a valid .env file directly into one of
+            the key input fields, and it will automatically populate the
+            corresponding values for you.
+          </p>
         </div>
       </v-card-text>
 
