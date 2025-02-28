@@ -2,10 +2,11 @@
 export type AcceptedFramework =
   | "vite"
   | "nuxt"
+  | "nextjs"
   | "streamlit"
   | "express"
   | "unknown";
-export type AcceptedPackageManager = "npm" | "yarn" | "pip";
+export type AcceptedPackageManager = "npm" | "yarn" | "pnpm" | "pip";
 export type Language = "javascript" | "python";
 export type OptionalFiles = "nginx.conf"; // Optional files exclusive to some frameworks
 export type ManagedFile =
@@ -80,6 +81,14 @@ export const packageManagers: Record<
     commands: { install: "yarn install", build: "yarn build" },
     detectionFiles: [{ file: "yarn.lock" }],
   },
+  pnpm: {
+    name: "pnpm",
+    commands: {
+      install: "corepack enable pnpm && pnpm i",
+      build: "corepack enable pnpm && pnpm run build",
+    },
+    detectionFiles: [{ file: "pnpm-lock.yaml" }],
+  },
   pip: {
     name: "pip",
     commands: { install: "pip install --no-cache-dir -r requirements.txt" },
@@ -105,7 +114,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     port: 80,
     files: ["nginx.conf"],
     configFiles: [{ file: "package.json", checkFor: ["vite"] }],
-    supportedManagers: ["npm", "yarn"],
+    supportedManagers: ["npm", "yarn", "pnpm"],
     defaultManager: "npm",
   },
   nuxt: {
@@ -120,12 +129,32 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
       outputDir: true,
       rootDir: true,
     },
-    outputDir: ".output/server/index.mjs",
+    outputDir: ".output",
     rootDir: "./",
     port: 80,
     files: [],
     configFiles: [{ file: "package.json", checkFor: ["nuxt"] }],
     supportedManagers: ["npm", "yarn"],
+    defaultManager: "npm",
+  },
+  nextjs: {
+    id: "nextjs",
+    name: "NextJs",
+    language: "javascript",
+    image: { type: "img", value: "/icons/Nextjs.svg" },
+    langs: ["tsx", "jsx", "typescript", "javascript"],
+    userConfigurable: {
+      buildCommand: { defaultEmpty: false },
+      installCommand: true,
+      outputDir: true,
+      rootDir: true,
+    },
+    outputDir: ".next",
+    rootDir: "./",
+    port: 80,
+    files: [],
+    configFiles: [{ file: "package.json", checkFor: ["next"] }],
+    supportedManagers: ["npm", "yarn", "pnpm"],
     defaultManager: "npm",
   },
   express: {

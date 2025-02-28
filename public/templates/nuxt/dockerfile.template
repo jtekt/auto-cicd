@@ -4,13 +4,18 @@ FROM node:22-slim as base
 # Set the working directory for building
 WORKDIR /app
 
-# Install dependencies
-COPY package.json {ROOT_DIR}
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* {ROOT_DIR}
 RUN {INSTALL_COMMAND}
 
 # Copy all source code
 COPY . .
 {BUILD_COMMAND}
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nuxt
+
+USER nuxt
+
 # Define environment variables
 ENV NODE_ENV=production
 ENV NITRO_PORT={PORT}
@@ -20,4 +25,4 @@ ENV HOST=0.0.0.0
 EXPOSE {PORT}
 
 # Start the application
-CMD ["node", "{OUTPUT_DIR}"]
+CMD ["node", "{OUTPUT_DIR}/server/index.mjs"]

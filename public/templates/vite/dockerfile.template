@@ -1,11 +1,14 @@
 # Start from an appropriate base image
-FROM node:22-slim as base
+FROM node:22-alpine as base
 
-# Set the working directory for building
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies
-COPY package.json {ROOT_DIR}
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* {ROOT_DIR}
 RUN {INSTALL_COMMAND}
 
 # Copy all source code
@@ -21,8 +24,13 @@ WORKDIR /usr/share/nginx/
 RUN rm -rf html && mkdir html
 
 # Copy nginx configuration and built application files
-COPY ./nginx.conf /etc/nginx/
+COPY {ROOT_DIR}nginx.conf /etc/nginx/
 COPY --from=build-stage /app/{OUTPUT_DIR} /usr/share/nginx/html
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 vite
+
+USER vite
 
 # Run the server in the foreground
 CMD ["nginx", "-g", "daemon off;"]
