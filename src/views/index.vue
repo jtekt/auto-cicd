@@ -4,7 +4,7 @@
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="searchQuery"
-          :label="t('pages.home.searchLabel')"
+          :label="t('views.index.searchLabel')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           @input="updateDebouncedUrlParams"
@@ -16,7 +16,7 @@
           :items="sortOptions"
           item-title="text"
           item-value="value"
-          :label="t('pages.home.sortLabel')"
+          :label="t('views.index.sortLabel')"
           prepend-icon="mdi-sort"
           variant="outlined"
           @update:model-value="updateUrlParams"
@@ -43,7 +43,7 @@
     <v-row v-else-if="!isLoading && projects.length < 1">
       <v-col cols="12">
         <v-alert variant="tonal" class="text-center">
-          {{ t("pages.home.projects.noFound") }}
+          {{ t("views.index.projects.noFound") }}
         </v-alert>
       </v-col>
     </v-row>
@@ -97,7 +97,7 @@
             <v-card-text>
               <p class="text-body-2 text-medium-emphasis">
                 {{
-                  project.description || t("pages.home.projects.noDescription")
+                  project.description || t("views.index.projects.noDescription")
                 }}
               </p>
               <v-divider class="my-2" />
@@ -107,7 +107,7 @@
                 </v-col>
                 <v-col>
                   <span class="text-caption"
-                    >{{ t("pages.home.projects.lastActivity") }}
+                    >{{ t("views.index.projects.lastActivity") }}
                     {{ formatDate(project.updatedAt) }}</span
                   >
                 </v-col>
@@ -144,10 +144,9 @@
     <v-row>
       <v-col cols="12">
         <v-alert variant="tonal" class="text-center">
-          If your project is not listed here, please ensure it in the auto-cicd
-          group or one of it`s subgroup in GitLab.
+          {{ t("views.index.footerMessage") }}
           <RouterLink to="/faq#move-project">
-            Learn how to transfer your project
+            {{ t("views.index.transferProject") }}
           </RouterLink>
         </v-alert>
       </v-col>
@@ -158,6 +157,7 @@
 <script lang="ts" setup>
 import { env } from "@/config/env";
 import { useAuthStore } from "@/stores/auth";
+import { useSnackbarStore } from "@/stores/snackbar";
 import axios from "axios";
 import { ref, computed, onMounted, watch } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
@@ -171,10 +171,12 @@ import {
 import { useRoute, useRouter } from "vue-router";
 
 const { t } = useLocale();
+
 const router = useRouter();
 const route = useRoute();
 
 const authStore = useAuthStore();
+const snackbarStore = useSnackbarStore();
 
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -218,22 +220,22 @@ onMounted(() => {
 
 const sortOptions = computed(() => [
   {
-    text: t("pages.home.projects.sort.nameAscText"),
+    text: t("views.index.projects.sort.nameAscText"),
     value: Sortoptions.name_asc,
     icon: "mdi-sort-alphabetical-ascending",
   },
   {
-    text: t("pages.home.projects.sort.nameDscText"),
+    text: t("views.index.projects.sort.nameDscText"),
     value: Sortoptions.name_desc,
     icon: "mdi-sort-alphabetical-descending",
   },
   {
-    text: t("pages.home.projects.sort.editedAscText"),
+    text: t("views.index.projects.sort.editedAscText"),
     value: Sortoptions.updated_desc,
     icon: "mdi-sort-clock-descending",
   },
   {
-    text: t("pages.home.projects.sort.editedDscText"),
+    text: t("views.index.projects.sort.editedDscText"),
     value: Sortoptions.updated_asc,
     icon: "mdi-sort-clock-ascending",
   },
@@ -386,6 +388,10 @@ const fetchProjects = async (clear?: boolean) => {
       hasNextPage.value = pageInfo.hasNextPage;
     }
   } catch (error) {
+    snackbarStore.showSnackbar(
+      t("views.index.projects.errors.fetchProjects"),
+      "error"
+    );
     console.error("Error fetching projects:", error);
   } finally {
     isLoading.value = false;

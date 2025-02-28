@@ -20,7 +20,7 @@
               JTEKT GitLab Auto CI&CD
             </h1>
             <p class="mb-6">
-              {{ t("pages.auth.signInMessage") }}
+              {{ t("views.auth.signInMessage") }}
             </p>
             <v-btn
               :href="url"
@@ -82,7 +82,7 @@ onMounted(async () => {
   if (!accessToken) {
     isLoading.value = false;
 
-    return stackbarStore.showSnackbar(t("pages.auth.errors.token"), "error");
+    return stackbarStore.showSnackbar(t("views.auth.errors.token"), "error");
   }
 
   // Get user info
@@ -91,7 +91,7 @@ onMounted(async () => {
   if (!user) {
     isLoading.value = false;
 
-    return stackbarStore.showSnackbar(t("pages.auth.errors.profile"), "error");
+    return stackbarStore.showSnackbar(t("views.auth.errors.profile"), "error");
   }
 
   // Set the session state

@@ -21,7 +21,105 @@ const messages = {
     $vuetify: {
       ...en,
     },
-    pages: {
+    components: {
+      deployHandler: {
+        actionBtn: "Deploy",
+        cancelBtn: "Cancel",
+        actionsNeededDialog: {
+          title: "Actions needed to deploy the app",
+          faqLink: "How to move a project to another group",
+        },
+        deployDialog: {
+          deployingFromGitlab: "Deploying from GitLab",
+          selectFramework: "Select Framework",
+          selectPackageManager: "Select Package Manager",
+          buildSettings: {
+            title: "Build and Output Settings",
+            description:
+              "These are the default configurations for a {framework} project. If your project requires different settings, you can modify them as needed.",
+            rootDir: "Root Directory",
+            outputDir: "Output Directory",
+            installCommand: "Install Command",
+            buildCommand: "Build Command",
+          },
+          envSettings: {
+            title: "Environment Variables",
+            description: "Add environment variables for your project.",
+            key: "Key",
+            value: "Value",
+            pasteHint:
+              "You can paste the contents of a valid .env file directly into one of the key input fields, and it will automatically populate the corresponding values for you.",
+            addMore: "Add More",
+          },
+        },
+        confirmDialog: {
+          title: "Confirm Deployment",
+          message:
+            "Are you sure you want to continue? The following changes will be made:",
+          filesSection: "Files to be Deployed",
+          update: "Update",
+          create: "Create",
+          envSection: "Included Environment Variables",
+          envDescription:
+            "These variables will be available in your deployment:",
+          noChanges: "Your repository is up to date, no file change needed",
+          continue: "Continue",
+        },
+        nextStepsDialog: {
+          successTitle: "Deployment Completed",
+          warningTitle: "Deployment Failed",
+          updateTitle: "Deployment Update",
+          filesCommitted: {
+            title: "Files Committed",
+            success:
+              "These changes have been pushed to your GitLab repository. Please pull the latest updates.",
+            empty: "No file was changed in your GitLab repository",
+          },
+          envAdded: {
+            title: "Environment Variables added",
+          },
+          notes: {
+            title: "Important Notes",
+          },
+          errors: {
+            title: "Errors Encountered",
+            message:
+              "Please review the following issues and try again or contact support.",
+          },
+          closeReview: "Close and Review",
+          close: "Close",
+        },
+        script: {
+          errors: {
+            unauthorized: "Error: Unauthorized",
+            namespaceNotAllowed:
+              "The project is not in an allowed group. Please transfer the project to an approved group:",
+            invalidEnvs: "The environment variables {keys} are invalid",
+            fetchFilesFailed: "Error fetching repository files: {error}",
+            commitFailed: "Error: Failed to commit deployment files",
+            envUpdateFailed: "Error: Failed to update environment variables",
+            deployFailed:
+              "Deployment failed. Please check the logs for more details",
+          },
+          success: {
+            commitSuccess: "Deployment files committed successfully!",
+            envUpdateSuccess: "Environment variables updated successfully!",
+            deployMessages: {
+              deploying: "Your project will be deployed within a few minutes.",
+              firstDeploy:
+                "If this is your first auto deployment, you will receive an email with the URL of your application.",
+              trackProgress:
+                "You can track the progress of your build by accessing the GitLab project under Build > Pipelines.",
+            },
+          },
+          actions: {
+            allowedGroup: "Allowed Group",
+            moveInstruction: ", then move your project to the new group",
+          },
+        },
+      },
+    },
+    views: {
       auth: {
         signInMessage:
           "Sign in to your account to access your projects and deploy them.",
@@ -30,7 +128,7 @@ const messages = {
           profile: "rror retrieving user profile from GitLab.",
         },
       },
-      home: {
+      index: {
         searchLabel: "Search by name or namespace",
         sortLabel: "Sort by",
         projects: {
@@ -44,39 +142,23 @@ const messages = {
             editedDscText: "Last Edited (Least Recent)",
           },
           errors: {
-            noSession: "No active session. Please log in.",
             fetchProjects: "Failed to fetch projects. Please try again.",
           },
         },
-        deploy: {
-          info: {
-            "1": "1. Ensure your project has a valid .Dockerfile in the root directory. This file contains the instructions to build your Docker image.",
-            "2": "2. The Docker container must expose the application via port 80.",
-            "3": "3. On click deploy please review the files that will be changed before continuing.",
-          },
-          codeEditor: {
-            placeholder: "Write your Dockerfile here...",
-            originalChanged: "The original .Dockerfile has been modified",
-          },
-          deploy: "Deploy",
-          cancel: "Cancel",
-          confirmDeployTitle: "Confirm Deployment",
-          confirmDeployMessage:
-            "Are you sure you want to deploy? The following files will be modified:",
-          continue: "Continue",
-          nextStepsTitle: "Deployment Successful",
-          nextStepsMessage1:
-            "1. Go to the 'Pipelines' section to monitor the build process and check for any errors.",
-          nextStepsMessage2:
-            "2. Once the build finishes, if this is the first auto deploy then you will receive an email with the deployed URL.",
-          close: "Close",
-          update: "Update",
-          insert: "Insert",
-          noChangesMade:
-            "No changes were made to the deployment files. There is nothing to deploy.",
-          reset: "Reset",
-          resetOriginal: "Reset to the original",
-          template: "Template",
+        footerMessage:
+          "If your project is not listed here, please ensure it in the auto-cicd group or one of it`s subgroup in GitLab.",
+        transferProject: "Learn how to transfer your project",
+      },
+      faq: {
+        moveProject: "How to Move a Repository to Another Namespace in GitLab",
+        steps: {
+          "1": "Log in to GitLab: Open your GitLab instance and log in to your account.",
+          "2": "Navigate to the Project: Go to the project you want to move.",
+          "3": "Go to Project Settings: In the left sidebar of your project, click on Settings, then General to open the general settings of the project.",
+          "4": "Expand the 'Advanced' Section: Scroll down to find the Advanced section, and click on it to expand the options.",
+          "5": "Change Namespace: In the Advanced section, you should see a field called 'Transfer project'. Click on the 'Transfer project' button.",
+          "6": "Choose the New Namespace: A dialog will pop up asking you to select the target namespace. You can select either a Group or another user namespace. Select the appropriate namespace (auto-cicd or a subgroup) and click Transfer project.",
+          "7": "Confirmation: GitLab will ask you to confirm the move. Once confirmed, the repository will be transferred to the new namespace.",
         },
       },
     },
@@ -85,64 +167,144 @@ const messages = {
     $vuetify: {
       ...ja,
     },
-    pages: {
+    components: {
+      deployHandler: {
+        actionBtn: "デプロイ",
+        cancelBtn: "キャンセル",
+        actionsNeededDialog: {
+          title: "アプリをデプロイするために必要なアクション",
+          faqLink: "プロジェクトを別のグループに移動する方法",
+        },
+        deployDialog: {
+          deployingFromGitlab: "GitLabからデプロイ中",
+          selectFramework: "フレームワークを選択",
+          selectPackageManager: "パッケージマネージャーを選択",
+          buildSettings: {
+            title: "ビルドと出力設定",
+            description:
+              "{framework} プロジェクトのデフォルト設定です。プロジェクトに異なる設定が必要な場合、必要に応じて変更できます。",
+            rootDir: "ルートディレクトリ",
+            outputDir: "出力ディレクトリ",
+            installCommand: "インストールコマンド",
+            buildCommand: "ビルドコマンド",
+          },
+          envSettings: {
+            title: "環境変数",
+            description: "プロジェクトの環境変数を追加してください。",
+            key: "キー",
+            value: "値",
+            pasteHint:
+              "有効な .env ファイルの内容をキー入力フィールドに直接貼り付けると、対応する値が自動的に入力されます。",
+            addMore: "さらに追加",
+          },
+        },
+        confirmDialog: {
+          title: "デプロイの確認",
+          message: "続行しますか？以下の変更が行われます：",
+          filesSection: "デプロイされるファイル",
+          update: "更新",
+          create: "作成",
+          envSection: "含まれる環境変数",
+          envDescription: "これらの変数がデプロイで利用可能になります：",
+          noChanges: "リポジトリは最新であり、ファイルの変更は必要ありません",
+          continue: "続行",
+        },
+        nextStepsDialog: {
+          successTitle: "デプロイが完了しました",
+          warningTitle: "デプロイに失敗しました",
+          updateTitle: "デプロイの更新",
+          filesCommitted: {
+            title: "コミットされたファイル",
+            success:
+              "これらの変更がGitLabリポジトリにプッシュされました。最新の更新をプルしてください。",
+            empty: "GitLabリポジトリでファイルが変更されませんでした",
+          },
+          envAdded: {
+            title: "追加された環境変数",
+          },
+          notes: {
+            title: "重要な注意事項",
+          },
+          errors: {
+            title: "発生したエラー",
+            message:
+              "以下の問題を確認し、再試行するかサポートに連絡してください。",
+          },
+          closeReview: "閉じて確認",
+          close: "閉じる",
+        },
+        script: {
+          errors: {
+            unauthorized: "エラー：権限がありません",
+            namespaceNotAllowed:
+              "プロジェクトが許可されたグループにありません。プロジェクトを承認されたグループに移動してください：",
+            invalidEnvs: "環境変数 {keys} が無効です",
+            fetchFilesFailed: "リポジトリファイルの取得エラー：{error}",
+            commitFailed: "エラー：デプロイファイルのコミットに失敗しました",
+            envUpdateFailed: "エラー：環境変数の更新に失敗しました",
+            deployFailed:
+              "デプロイに失敗しました。詳細はログを確認してください",
+          },
+          success: {
+            commitSuccess: "デプロイファイルが正常にコミットされました！",
+            envUpdateSuccess: "環境変数が正常に更新されました！",
+            deployMessages: {
+              deploying: "プロジェクトは数分以内にデプロイされます。",
+              firstDeploy:
+                "これが最初の自動デプロイの場合、アプリケーションのURLが記載されたメールが届きます。",
+              trackProgress:
+                "GitLabプロジェクトの「ビルド > パイプライン」でビルドの進捗を確認できます。",
+            },
+          },
+          actions: {
+            allowedGroup: "許可されたグループ",
+            moveInstruction:
+              "、その後プロジェクトを新しいグループに移動してください",
+          },
+        },
+      },
+    },
+    views: {
       auth: {
         signInMessage:
           "アカウントにサインインして、プロジェクトにアクセスし、デプロイしてください。",
         errors: {
-          token: "GitLabからアクセストークンの作成に失敗しました",
-          profile: "GitLabからユーザープロフィールの取得に失敗しました",
+          token: "GitLabアクセストークンの作成エラー。",
+          profile: "GitLabからユーザープロフィールの取得エラー。",
         },
       },
-      home: {
-        searchLabel: "名前またはネームスペースで検索",
+      index: {
+        searchLabel: "名前または名前空間で検索",
         sortLabel: "並べ替え",
         projects: {
           noFound: "プロジェクトが見つかりません",
-          lastActivity: "最終活動:",
+          lastActivity: "最終アクティビティ：",
           noDescription: "説明なし",
           sort: {
             nameAscText: "名前 (A-Z)",
             nameDscText: "名前 (Z-A)",
-            editedAscText: "最終編集 (新しい順)",
-            editedDscText: "最終編集 (古い順)",
+            editedAscText: "最終編集 (最新)",
+            editedDscText: "最終編集 (最古)",
           },
           errors: {
-            noSession:
-              "アクティブなセッションがありません。ログインしてください。",
             fetchProjects:
-              "プロジェクトの取得に失敗しました。もう一度試してください。",
+              "プロジェクトの取得に失敗しました。再試行してください。",
           },
         },
-        deploy: {
-          info: {
-            "1": "1. プロジェクトのルートディレクトリに有効な .Dockerfile があることを確認してください。このファイルには、Dockerイメージを構築するための指示が含まれています。",
-            "2": "2. Dockerコンテナは、ポート80 を通じてアプリケーションを公開する必要があります。",
-            "3": "3. デプロイをクリックすると、続行する前に変更されるファイルを確認してください。",
-          },
-          codeEditor: {
-            placeholder: "ここにDockerfileを書いてください...",
-            originalChanged: "元の .Dockerfile は変更されました",
-          },
-          deploy: "デプロイ",
-          cancel: "キャンセル",
-          confirmDeployTitle: "デプロイの確認",
-          confirmDeployMessage:
-            "本当にデプロイしますか？次のファイルが変更されます:",
-          continue: "続行",
-          nextStepsTitle: "デプロイが成功しました",
-          nextStepsMessage1:
-            "1. 'Pipelines' セクションに移動して、ビルドプロセスとエラーを確認してください。",
-          nextStepsMessage2:
-            "2. ビルドが完了すると、デプロイされたURLが記載されたメールが届きます。",
-          close: "閉じる",
-          update: "更新",
-          insert: "挿入",
-          noChangesMade:
-            "デプロイファイルに変更はありませんでした。デプロイするものはありません。",
-          reset: "リセット",
-          resetOriginal: "元に戻す",
-          template: "テンプレート",
+        footerMessage:
+          "プロジェクトがここに表示されない場合、GitLabのauto-cicdグループまたはそのサブグループにあることを確認してください。",
+        transferProject: "プロジェクトの移動方法を学ぶ",
+      },
+      faq: {
+        moveProject: "GitLabでリポジトリを別の名前空間に移動する方法",
+        steps: {
+          "1": "GitLabにログイン：GitLabインスタンスを開き、アカウントにログインします。",
+          "2": "プロジェクトに移動：移動したいプロジェクトにアクセスします。",
+          "3": "プロジェクト設定に移動：プロジェクトの左サイドバーで「設定」をクリックし、「一般」を選択して一般設定を開きます。",
+          "4": "「詳細」セクションを展開：下にスクロールして「詳細」セクションを見つけ、クリックしてオプションを展開します。",
+          "5": "名前空間を変更：「詳細」セクションに「プロジェクトの転送」というフィールドがあります。「プロジェクトの転送」ボタンをクリックします。",
+          "6": "新しい名前空間を選択：ダイアログが表示され、移動先の名前空間を選択するように求められます。グループまたは別のユーザーの名前空間を選択できます。適切な名前空間（auto-cicdまたはサブグループ）を選択し、「プロジェクトの転送」をクリックします。",
+          "7": "確認：GitLabは移動の確認を求めます。確認すると、リポジトリが新しい名前空間に転送されます。",
         },
       },
     },
@@ -150,12 +312,12 @@ const messages = {
 };
 
 // Get the saved language from localStorage, defaulting to 'en'
-const savedLanguage = localStorage.getItem("preferred_language") || "en";
+const savedLanguage = localStorage.getItem("preferred_language") || "ja";
 
 const i18n = createI18n({
   legacy: false, // Vuetify does not support the legacy mode of vue-i18n
   locale: savedLanguage,
-  fallbackLocale: "ja",
+  fallbackLocale: "en",
   messages,
 });
 

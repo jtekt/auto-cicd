@@ -1,7 +1,7 @@
 <template>
   <v-btn :color="'success'" variant="tonal" @click="handleDeployBtn()">
     <v-icon start icon="mdi-rocket-launch-outline" />
-    {{ t("pages.home.deploy.deploy") }}
+    {{ t("components.deployHandler.actionBtn") }}
   </v-btn>
 
   <!-- Action Needed Dialog -->
@@ -12,7 +12,9 @@
     max-height="90vh"
   >
     <v-card>
-      <template #title>Actions needed to deploy the app</template>
+      <template #title>{{
+        t("components.deployHandler.actionsNeededDialog.title")
+      }}</template>
       <v-card-text>
         <v-list>
           <v-list-item v-for="(action, index) in actionNeeded" :key="index">
@@ -23,9 +25,9 @@
             >{{ action.posDescription }}.
           </v-list-item>
         </v-list>
-        <RouterLink to="/faq#move-project"
-          >How to move a project to another group</RouterLink
-        >
+        <RouterLink to="/faq#move-project">
+          {{ t("components.deployHandler.actionsNeededDialog.faqLink") }}
+        </RouterLink>
       </v-card-text>
       <v-card-actions>
         <v-btn color="primary" @click="actionNeededDialog = false">
@@ -65,7 +67,11 @@
               align-items: start;
             "
           >
-            <p class="text-caption">Deploying from GitLab</p>
+            <p class="text-caption">
+              {{
+                t("components.deployHandler.deployDialog.deployingFromGitlab")
+              }}
+            </p>
             <div class="d-flex ga-2 align-center">
               <v-avatar image="/icons/GitLab.svg" size="24"></v-avatar>
               <p class="text-body-1 font-weight-medium">
@@ -94,7 +100,7 @@
             :items="frameworks"
             item-title="name"
             item-value="id"
-            label="Select Framework"
+            :label="t('components.deployHandler.deployDialog.selectFramework')"
             variant="outlined"
             :error="frameworkSelector === 'unknown'"
             @update:model-value="handleChangeFramework"
@@ -142,7 +148,9 @@
             :items="packageManagersOptions"
             item-title="title"
             item-value="value"
-            label="Select Package Manager"
+            :label="
+              t('components.deployHandler.deployDialog.selectPackageManager')
+            "
             variant="outlined"
             @update:model-value="handleChangeManager"
           />
@@ -150,20 +158,28 @@
           <v-expansion-panels>
             <!-- Build and Output Settings -->
             <v-expansion-panel v-if="!!frameworkSelected.userConfigurable">
-              <v-expansion-panel-title
-                >Build and Output Settings</v-expansion-panel-title
-              >
+              <v-expansion-panel-title>
+                {{
+                  t("components.deployHandler.deployDialog.buildSettings.title")
+                }}
+              </v-expansion-panel-title>
               <v-expansion-panel-text>
                 <p class="mb-4 text-subtitle-2 font-weight-light">
-                  These are the default configurations for a
-                  <strong>{{ frameworkSelected.name }}</strong>
-                  project. If your project requires different settings, you can
-                  modify them as needed.
+                  {{
+                    t(
+                      "components.deployHandler.deployDialog.buildSettings.description",
+                      { framework: frameworkSelected.name }
+                    )
+                  }}
                 </p>
                 <v-text-field
                   v-if="frameworkSelected.userConfigurable.rootDir"
                   v-model="projectConfig.rootDir"
-                  label="Root Directory"
+                  :label="
+                    t(
+                      'components.deployHandler.deployDialog.buildSettings.rootDir'
+                    )
+                  "
                   variant="outlined"
                   :class="
                     projectConfig.rootDir ===
@@ -175,7 +191,11 @@
                 <v-text-field
                   v-if="frameworkSelected.userConfigurable.outputDir"
                   v-model="projectConfig.outputDir"
-                  label="Output Directory"
+                  :label="
+                    t(
+                      'components.deployHandler.deployDialog.buildSettings.outputDir'
+                    )
+                  "
                   variant="outlined"
                   :class="
                     projectConfig.outputDir ===
@@ -187,7 +207,11 @@
                 <v-text-field
                   v-if="frameworkSelected.userConfigurable.installCommand"
                   v-model="projectConfig.installCommand"
-                  label="Install Command"
+                  :label="
+                    t(
+                      'components.deployHandler.deployDialog.buildSettings.installCommand'
+                    )
+                  "
                   variant="outlined"
                   :class="
                     projectConfig.installCommand ===
@@ -199,7 +223,11 @@
                 <v-text-field
                   v-if="frameworkSelected.userConfigurable.buildCommand"
                   v-model="projectConfig.buildCommand"
-                  label="Build Command"
+                  :label="
+                    t(
+                      'components.deployHandler.deployDialog.buildSettings.buildCommand'
+                    )
+                  "
                   variant="outlined"
                   :class="
                     projectConfig.buildCommand ===
@@ -213,12 +241,18 @@
 
             <!-- Environment Variables Settings -->
             <v-expansion-panel>
-              <v-expansion-panel-title
-                >Environment Variables</v-expansion-panel-title
-              >
+              <v-expansion-panel-title>
+                {{
+                  t("components.deployHandler.deployDialog.envSettings.title")
+                }}
+              </v-expansion-panel-title>
               <v-expansion-panel-text>
                 <p class="mb-4 text-subtitle-2 font-weight-light">
-                  Add environment variables for your project.
+                  {{
+                    t(
+                      "components.deployHandler.deployDialog.envSettings.description"
+                    )
+                  }}
                 </p>
 
                 <div
@@ -228,7 +262,9 @@
                 >
                   <v-text-field
                     v-model="env.key"
-                    label="Key"
+                    :label="
+                      t('components.deployHandler.deployDialog.envSettings.key')
+                    "
                     variant="outlined"
                     density="compact"
                     hide-details
@@ -239,7 +275,11 @@
                   />
                   <v-text-field
                     v-model="env.value"
-                    label="Value"
+                    :label="
+                      t(
+                        'components.deployHandler.deployDialog.envSettings.value'
+                      )
+                    "
                     variant="outlined"
                     density="compact"
                     hide-details
@@ -266,13 +306,19 @@
                   v-if="environmentVariables.length"
                   class="text-caption text-center mt-2 mb-2"
                 >
-                  You can paste the contents of a valid .env file directly into
-                  one of the key input fields, and it will automatically
-                  populate the corresponding values for you.
+                  {{
+                    t(
+                      "components.deployHandler.deployDialog.envSettings.pasteHint"
+                    )
+                  }}
                 </p>
-                <v-btn color="primary" variant="tonal" @click="addEnv"
-                  >Add More</v-btn
-                >
+                <v-btn color="primary" variant="tonal" @click="addEnv">
+                  {{
+                    t(
+                      "components.deployHandler.deployDialog.envSettings.addMore"
+                    )
+                  }}
+                </v-btn>
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
@@ -317,13 +363,13 @@
           <v-btn
             color="success"
             variant="tonal"
-            :text="t('pages.home.deploy.deploy')"
+            :text="t('components.deployHandler.actionBtn')"
             :disabled="isLoading || frameworkSelector === 'unknown'"
             @click="handleDeploy"
           />
           <v-btn
             variant="tonal"
-            :text="t('pages.home.deploy.cancel')"
+            :text="t('components.deployHandler.cancelBtn')"
             @click="deployDialog = false"
           />
         </div>
@@ -342,20 +388,20 @@
     <v-card prepend-icon="mdi-check-all" class="pa-2">
       <template #title>
         <span class="text-h5 font-weight-bold">
-          {{ t("pages.home.deploy.confirmDeployTitle") }}
+          {{ t("components.deployHandler.confirmDialog.title") }}
         </span>
       </template>
 
       <v-card-text class="mt-4">
         <!-- Main instruction message -->
         <p class="text-body-1 mb-4">
-          Are you sure you want to continue? The following changes will be made:
+          {{ t("components.deployHandler.confirmDialog.message") }}
         </p>
 
         <!-- Files Section -->
         <div class="mb-6">
           <h3 class="text-subtitle-s font-weight-medium mb-2">
-            Files to be Deployed
+            {{ t("components.deployHandler.confirmDialog.filesSection") }}
           </h3>
           <v-expansion-panels
             v-if="injectFiles.length"
@@ -375,7 +421,11 @@
                     size="small"
                     class="font-weight-bold"
                   >
-                    {{ fileInfo.action === "update" ? "Update" : "Create" }}
+                    {{
+                      fileInfo.action === "update"
+                        ? t("components.deployHandler.confirmDialog.update")
+                        : t("components.deployHandler.confirmDialog.create")
+                    }}
                   </v-chip>
                   <span class="font-weight-medium">
                     {{ fileInfo.fileName }}
@@ -399,17 +449,17 @@
             density="compact"
             class="mt-2"
           >
-            {{ t("pages.home.deploy.noChangesMade") }}
+            {{ t("components.deployHandler.confirmDialog.noChanges") }}
           </v-alert>
         </div>
 
         <!-- Environment Variables Section -->
         <div v-if="environmentVariables.length" class="mb-6">
           <h3 class="text-subtitle-s font-weight-medium mb-2">
-            Included Environment Variables
+            {{ t("components.deployHandler.confirmDialog.envSection") }}
           </h3>
           <p class="text-body-2 text-grey-darken-1 mb-2">
-            These variables will be available in your deployment:
+            {{ t("components.deployHandler.confirmDialog.envDescription") }}
           </p>
           <v-alert
             v-for="(env, index) in environmentVariables"
@@ -431,10 +481,10 @@
           variant="tonal"
           @click="confirmDeploy"
         >
-          {{ t("pages.home.deploy.continue") }}
+          {{ t("components.deployHandler.confirmDialog.continue") }}
         </v-btn>
         <v-btn variant="tonal" class="px-4" @click="cancelDeploy">
-          {{ t("pages.home.deploy.cancel") }}
+          {{ t("components.deployHandler.cancelBtn") }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -466,17 +516,21 @@
         </v-icon>
         {{
           deploymentInfo?.errors.length && !deploymentInfo?.messages.length
-            ? "Deployment Failed"
+            ? t("components.deployHandler.nextStepsDialog.warningTitle")
             : deploymentInfo?.messages.length
-            ? "Deployment Completed"
-            : "Deployment Update"
+            ? t("components.deployHandler.nextStepsDialog.successTitle")
+            : t("components.deployHandler.nextStepsDialog.updateTitle")
         }}
       </v-card-title>
 
       <v-card-text v-if="deploymentInfo" class="py-0 pt-4">
         <!-- Files Committed Section -->
         <div class="mb-6">
-          <h3 class="text-h6 font-weight-medium mb-2">Files Committed</h3>
+          <h3 class="text-h6 font-weight-medium mb-2">
+            {{
+              t("components.deployHandler.nextStepsDialog.filesCommitted.title")
+            }}
+          </h3>
           <v-alert
             :type="deploymentInfo.filesCommitted.length ? 'info' : 'warning'"
             variant="tonal"
@@ -485,8 +539,12 @@
           >
             {{
               deploymentInfo.filesCommitted.length > 0
-                ? "These changes have been pushed to your GitLab repository. Please pull the latest updates."
-                : "No file was changed in your GitLab repository"
+                ? t(
+                    "components.deployHandler.nextStepsDialog.filesCommitted.success"
+                  )
+                : t(
+                    "components.deployHandler.nextStepsDialog.filesCommitted.empty"
+                  )
             }}
           </v-alert>
           <v-alert
@@ -500,10 +558,10 @@
           </v-alert>
         </div>
 
-        <!-- Environment varibles Section -->
+        <!-- Environment variables Section -->
         <div v-if="deploymentInfo.envs.length" class="mb-6">
           <h3 class="text-h6 font-weight-medium mb-2">
-            Environment Variables added
+            {{ t("components.deployHandler.nextStepsDialog.envAdded.title") }}
           </h3>
           <v-alert
             v-for="env in deploymentInfo.envs"
@@ -518,7 +576,9 @@
 
         <!-- Success Messages Section -->
         <div v-if="deploymentInfo.messages.length" class="mb-6">
-          <h3 class="text-h5 font-weight-medium mb-2">Important Notes</h3>
+          <h3 class="text-h5 font-weight-medium mb-2">
+            {{ t("components.deployHandler.nextStepsDialog.notes.title") }}
+          </h3>
           <v-alert
             v-for="f in deploymentInfo.messages"
             :key="f"
@@ -532,10 +592,10 @@
         <!-- Errors Section -->
         <div v-if="deploymentInfo.errors?.length">
           <h3 class="text-subtitle-1 font-weight-medium mb-2 text-error">
-            Errors Encountered
+            {{ t("components.deployHandler.nextStepsDialog.errors.title") }}
           </h3>
           <v-alert type="error" variant="tonal" density="compact" class="mb-3">
-            Please review the following issues and try again or contact support.
+            {{ t("components.deployHandler.nextStepsDialog.errors.message") }}
           </v-alert>
           <v-list density="compact">
             <v-list-item v-for="error in deploymentInfo.errors" :key="error">
@@ -553,7 +613,11 @@
           class="px-4"
           @click="nextStepsDialog = false"
         >
-          {{ deploymentInfo?.errors.length ? "Close and Review" : "Close" }}
+          {{
+            deploymentInfo?.errors.length
+              ? t("components.deployHandler.nextStepsDialog.closeReview")
+              : t("components.deployHandler.nextStepsDialog.close")
+          }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -699,7 +763,10 @@ const frameworkSelected = computed(
 // Open deploy dialog and detect framework/language
 const handleDeployBtn = async () => {
   if (!authStore.session)
-    return snackbarStore.showSnackbar("Error: Unauthorized", "error");
+    return snackbarStore.showSnackbar(
+      t("components.deployHandler.script.errors.unauthorized"),
+      "error"
+    );
 
   // Check namespace (example logic, adjust as needed)
   if (
@@ -708,13 +775,16 @@ const handleDeployBtn = async () => {
   ) {
     actionNeeded.value = [
       {
-        descripton:
-          "The project is not in an allowed group. Please transfer the project to an approved group:",
+        descripton: t(
+          "components.deployHandler.script.errors.namespaceNotAllowed"
+        ),
         link: {
           url: `${env.GITLAB_URL}/${env.ALLOWED_NAMESPACES[0]}`,
-          text: "Allowed Group",
+          text: t("components.deployHandler.script.actions.allowedGroup"),
         },
-        posDescription: ", then move your project to the new group",
+        posDescription: t(
+          "components.deployHandler.script.actions.moveInstruction"
+        ),
       },
     ];
     actionNeededDialog.value = true;
@@ -759,7 +829,10 @@ const handleChangeManager = (manager: AcceptedPackageManager) => {
 // Deploy logic
 const handleDeploy = async () => {
   if (!authStore.session) {
-    return snackbarStore.showSnackbar("Error: Unauthorized", "error");
+    return snackbarStore.showSnackbar(
+      t("components.deployHandler.script.errors.unauthorized"),
+      "error"
+    );
   }
 
   // Validate envs
@@ -769,9 +842,9 @@ const handleDeploy = async () => {
 
   if (invalidEnvs.length) {
     return snackbarStore.showSnackbar(
-      `The environment variables ${invalidEnvs
-        .map((e) => e.key)
-        .join(", ")} are invalid`,
+      t("components.deployHandler.script.errors.invalidEnvs", {
+        keys: invalidEnvs.map((e) => e.key).join(", "),
+      }),
       "error"
     );
   }
@@ -790,7 +863,12 @@ const handleDeploy = async () => {
 
   if (!files.success) {
     isLoading.value = false;
-    return snackbarStore.showSnackbar("Error: " + files.error, "error");
+    return snackbarStore.showSnackbar(
+      t("components.deployHandler.script.errors.fetchFilesFailed", {
+        error: files.error,
+      }),
+      "error"
+    );
   }
 
   originalFiles.value = files.data;
@@ -832,7 +910,10 @@ const handleDeploy = async () => {
 const confirmDeploy = async () => {
   confirmDeployDialog.value = false;
   if (!authStore.session) {
-    return snackbarStore.showSnackbar("Error: Unauthorized", "error");
+    return snackbarStore.showSnackbar(
+      t("components.deployHandler.script.errors.unauthorized"),
+      "error"
+    );
   }
 
   isLoading.value = true;
@@ -884,7 +965,7 @@ const confirmDeploy = async () => {
       );
       commitResult = { success: true };
       snackbarStore.showSnackbar(
-        "Deployment files committed successfully!",
+        t("components.deployHandler.script.success.commitSuccess"),
         "success"
       );
     } catch (err) {
@@ -898,7 +979,7 @@ const confirmDeploy = async () => {
       }
 
       snackbarStore.showSnackbar(
-        "Error: Failed to commit deployment files.",
+        t("components.deployHandler.script.errors.commitFailed"),
         "error"
       );
       console.error("Commit error:", err);
@@ -910,7 +991,7 @@ const confirmDeploy = async () => {
     await updateEnvs();
     envUpdateResult = { success: true };
     snackbarStore.showSnackbar(
-      "Environment variables updated successfully!",
+      t("components.deployHandler.script.success.envUpdateSuccess"),
       "success"
     );
   } catch (err) {
@@ -924,7 +1005,7 @@ const confirmDeploy = async () => {
     }
 
     snackbarStore.showSnackbar(
-      "Error: Failed to update environment variables.",
+      t("components.deployHandler.script.errors.envUpdateFailed"),
       "error"
     );
     console.error("Env update error:", err);
@@ -944,9 +1025,9 @@ const confirmDeploy = async () => {
 
   if (commitResult.success && envUpdateResult.success) {
     deploymentInfo.value.messages.push(
-      "Your project will be deployed within a few minutes.",
-      "If this is your first auto deployment, you will receive an email with the URL of your application.",
-      "You can track the progress of your build by accessing the GitLab project under Build > Pipelines."
+      t("components.deployHandler.script.success.deployMessages.deploying"),
+      t("components.deployHandler.script.success.deployMessages.firstDeploy"),
+      t("components.deployHandler.script.success.deployMessages.trackProgress")
     );
   } else {
     if (!commitResult.success && injectFiles.value.length) {
@@ -963,7 +1044,7 @@ const confirmDeploy = async () => {
     }
     if (!commitResult.success && !envUpdateResult.success) {
       deploymentInfo.value.errors.push(
-        "Deployment failed. Please check the logs for more details."
+        t("components.deployHandler.script.errors.deployFailed")
       );
     }
   }
