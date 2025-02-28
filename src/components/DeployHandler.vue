@@ -444,7 +444,7 @@
   <v-dialog v-model="nextStepsDialog" max-width="600px">
     <v-card class="pa-2">
       <v-card-title
-        class="text-h4 font-weight-bold text-center py-4"
+        class="text-h5 font-weight-bold text-center py-4"
         :class="{
           'text-success':
             deploymentInfo?.messages.length && !deploymentInfo?.errors.length,
@@ -476,10 +476,13 @@
       <v-card-text v-if="deploymentInfo" class="py-0 pt-4">
         <!-- Files Committed Section -->
         <div class="mb-6">
-          <h3 class="text-h5 font-weight-medium mb-2">
-            Files Committed to Repository
-          </h3>
-          <v-alert type="info" variant="tonal" density="compact" class="mb-3">
+          <h3 class="text-h6 font-weight-medium mb-2">Files Committed</h3>
+          <v-alert
+            :type="deploymentInfo.filesCommitted.length ? 'info' : 'warning'"
+            variant="tonal"
+            density="compact"
+            class="mb-3"
+          >
             {{
               deploymentInfo.filesCommitted.length > 0
                 ? "These changes have been pushed to your GitLab repository. Please pull the latest updates."
@@ -494,6 +497,22 @@
             class="mb-1"
           >
             {{ f }}
+          </v-alert>
+        </div>
+
+        <!-- Environment varibles Section -->
+        <div v-if="deploymentInfo.envs.length" class="mb-6">
+          <h3 class="text-h6 font-weight-medium mb-2">
+            Environment Variables added
+          </h3>
+          <v-alert
+            v-for="env in deploymentInfo.envs"
+            :key="env"
+            variant="tonal"
+            density="compact"
+            class="mb-1"
+          >
+            {{ env }}
           </v-alert>
         </div>
 
@@ -580,6 +599,7 @@ const confirmDeployDialog = ref(false);
 const nextStepsDialog = ref(false);
 const deploymentInfo = ref<{
   filesCommitted: string[];
+  envs: string[];
   messages: string[];
   errors: string[];
 } | null>(null);
@@ -915,6 +935,9 @@ const confirmDeploy = async () => {
     filesCommitted: commitResult.success
       ? commitActions.map((a) => a.file_path)
       : [],
+    envs: envUpdateResult.success
+      ? environmentVariables.value.map((env) => env.key)
+      : [],
     messages: [],
     errors: [],
   };
@@ -926,16 +949,6 @@ const confirmDeploy = async () => {
       "You can track the progress of your build by accessing the GitLab project under Build > Pipelines."
     );
   } else {
-    if (commitResult.success) {
-      deploymentInfo.value.messages.push(
-        "Deployment files were committed successfully."
-      );
-    }
-    if (envUpdateResult.success) {
-      deploymentInfo.value.messages.push(
-        "Environment variables were updated successfully."
-      );
-    }
     if (!commitResult.success && injectFiles.value.length) {
       deploymentInfo.value.errors.push(
         `Failed to commit files: ${commitResult.error || "Unknown error"}`
