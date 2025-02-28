@@ -205,8 +205,7 @@
               >
               <v-expansion-panel-text>
                 <p class="mb-4 text-subtitle-2 font-weight-light">
-                  Add environment variables for your project. Sensitive values
-                  will be hidden.
+                  Add environment variables for your project.
                 </p>
 
                 <div
@@ -221,7 +220,7 @@
                     density="compact"
                     hide-details
                     :error="!!env.value && !env.key"
-                    @paste="handlePaste($event, index)"
+                    :warni="!!env.value && !env.key"
                     :disabled="env.protected"
                   />
                   <v-text-field
@@ -233,6 +232,7 @@
                     :disabled="env.protected"
                     :append-inner-icon="env.visible ? 'mdi-eye-off' : 'mdi-eye'"
                     :type="env.visible && !env.protected ? 'text' : 'password'"
+                    :error="!!env.key && !env.value"
                     @click:append-inner="
                       env.visible = !env.protected && !env.visible
                     "
@@ -248,7 +248,10 @@
                     <v-icon>mdi-delete</v-icon>
                   </v-btn>
                 </div>
-                <p class="text-caption text-center mt-2 mb-2">
+                <p
+                  v-if="environmentVariables.length"
+                  class="text-caption text-center mt-2 mb-2"
+                >
                   You can paste the contents of a valid .env file directly into
                   one of the key input fields, and it will automatically
                   populate the corresponding values for you.
@@ -267,7 +270,7 @@
         <div
           class="d-flex justify-end ga-2"
           style="
-            padding: 24px;
+            padding: 0 24px;
             width: 100%;
             max-width: 800px;
             margin-top: auto;
@@ -330,7 +333,7 @@
               class="mb-1"
             >
               <template #title>
-                <div class="d-flex align-center gap-2">
+                <div class="d-flex align-center ga-4">
                   <v-chip
                     :color="fileInfo.action === 'update' ? 'info' : 'success'"
                     size="small"
@@ -453,19 +456,6 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
-
-  <!-- Multiple Snackbars -->
-  <v-snackbar
-    v-for="(snack, index) in snackbarQueue"
-    :key="index"
-    v-model="snack.show"
-    :color="snack.color"
-    :timeout="5000"
-    :style="{ 'margin-bottom': `${index * 60}px`, zIndex: 1000 }"
-    location="bottom"
-  >
-    {{ snack.text }}
-  </v-snackbar>
 </template>
 
 <script setup lang="ts">
@@ -486,16 +476,13 @@ import {
   type FrameworkConfig,
 } from "@/config/frameworks-config";
 import type { CommitAction } from "@/libs/gitlab";
+import { useSnackbarStore } from "@/stores/snackbar";
 
 const authStore = useAuthStore();
+const snackbarStore = useSnackbarStore();
 
 const { t } = useLocale();
 const { project } = defineProps<{ project: ProjectNode }>();
-
-// Define the snackbar queue as a reactive array
-const snackbarQueue = ref<
-  Array<{ show: boolean; text: string; color: string }>
->([]);
 
 const dialog = ref(false);
 const actionNeededDialog = ref(false);
@@ -612,7 +599,8 @@ const frameworkSelected = computed(
 
 // Open deploy dialog and detect framework/language
 const handleDeployBtn = async () => {
-  if (!authStore.session) return showSnackbar("Error: Unauthorized", "error");
+  if (!authStore.session)
+    return snackbarStore.showSnackbar("Error: Unauthorized", "error");
 
   // Check namespace (example logic, adjust as needed)
   if (
@@ -673,7 +661,21 @@ const handleChangeManager = (manager: AcceptedPackageManager) => {
 // Deploy logic
 const handleDeploy = async () => {
   if (!authStore.session) {
-    return showSnackbar("Error: Unauthorized", "error");
+    return snackbarStore.showSnackbar("Error: Unauthorized", "error");
+  }
+
+  // Validate envs
+  const invalidEnvs = environmentVariables.value.filter(
+    (e) => !e.key || !e.value
+  );
+
+  if (invalidEnvs.length) {
+    return snackbarStore.showSnackbar(
+      `The environment variables ${invalidEnvs
+        .map((e) => e.key)
+        .join(", ")} are invalid`,
+      "error"
+    );
   }
 
   injectFiles.value = [];
@@ -687,7 +689,7 @@ const handleDeploy = async () => {
   ]);
 
   if (!files.success) {
-    return showSnackbar("Error: " + files.error, "error");
+    return snackbarStore.showSnackbar("Error: " + files.error, "error");
   }
 
   originalFiles.value = files.data;
@@ -728,7 +730,8 @@ const handleDeploy = async () => {
 // Confirm deployment
 const confirmDeploy = async () => {
   confirmDeployDialog.value = false;
-  if (!authStore.session) return showSnackbar("Error: Unauthorized", "error");
+  if (!authStore.session)
+    return snackbarStore.showSnackbar("Error: Unauthorized", "error");
 
   const encodeBase64 = (str: string) => btoa(unescape(encodeURIComponent(str)));
   const commitActions = injectFiles.value.map((f) => ({
@@ -739,7 +742,7 @@ const confirmDeploy = async () => {
   }));
 
   if (commitActions.length === 0) {
-    return showSnackbar("No changes to deploy", "info");
+    return snackbarStore.showSnackbar("No changes to deploy", "info");
   }
 
   try {
@@ -759,7 +762,7 @@ const confirmDeploy = async () => {
       }
     );
 
-    showSnackbar("Deployment successful", "success");
+    snackbarStore.showSnackbar("Deployment successful", "success");
 
     await updateEnvs();
 
@@ -775,7 +778,7 @@ const confirmDeploy = async () => {
     dialog.value = false;
     nextStepsDialog.value = true;
   } catch (err) {
-    showSnackbar("Deployment failed", "error");
+    snackbarStore.showSnackbar("Deployment failed", "error");
     console.error(err);
   }
 };
@@ -810,9 +813,15 @@ const updateEnvs = async () => {
       }
     );
 
-    showSnackbar("Environment variables updated successfully", "success");
+    snackbarStore.showSnackbar(
+      "Environment variables updated successfully",
+      "success"
+    );
   } catch (err) {
-    showSnackbar("Failed to update environment variables", "error");
+    snackbarStore.showSnackbar(
+      "Failed to update environment variables",
+      "error"
+    );
     console.error(err);
   }
 };
@@ -990,22 +999,6 @@ const getEnvs = async () => {
   } catch (error) {
     console.log(error);
   }
-};
-
-// Snackbar helper
-const showSnackbar = (text: string, color: string) => {
-  // Add new snackbar to the queue
-  snackbarQueue.value.push({ show: true, text, color });
-
-  // Optional: Auto-remove after timeout to prevent memory buildup
-  setTimeout(() => {
-    const index = snackbarQueue.value.findIndex(
-      (s) => s.text === text && s.color === color
-    );
-    if (index !== -1) {
-      snackbarQueue.value.splice(index, 1);
-    }
-  }, 5500); // Slightly longer than timeout to ensure it disappears smoothly
 };
 </script>
 

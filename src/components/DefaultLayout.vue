@@ -50,6 +50,20 @@
       </div>
     </v-footer>
   </v-app>
+
+  <!-- Multiple Snackbars -->
+  <v-snackbar
+    v-for="(snack, index) in snackbarStore.snackbarQueue"
+    :key="index"
+    v-model="snack.show"
+    :color="snack.color"
+    :timeout="5000"
+    :style="{ 'margin-bottom': `${index * 55}px`, zIndex: 10000 }"
+    location="bottom"
+    top
+  >
+    {{ snack.text }}
+  </v-snackbar>
 </template>
 
 <script setup lang="ts">
@@ -60,8 +74,11 @@ import { createGitlabAuthUrl, refreshAccessToken } from "@/libs/gitlab";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
+import { useSnackbarStore } from "@/stores/snackbar";
 
 const { current } = useLocale();
+
+const snackbarStore = useSnackbarStore();
 
 const authStore = useAuthStore();
 const isLoading = ref(true);

@@ -1,27 +1,12 @@
 <template>
   <v-row v-if="isLoading">
-    <v-col
-      cols="12"
-      class="text-center"
-    >
+    <v-col cols="12" class="text-center">
       <AppLoader />
     </v-col>
   </v-row>
-  <v-container
-    v-else
-    class="fill-height"
-    fluid
-  >
-    <v-row
-      align="center"
-      justify="center"
-    >
-      <v-col
-        cols="12"
-        sm="8"
-        md="6"
-        lg="4"
-      >
+  <v-container v-else class="fill-height" fluid>
+    <v-row align="center" justify="center">
+      <v-col cols="12" sm="8" md="6" lg="4">
         <v-card class="elevation-8">
           <v-card-text class="text-center pa-8">
             <v-img
@@ -46,12 +31,7 @@
               elevation="2"
               :ripple="false"
             >
-              <v-icon
-                left
-                class="mr-4"
-              >
-                mdi-gitlab
-              </v-icon>
+              <v-icon left class="mr-4"> mdi-gitlab </v-icon>
               Login with GitLab
             </v-btn>
           </v-card-text>
@@ -59,14 +39,6 @@
       </v-col>
     </v-row>
   </v-container>
-
-  <v-snackbar
-    v-model="snackbar.show"
-    :color="snackbar.color"
-    :timeout="5000"
-  >
-    {{ snackbar.text }}
-  </v-snackbar>
 </template>
 
 <script setup lang="ts">
@@ -77,6 +49,7 @@ import {
   getGitlabProfile,
 } from "@/libs/gitlab";
 import { useAuthStore } from "@/stores/auth";
+import { useSnackbarStore } from "@/stores/snackbar";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale } from "vuetify";
@@ -92,11 +65,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
-const snackbar = ref({
-  show: false,
-  text: "",
-  color: "success",
-});
+const stackbarStore = useSnackbarStore();
 
 onMounted(async () => {
   if (
@@ -113,12 +82,7 @@ onMounted(async () => {
   if (!accessToken) {
     isLoading.value = false;
 
-    snackbar.value = {
-      show: true,
-      color: "error",
-      text: t("pages.auth.errors.token"),
-    };
-    return;
+    return stackbarStore.showSnackbar(t("pages.auth.errors.token"), "error");
   }
 
   // Get user info
@@ -127,12 +91,7 @@ onMounted(async () => {
   if (!user) {
     isLoading.value = false;
 
-    snackbar.value = {
-      show: true,
-      color: "error",
-      text: t("pages.auth.errors.profile"),
-    };
-    return;
+    return stackbarStore.showSnackbar(t("pages.auth.errors.profile"), "error");
   }
 
   // Set the session state
