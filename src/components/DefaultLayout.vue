@@ -1,16 +1,35 @@
 <template>
-  <v-app :theme="theme">
-    <v-app-bar elevation="1" style="position: fixed">
+  <v-app :theme="theme.current.value.dark ? 'dark' : 'light'">
+    <v-app-bar
+      elevation="1"
+      :style="{
+        position: 'fixed',
+        backgroundColor: theme.current.value.dark ? '#000' : '#fff',
+      }"
+    >
       <v-container class="d-flex align-center">
         <RouterLink
           to="/"
           class="d-flex align-center mr-auto text-decoration-none"
         >
-          <v-img src="/JTEKT_logo.jpg" alt="JTEK logo" width="120" contain />
+          <v-img
+            :src="
+              theme.current.value.dark
+                ? '/JTEKT_logo_negative.jpg'
+                : '/JTEKT_logo.jpg'
+            "
+            alt="JTEK logo"
+            width="120"
+            contain
+          />
         </RouterLink>
         <v-spacer />
         <v-btn
-          :icon="theme === 'light' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
+          :icon="
+            !theme.current.value.dark
+              ? 'mdi-weather-night'
+              : 'mdi-weather-sunny'
+          "
           @click="toggleTheme"
         />
         <v-btn
@@ -72,7 +91,7 @@ import { onMounted, ref } from "vue";
 import AppLoader from "./AppLoader.vue";
 import { createGitlabAuthUrl, refreshAccessToken } from "@/libs/gitlab";
 import { useRoute, useRouter } from "vue-router";
-import { useLocale } from "vuetify";
+import { useLocale, useTheme } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
 import { useSnackbarStore } from "@/stores/snackbar";
 
@@ -86,11 +105,11 @@ const isLoading = ref(true);
 const router = useRouter();
 const route = useRoute();
 
-const theme = ref(localStorage.getItem("theme") || "light");
+const theme = useTheme();
 
 function toggleTheme() {
-  theme.value = theme.value === "light" ? "dark" : "light";
-  localStorage.setItem("theme", theme.value);
+  theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";
+  localStorage.setItem("theme", theme.global.name.value);
 }
 
 onMounted(async () => {
