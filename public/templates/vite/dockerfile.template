@@ -21,7 +21,7 @@ RUN rm -rf html && mkdir html
 
 # Copy nginx configuration and built application files
 COPY {ROOT_DIR}nginx.conf /etc/nginx/
-COPY --from=build-stage /app/{OUTPUT_DIR} /usr/share/nginx/html
+COPY --from=base /app/{OUTPUT_DIR} /usr/share/nginx/html
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 vite
