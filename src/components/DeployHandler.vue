@@ -36,13 +36,17 @@
   </v-dialog>
 
   <!-- Deploy Dialog -->
-  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
+  <v-dialog
+    v-model="deployDialog"
+    fullscreen
+    transition="dialog-bottom-transition"
+  >
     <v-card :loading="isLoading" style="height: 100%">
       <v-toolbar style="position: relative">
         <v-btn
           style="position: absolute; left: 0"
           icon="mdi-close"
-          @click="dialog = false"
+          @click="deployDialog = false"
         ></v-btn>
 
         <v-toolbar-items
@@ -83,7 +87,7 @@
         </div>
 
         <!-- Configuration Form -->
-        <template v-else>
+        <template v-else-if="!isLoading || frameworkSelected.id !== 'unknown'">
           <!-- Framework Selector -->
           <v-select
             v-model="frameworkSelector"
@@ -320,7 +324,7 @@
           <v-btn
             variant="tonal"
             :text="t('pages.home.deploy.cancel')"
-            @click="dialog = false"
+            @click="deployDialog = false"
           />
         </div>
       </template>
@@ -565,7 +569,7 @@ const snackbarStore = useSnackbarStore();
 const { t } = useLocale();
 const { project } = defineProps<{ project: ProjectNode }>();
 
-const dialog = ref(false);
+const deployDialog = ref(false);
 const actionNeededDialog = ref(false);
 const actionNeeded = ref<
   {
@@ -700,7 +704,7 @@ const handleDeployBtn = async () => {
   }
 
   isLoading.value = true;
-  dialog.value = true;
+  deployDialog.value = true;
 
   // Get envs
   environmentVariables.value = (await getEnvs()) || [];
@@ -955,6 +959,7 @@ const confirmDeploy = async () => {
   }
 
   isLoading.value = false;
+  deployDialog.value = false;
   nextStepsDialog.value = true; // Show dialog regardless of success/failure
 };
 
