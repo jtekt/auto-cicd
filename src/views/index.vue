@@ -144,12 +144,11 @@
     <v-row>
       <v-col cols="12">
         <v-alert variant="tonal" class="text-center">
-          If your project is not listed here, please ensure it is transferred to
-          the auto-cicd group or its subgroup in GitLab.
+          If your project is not listed here, please ensure it in the auto-cicd
+          group or one of it`s subgroup in GitLab.
           <RouterLink to="/faq#move-project">
             Learn how to transfer your project
           </RouterLink>
-          for automatic integration.
         </v-alert>
       </v-col>
     </v-row>
