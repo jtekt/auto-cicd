@@ -444,7 +444,7 @@
   <v-dialog v-model="nextStepsDialog" max-width="600px">
     <v-card class="pa-2">
       <v-card-title
-        class="text-h5 font-weight-bold text-center py-4"
+        class="text-h4 font-weight-bold text-center py-4"
         :class="{
           'text-success':
             deploymentInfo?.messages.length && !deploymentInfo?.errors.length,
@@ -476,7 +476,7 @@
       <v-card-text v-if="deploymentInfo" class="py-0 pt-4">
         <!-- Files Committed Section -->
         <div class="mb-6">
-          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+          <h3 class="text-h5 font-weight-medium mb-2">
             Files Committed to Repository
           </h3>
           <v-alert type="info" variant="tonal" density="compact" class="mb-3">
@@ -486,26 +486,24 @@
                 : "No file was changed in your GitLab repository"
             }}
           </v-alert>
-          <v-list
-            v-if="deploymentInfo.filesCommitted.length"
+          <v-alert
+            v-for="f in deploymentInfo.filesCommitted"
+            :key="f"
+            variant="tonal"
             density="compact"
-            class="bg-grey-lighten-4 rounded-lg py-1"
+            class="mb-1"
           >
-            <v-list-item v-for="f in deploymentInfo.filesCommitted" :key="f">
-              <span class="text-body-2">{{ f }}</span>
-            </v-list-item>
-          </v-list>
+            {{ f }}
+          </v-alert>
         </div>
 
         <!-- Success Messages Section -->
         <div v-if="deploymentInfo.messages.length" class="mb-6">
-          <h3 class="text-subtitle-1 font-weight-medium mb-2">
-            Important Notes
-          </h3>
+          <h3 class="text-h5 font-weight-medium mb-2">Important Notes</h3>
           <v-alert
             v-for="f in deploymentInfo.messages"
             :key="f"
-            class="mb-2"
+            class="mb-1"
             density="compact"
           >
             <span class="text-body-2">{{ f }}</span>
@@ -705,7 +703,6 @@ const handleDeployBtn = async () => {
 
   isLoading.value = true;
   deployDialog.value = true;
-
   // Get envs
   environmentVariables.value = (await getEnvs()) || [];
 
@@ -965,6 +962,8 @@ const confirmDeploy = async () => {
 
 // Update or create environment variables in GitLab
 const updateEnvs = async () => {
+  if (environmentVariables.value.length === 0) return;
+
   if (!authStore.session) throw new Error("Unauthorized");
 
   const existingEnvs = await getEnvs();
