@@ -1,7 +1,8 @@
 <template>
   <v-app :theme="theme.current.value.dark ? 'dark' : 'light'">
     <v-app-bar
-      elevation="1"
+      elevation="0"
+      class="border-b-sm"
       :style="{
         position: 'fixed',
         backgroundColor: theme.current.value.dark ? '#000' : '#fff',
@@ -63,7 +64,13 @@
       </v-container>
     </v-main>
 
-    <v-footer app class="d-flex flex-column bg-black">
+    <v-footer
+      app
+      class="d-flex flex-column border-t-sm"
+      :style="{
+        backgroundColor: theme.current.value.dark ? '#000' : '#fff',
+      }"
+    >
       <div class="px-4 py-2 text-center w-100">
         {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
       </div>
