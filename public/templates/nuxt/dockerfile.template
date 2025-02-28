@@ -11,10 +11,6 @@ RUN {INSTALL_COMMAND}
 # Copy all source code
 COPY . .
 {BUILD_COMMAND}
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nuxt
-
-USER nuxt
 
 # Define environment variables
 ENV NODE_ENV=production

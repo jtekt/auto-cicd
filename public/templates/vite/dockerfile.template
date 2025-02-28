@@ -23,10 +23,5 @@ RUN rm -rf html && mkdir html
 COPY {ROOT_DIR}nginx.conf /etc/nginx/
 COPY --from=base /app/{OUTPUT_DIR} /usr/share/nginx/html
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 vite
-
-USER vite
-
 # Run the server in the foreground
 CMD ["nginx", "-g", "daemon off;"]
