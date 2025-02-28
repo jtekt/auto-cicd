@@ -918,12 +918,11 @@ const confirmDeploy = async () => {
 
   isLoading.value = true;
 
-  // Modern base64 encoding replacing deprecated unescape
   const encodeBase64 = (str: string) => {
     return btoa(
-      encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-        String.fromCharCode(parseInt(p1, 16))
-      )
+      new TextEncoder()
+        .encode(str)
+        .reduce((data, byte) => data + String.fromCharCode(byte), "")
     );
   };
 
@@ -988,12 +987,15 @@ const confirmDeploy = async () => {
 
   // Try updating environment variables
   try {
-    await updateEnvs();
-    envUpdateResult = { success: true };
-    snackbarStore.showSnackbar(
-      t("components.deployHandler.script.success.envUpdateSuccess"),
-      "success"
-    );
+    if (environmentVariables.value.length > 0) {
+      await updateEnvs();
+
+      envUpdateResult = { success: true };
+      snackbarStore.showSnackbar(
+        t("components.deployHandler.script.success.envUpdateSuccess"),
+        "success"
+      );
+    }
   } catch (err) {
     if (err instanceof AxiosError || err instanceof Error) {
       envUpdateResult = {
@@ -1023,7 +1025,7 @@ const confirmDeploy = async () => {
     errors: [],
   };
 
-  if (commitResult.success && envUpdateResult.success) {
+  if (commitResult.success) {
     deploymentInfo.value.messages.push(
       t("components.deployHandler.script.success.deployMessages.deploying"),
       t("components.deployHandler.script.success.deployMessages.firstDeploy"),
