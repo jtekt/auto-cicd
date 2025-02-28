@@ -52,7 +52,14 @@
             :href="project.webUrl"
             target="_blank"
             rel="noopener noreferrer"
-            style="text-decoration: inherit; color: inherit"
+            style="
+              text-decoration: inherit;
+              color: inherit;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: start;
+            "
           >
             <p class="text-caption">Deploying from GitLab</p>
             <div class="d-flex ga-2 align-center">
@@ -136,9 +143,9 @@
             @update:model-value="handleChangeManager"
           />
 
-          <!-- Build and Output Settings -->
-          <v-expansion-panels v-if="!!frameworkSelected.userConfigurable">
-            <v-expansion-panel>
+          <v-expansion-panels>
+            <!-- Build and Output Settings -->
+            <v-expansion-panel v-if="!!frameworkSelected.userConfigurable">
               <v-expansion-panel-title
                 >Build and Output Settings</v-expansion-panel-title
               >
@@ -199,6 +206,8 @@
                 />
               </v-expansion-panel-text>
             </v-expansion-panel>
+
+            <!-- Environment Variables Settings -->
             <v-expansion-panel>
               <v-expansion-panel-title
                 >Environment Variables</v-expansion-panel-title
@@ -222,6 +231,7 @@
                     :error="!!env.value && !env.key"
                     :warni="!!env.value && !env.key"
                     :disabled="env.protected"
+                    @paste="(e: ClipboardEvent) => handlePaste(e, index)"
                   />
                   <v-text-field
                     v-model="env.value"
@@ -282,7 +292,7 @@
             color="success"
             variant="tonal"
             :text="t('pages.home.deploy.deploy')"
-            :disabled="frameworkSelector === 'unknown'"
+            :disabled="isLoading || frameworkSelector === 'unknown'"
             @click="handleDeploy"
           />
           <v-btn
@@ -305,7 +315,7 @@
   >
     <v-card prepend-icon="mdi-check-all" class="pa-2">
       <template #title>
-        <span class="text-h6 font-weight-bold">
+        <span class="text-h5 font-weight-bold">
           {{ t("pages.home.deploy.confirmDeployTitle") }}
         </span>
       </template>
@@ -313,12 +323,12 @@
       <v-card-text class="mt-4">
         <!-- Main instruction message -->
         <p class="text-body-1 mb-4">
-          {{ t("pages.home.deploy.confirmDeployMessage") }}
+          Are you sure you want to continue? The following changes will be made:
         </p>
 
         <!-- Files Section -->
         <div class="mb-6">
-          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+          <h3 class="text-subtitle-s font-weight-medium mb-2">
             Files to be Deployed
           </h3>
           <v-expansion-panels
@@ -369,28 +379,27 @@
 
         <!-- Environment Variables Section -->
         <div v-if="environmentVariables.length" class="mb-6">
-          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+          <h3 class="text-subtitle-s font-weight-medium mb-2">
             Included Environment Variables
           </h3>
           <p class="text-body-2 text-grey-darken-1 mb-2">
             These variables will be available in your deployment:
           </p>
-          <v-list density="compact" class="bg-grey-lighten-4 rounded-lg py-1">
-            <v-list-item
-              v-for="(env, index) in environmentVariables"
-              :key="index"
-              class="text-body-2"
-            >
-              <span class="font-weight-medium">{{ env.key }}</span>
-            </v-list-item>
-          </v-list>
+          <v-alert
+            v-for="(env, index) in environmentVariables"
+            :key="index"
+            class="mb-2"
+            density="compact"
+          >
+            <span class="font-weight-medium">{{ env.key }}</span>
+          </v-alert>
         </div>
       </v-card-text>
 
       <v-card-actions class="pa-4">
         <v-spacer />
         <v-btn
-          v-if="injectFiles.length > 0"
+          v-if="injectFiles.length || environmentVariables.length"
           color="success"
           class="px-4"
           variant="tonal"
@@ -408,36 +417,86 @@
   <!-- Next Steps Dialog -->
   <v-dialog v-model="nextStepsDialog" max-width="600px">
     <v-card class="pa-2">
-      <v-card-title class="text-h5 font-weight-bold text-center py-4">
-        <v-icon left color="success">mdi-check-circle</v-icon>
-        Deployment Completed Successfully! 🎉
+      <v-card-title
+        class="text-h5 font-weight-bold text-center py-4"
+        :class="{
+          'text-success':
+            deploymentInfo?.messages.length && !deploymentInfo?.errors.length,
+          'text-warning':
+            deploymentInfo?.messages.length && deploymentInfo?.errors.length,
+          'text-error':
+            deploymentInfo?.errors.length && !deploymentInfo?.messages.length,
+        }"
+      >
+        <v-icon
+          left
+          :color="deploymentInfo?.errors.length ? 'error' : 'success'"
+        >
+          {{
+            deploymentInfo?.errors.length
+              ? "mdi-alert-circle"
+              : "mdi-check-circle"
+          }}
+        </v-icon>
+        {{
+          deploymentInfo?.errors.length && !deploymentInfo?.messages.length
+            ? "Deployment Failed"
+            : deploymentInfo?.messages.length
+            ? "Deployment Completed"
+            : "Deployment Update"
+        }}
       </v-card-title>
 
-      <v-card-text v-if="deploymentInfo" class="py-4">
+      <v-card-text v-if="deploymentInfo" class="py-0 pt-4">
         <!-- Files Committed Section -->
-        <div v-if="deploymentInfo.filesCommitted.length" class="mb-6">
+        <div class="mb-6">
           <h3 class="text-subtitle-1 font-weight-medium mb-2">
             Files Committed to Repository
           </h3>
           <v-alert type="info" variant="tonal" density="compact" class="mb-3">
-            These changes have been pushed to your GitLab repository. Please
-            pull the latest updates.
+            {{
+              deploymentInfo.filesCommitted.length > 0
+                ? "These changes have been pushed to your GitLab repository. Please pull the latest updates."
+                : "No file was changed in your GitLab repository"
+            }}
           </v-alert>
-          <v-list density="compact" class="bg-grey-lighten-4 rounded-lg py-1">
+          <v-list
+            v-if="deploymentInfo.filesCommitted.length"
+            density="compact"
+            class="bg-grey-lighten-4 rounded-lg py-1"
+          >
             <v-list-item v-for="f in deploymentInfo.filesCommitted" :key="f">
               <span class="text-body-2">{{ f }}</span>
             </v-list-item>
           </v-list>
         </div>
 
-        <!-- Important Notes Section -->
+        <!-- Success Messages Section -->
         <div v-if="deploymentInfo.messages.length" class="mb-6">
           <h3 class="text-subtitle-1 font-weight-medium mb-2">
             Important Notes
           </h3>
+          <v-alert
+            v-for="f in deploymentInfo.messages"
+            :key="f"
+            class="mb-2"
+            density="compact"
+          >
+            <span class="text-body-2">{{ f }}</span>
+          </v-alert>
+        </div>
+
+        <!-- Errors Section -->
+        <div v-if="deploymentInfo.errors?.length">
+          <h3 class="text-subtitle-1 font-weight-medium mb-2 text-error">
+            Errors Encountered
+          </h3>
+          <v-alert type="error" variant="tonal" density="compact" class="mb-3">
+            Please review the following issues and try again or contact support.
+          </v-alert>
           <v-list density="compact">
-            <v-list-item v-for="f in deploymentInfo.messages" :key="f">
-              <span class="text-body-2">{{ f }}</span>
+            <v-list-item v-for="error in deploymentInfo.errors" :key="error">
+              <span class="text-body-2">● {{ error }}</span>
             </v-list-item>
           </v-list>
         </div>
@@ -446,12 +505,12 @@
       <v-card-actions class="pa-4">
         <v-spacer />
         <v-btn
-          color="primary"
+          :color="deploymentInfo?.errors.length ? 'error' : 'primary'"
           variant="tonal"
           class="px-4"
           @click="nextStepsDialog = false"
         >
-          Close
+          {{ deploymentInfo?.errors.length ? "Close and Review" : "Close" }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -461,7 +520,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { env } from "@/config/env";
 import { useLocale } from "vuetify";
 import type { ProjectNode } from "@/types/project";
@@ -498,6 +557,7 @@ const nextStepsDialog = ref(false);
 const deploymentInfo = ref<{
   filesCommitted: string[];
   messages: string[];
+  errors: string[];
 } | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
@@ -539,8 +599,8 @@ const handlePaste = (event: ClipboardEvent, index: number) => {
     .filter((line) => line.trim() !== "");
 
   const newVariables: { key: string; value: string; visible: boolean }[] = [];
-  let isValidEnv = true;
 
+  let isValidEnv = true;
   // Validate if the pasted lines are in valid .env format
   for (const line of envLines) {
     const match = line.match(/^([^#=]+)\s*=\s*(.*)$/); // Match key=value pairs and ignore comments
@@ -558,12 +618,7 @@ const handlePaste = (event: ClipboardEvent, index: number) => {
   // If the paste is a valid .env format, update the environment variables
   if (isValidEnv && newVariables.length > 0) {
     // If there is a focus on a particular key (index is provided), update that key
-    if (index !== undefined && environmentVariables.value[index]) {
-      environmentVariables.value[index] = newVariables[0]; // Only update the first line
-    } else {
-      // If no index, or this is the first key, clear previous and set new variables
-      environmentVariables.value = [...newVariables]; // Replace old values with new ones
-    }
+    environmentVariables.value[index] = newVariables[0]; // Only update the first line
 
     // If there are more than one key-value pairs, add the rest as new entries
     if (newVariables.length > 1) {
@@ -622,11 +677,11 @@ const handleDeployBtn = async () => {
     return;
   }
 
+  isLoading.value = true;
+  dialog.value = true;
+
   // Get envs
   environmentVariables.value = (await getEnvs()) || [];
-
-  dialog.value = true;
-  isLoading.value = true;
 
   const detectedConfig = await identifyProject();
 
@@ -678,6 +733,8 @@ const handleDeploy = async () => {
     );
   }
 
+  isLoading.value = true;
+
   injectFiles.value = [];
 
   // Check if the files have been changed
@@ -689,6 +746,7 @@ const handleDeploy = async () => {
   ]);
 
   if (!files.success) {
+    isLoading.value = false;
     return snackbarStore.showSnackbar("Error: " + files.error, "error");
   }
 
@@ -714,7 +772,6 @@ const handleDeploy = async () => {
         action: "create",
       });
     } else if (originalFile.content !== file.content) {
-      console.log({ original: originalFile.content, new: file.content });
       fs.push({
         ...file,
         action: "update",
@@ -724,106 +781,189 @@ const handleDeploy = async () => {
     return fs;
   }, []);
 
+  isLoading.value = false;
   confirmDeployDialog.value = true; // Open confirmation dialog
 };
 
 // Confirm deployment
 const confirmDeploy = async () => {
   confirmDeployDialog.value = false;
-  if (!authStore.session)
+  if (!authStore.session) {
     return snackbarStore.showSnackbar("Error: Unauthorized", "error");
-
-  const encodeBase64 = (str: string) => btoa(unescape(encodeURIComponent(str)));
-  const commitActions = injectFiles.value.map((f) => ({
-    action: f.action || "create",
-    file_path: f.fileName,
-    content: encodeBase64(f.content),
-    encoding: "base64",
-  }));
-
-  if (commitActions.length === 0) {
-    return snackbarStore.showSnackbar("No changes to deploy", "info");
   }
 
-  try {
-    const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
+  isLoading.value = true;
 
-    await axios.post(
-      commitUrl,
-      {
-        branch: project.repository.rootRef,
-        commit_message: `Auto-generated deployment files`,
-        actions: commitActions,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      }
+  // Modern base64 encoding replacing deprecated unescape
+  const encodeBase64 = (str: string) => {
+    return btoa(
+      encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+        String.fromCharCode(parseInt(p1, 16))
+      )
     );
+  };
 
-    snackbarStore.showSnackbar("Deployment successful", "success");
+  let commitActions: {
+    action: CommitAction;
+    file_path: string;
+    content: string;
+    encoding: string;
+  }[] = [];
 
-    await updateEnvs();
+  let commitResult: { success: boolean; error?: string } = { success: false };
+  let envUpdateResult: { success: boolean; error?: string } = {
+    success: false,
+  };
 
-    deploymentInfo.value = {
-      filesCommitted: commitActions.map((a) => a.file_path),
-      messages: [
-        "Your project will be deployed within a few minutes.",
-        "If this is your first auto deployment, you will receive an email with the URL of your application.",
-        "You can track the progress of your build by accessing the GitLab project under Build > Pipelines.",
-      ],
-    };
+  // Try committing files
+  if (injectFiles.value.length) {
+    commitActions = injectFiles.value.map((f) => ({
+      action: f.action || "create",
+      file_path: f.fileName,
+      content: encodeBase64(f.content),
+      encoding: "base64",
+    }));
 
-    dialog.value = false;
-    nextStepsDialog.value = true;
-  } catch (err) {
-    snackbarStore.showSnackbar("Deployment failed", "error");
-    console.error(err);
+    try {
+      const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
+      await axios.post(
+        commitUrl,
+        {
+          branch: project.repository.rootRef,
+          commit_message: `Auto-generated deployment files`,
+          actions: commitActions,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+          },
+        }
+      );
+      commitResult = { success: true };
+      snackbarStore.showSnackbar(
+        "Deployment files committed successfully!",
+        "success"
+      );
+    } catch (err) {
+      if (err instanceof AxiosError || err instanceof Error) {
+        commitResult = {
+          success: false,
+          error: err.message || "Unknown error",
+        };
+      } else {
+        commitResult = { success: false, error: "Unknown error" };
+      }
+
+      snackbarStore.showSnackbar(
+        "Error: Failed to commit deployment files.",
+        "error"
+      );
+      console.error("Commit error:", err);
+    }
   }
+
+  // Try updating environment variables
+  try {
+    await updateEnvs();
+    envUpdateResult = { success: true };
+    snackbarStore.showSnackbar(
+      "Environment variables updated successfully!",
+      "success"
+    );
+  } catch (err) {
+    if (err instanceof AxiosError || err instanceof Error) {
+      envUpdateResult = {
+        success: false,
+        error: err.message || "Unknown error",
+      };
+    } else {
+      envUpdateResult = { success: false, error: "Unknown error" };
+    }
+
+    snackbarStore.showSnackbar(
+      "Error: Failed to update environment variables.",
+      "error"
+    );
+    console.error("Env update error:", err);
+  }
+
+  // Set Deployment Info based on results
+  deploymentInfo.value = {
+    filesCommitted: commitResult.success
+      ? commitActions.map((a) => a.file_path)
+      : [],
+    messages: [],
+    errors: [],
+  };
+
+  if (commitResult.success && envUpdateResult.success) {
+    deploymentInfo.value.messages.push(
+      "Your project will be deployed within a few minutes.",
+      "If this is your first auto deployment, you will receive an email with the URL of your application.",
+      "You can track the progress of your build by accessing the GitLab project under Build > Pipelines."
+    );
+  } else {
+    if (commitResult.success) {
+      deploymentInfo.value.messages.push(
+        "Deployment files were committed successfully."
+      );
+    }
+    if (envUpdateResult.success) {
+      deploymentInfo.value.messages.push(
+        "Environment variables were updated successfully."
+      );
+    }
+    if (!commitResult.success && injectFiles.value.length) {
+      deploymentInfo.value.errors.push(
+        `Failed to commit files: ${commitResult.error || "Unknown error"}`
+      );
+    }
+    if (!envUpdateResult.success) {
+      deploymentInfo.value.errors.push(
+        `Failed to update environment variables: ${
+          envUpdateResult.error || "Unknown error"
+        }`
+      );
+    }
+    if (!commitResult.success && !envUpdateResult.success) {
+      deploymentInfo.value.errors.push(
+        "Deployment failed. Please check the logs for more details."
+      );
+    }
+  }
+
+  isLoading.value = false;
+  nextStepsDialog.value = true; // Show dialog regardless of success/failure
 };
 
 // Update or create environment variables in GitLab
 const updateEnvs = async () => {
-  try {
-    if (!authStore.session) throw new Error("Unauthorized");
+  if (!authStore.session) throw new Error("Unauthorized");
 
-    const existingEnvs = await getEnvs();
+  const existingEnvs = await getEnvs();
 
-    // Add or update new variables
-    const method = existingEnvs ? "put" : "post";
-    const url = existingEnvs
-      ? `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables/${envKey}`
-      : `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables`;
+  // Add or update new variables
+  const method = existingEnvs ? "put" : "post";
+  const url = existingEnvs
+    ? `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables/${envKey}`
+    : `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables`;
 
-    await axios[method](
-      url,
-      {
-        key: envKey,
-        value: environmentVariables.value
-          .map((e) => `${e.key}=${e.value}`)
-          .join("\n"),
-        description: "Generated in the Auto CI/CD App",
-        variable_type: "file",
+  await axios[method](
+    url,
+    {
+      key: envKey,
+      value: environmentVariables.value
+        .map((e) => `${e.key}=${e.value}`)
+        .join("\n"),
+      description: "Generated in the Auto CI/CD App",
+      variable_type: "file",
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      }
-    );
-
-    snackbarStore.showSnackbar(
-      "Environment variables updated successfully",
-      "success"
-    );
-  } catch (err) {
-    snackbarStore.showSnackbar(
-      "Failed to update environment variables",
-      "error"
-    );
-    console.error(err);
-  }
+    }
+  );
 };
 
 // Cancel deployment
@@ -995,9 +1135,21 @@ const getEnvs = async () => {
       });
 
       return vars;
+    } else if (response.data.variable_type === "env_var") {
+      return [
+        {
+          key: response.data.key,
+          value: response.data.value,
+          protected:
+            response.data.masked ||
+            response.data.hidden ||
+            response.data.protected,
+          visible: false,
+        },
+      ];
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 </script>

@@ -20,6 +20,7 @@ export type PackageManagerConfig = {
   commands: {
     install: string;
     build?: string; // Optional, some frameworks may not need a build step
+    start?: string; // Optional, some frameworks have a preset start
   };
   detectionFiles: {
     file: string;
@@ -73,12 +74,18 @@ export const packageManagers: Record<
 > = {
   npm: {
     name: "npm",
-    commands: { install: "npm install", build: "npm run build" },
+    commands: {
+      install: "npm install",
+      build: "npm run build",
+    },
     detectionFiles: [{ file: "package-lock.json" }],
   },
   yarn: {
     name: "yarn",
-    commands: { install: "yarn install", build: "yarn build" },
+    commands: {
+      install: "yarn install",
+      build: "yarn build",
+    },
     detectionFiles: [{ file: "yarn.lock" }],
   },
   pnpm: {
@@ -111,7 +118,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     },
     outputDir: "dist",
     rootDir: "./",
-    port: 80,
+    port: 5173,
     files: ["nginx.conf"],
     configFiles: [{ file: "package.json", checkFor: ["vite"] }],
     supportedManagers: ["npm", "yarn", "pnpm"],
@@ -131,7 +138,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     },
     outputDir: ".output",
     rootDir: "./",
-    port: 80,
+    port: 3000,
     files: [],
     configFiles: [{ file: "package.json", checkFor: ["nuxt"] }],
     supportedManagers: ["npm", "yarn"],
@@ -151,7 +158,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     },
     outputDir: ".next",
     rootDir: "./",
-    port: 80,
+    port: 3000,
     files: [],
     configFiles: [{ file: "package.json", checkFor: ["next"] }],
     supportedManagers: ["npm", "yarn", "pnpm"],
@@ -173,7 +180,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     },
     outputDir: "app.js",
     rootDir: "./",
-    port: 80,
+    port: 3000,
     files: [],
     configFiles: [{ file: "package.json", checkFor: ["express"] }],
     supportedManagers: ["npm", "yarn"],
@@ -203,7 +210,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     image: { type: "icon", value: "mdi-help-circle-outline" },
     outputDir: "dist",
     rootDir: "./",
-    port: 80,
+    port: 3000,
     files: [],
     supportedManagers: ["npm"],
     defaultManager: "npm",
@@ -229,7 +236,7 @@ export const getDefaultProjectConfig = (
       : undefined,
     outputDir: framework.outputDir || "dist",
     rootDir: framework.rootDir || "./",
-    port: framework.port || 80,
+    port: framework.port || 3000,
     files: framework.files || [],
     runtimeDependencies: framework.runtimeDependencies,
   };

@@ -1,31 +1,9 @@
 <template>
-  <v-card
-    class="code-editor"
-    style="padding: 0"
-  >
+  <v-card class="code-editor" elevation="2">
     <div class="editor-card-container">
-      <div
-        v-if="showLineNumbers"
-        class="line-numbers pr-2"
-      >
-        <div
-          v-for="i in lineCount"
-          :key="i"
-          class="line-number"
-          style="position: relative"
-        >
-          <div
-            v-if="highlightedLines.includes(i)"
-            class="pa-1"
-            style="
-              position: absolute;
-              top: 50%;
-              left: 0;
-              background-color: orange;
-              border-radius: 50%;
-              transform: translate(-50%, -50%);
-            "
-          />
+      <div v-if="showLineNumbers" class="line-numbers">
+        <div v-for="i in lineCount" :key="i" class="line-number">
+          <span v-if="highlightedLines.includes(i)" class="highlight-dot" />
           {{ i }}
         </div>
       </div>
@@ -41,7 +19,6 @@
             :readonly="readonly"
             class="code-input"
             spellcheck="false"
-            no-resize
             @input="handleInput"
             @keydown="handleKeyDown"
           />
@@ -53,6 +30,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, nextTick } from "vue";
+import { useTheme } from "vuetify";
 
 const props = defineProps({
   modelValue: {
@@ -83,6 +61,10 @@ const props = defineProps({
 
 const textarea = ref<HTMLTextAreaElement | null>(null);
 const code = ref(props.modelValue || props.defaultValue);
+
+// Vuetify theme
+const theme = useTheme();
+const isDark = computed(() => theme.current.value.dark);
 
 watch(
   () => props.modelValue || props.defaultValue,
@@ -145,76 +127,137 @@ const emit = defineEmits<{
 
 <style scoped>
 .code-editor {
-  font-family: "Fira Code", monospace;
+  font-family: "Roboto Mono", monospace;
   width: 100%;
-  height: 100%;
   max-width: 900px;
   max-height: 500px;
-  margin: auto;
-  padding: 10px;
-  padding-bottom: 0;
+  border-radius: 8px;
+  margin: 16px auto;
   overflow: auto;
+  background-color: v-bind('isDark ? "#1e1e1e" : "#ffffff"');
 }
 
 .editor-card-container {
   display: flex;
+  min-height: 0;
+  background-color: v-bind('isDark ? "#252526" : "#f5f5f5"');
+}
+
+.line-numbers {
+  user-select: none;
+  text-align: right;
+  padding: 12px 8px;
+  border-right: 1px solid v-bind('isDark ? "#3e3e3e" : "#e0e0e0"');
+  min-width: 48px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: v-bind('isDark ? "#2d2d2d" : "#fafafa"');
+  color: v-bind('isDark ? "#858585" : "#666666"');
+}
+
+.line-number {
+  font-size: 13px;
+  line-height: 1.5;
+  position: relative;
+}
+
+.highlight-dot {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: #ff9800;
+  border-radius: 50%;
+  transform: translateY(-50%);
 }
 
 .code-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  min-height: 0;
 }
 
 .longest-line {
   white-space: pre;
   height: 0;
   color: transparent;
-}
-
-.line-numbers {
-  user-select: none;
-  text-align: right;
-  color: #999;
-}
-
-.line-number {
-  padding: 0 5px;
+  padding: 0 12px;
 }
 
 .code-input-container {
-  position: relative;
   flex: 1;
+  padding: 12px;
   overflow: auto;
+  background-color: v-bind('isDark ? "#252526" : "#f5f5f5"');
 }
 
 .code-input {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  background: transparent;
   border: none;
   outline: none;
-  background: transparent;
-  caret-color: red;
-  width: 100%;
+  font-size: 13px;
+  line-height: 1.5;
   resize: none;
   white-space: pre;
-  overflow: hidden;
+  padding: 0;
+  color: v-bind('isDark ? "#d4d4d4" : "#333333"');
+  caret-color: v-bind('isDark ? "#569cd6" : "#0066cc"');
 }
 
-/* For WebKit browsers (Chrome, Safari) */
-.code-editor::-webkit-scrollbar {
-  width: 6px; /* Adjust the width as needed */
-  height: 6px;
+/* Placeholder styling */
+.code-input::placeholder {
+  color: v-bind('isDark ? "#858585" : "#999999"');
+  opacity: 0.6;
 }
 
-.code-editor::-webkit-scrollbar-track {
-  background: transparent; /* Scroll track color */
+/* Scrollbar styling */
+.code-editor::-webkit-scrollbar,
+.code-input-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.code-editor::-webkit-scrollbar-thumb {
-  background: rgb(156, 156, 156); /* Scrollbar thumb color */
-  border-radius: 6px; /* Rounded corners for the thumb */
+.code-editor::-webkit-scrollbar-track,
+.code-input-container::-webkit-scrollbar-track {
+  background: v-bind('isDark ? "#252526" : "#f5f5f5"');
 }
 
-.code-editor::-webkit-scrollbar-thumb:hover {
-  background: #555; /* Darker color on hover */
+.code-editor::-webkit-scrollbar-thumb,
+.code-input-container::-webkit-scrollbar-thumb {
+  background: v-bind('isDark ? "#4e4e4e" : "#cccccc"');
+  border-radius: 4px;
+}
+
+.code-editor::-webkit-scrollbar-thumb:hover,
+.code-input-container::-webkit-scrollbar-thumb:hover {
+  background: v-bind('isDark ? "#666" : "#aaaaaa"');
+}
+
+/* Hover effects */
+.code-input:focus {
+  outline: none;
+}
+
+/* Smooth transitions */
+.line-number,
+.code-input {
+  transition: all 0.2s ease;
+}
+
+/* Selection styling */
+.code-input::selection {
+  background: v-bind('isDark ? "#264f78" : "#b3d7ff"');
+  color: v-bind('isDark ? "#ffffff" : "#000000"');
+}
+
+/* Disabled state */
+.code-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

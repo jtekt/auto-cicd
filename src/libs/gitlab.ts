@@ -67,7 +67,7 @@ export const createAccessToken = async (
     // Validate
     return TokenSchema.parse(token.data);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return null;
   }
 };
@@ -91,7 +91,7 @@ export const refreshAccessToken = async (session: Session) => {
     // Validate
     return TokenSchema.parse(token.data);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return null;
   }
 };
@@ -109,7 +109,7 @@ export const getGitlabProfile = async (access_token: string) => {
     // Validate
     return UserSchema.parse(res.data);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return null;
   }
 };

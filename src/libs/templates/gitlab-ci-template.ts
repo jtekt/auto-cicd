@@ -18,20 +18,7 @@ export const generateGitLabCI = async (
     }
 
     let gitlabCI = await response.text();
-    console.log(
-      project.fullPath
-        .split("/")
-        .pop()
-        ?.toLowerCase()
-        .replace(/[^a-zA-Z0-9\s.,!?'"]/g, "")
-        .trim()
-        .replace(" ", "-"),
-      project.name
-        .toLowerCase()
-        .replace(/[^a-zA-Z0-9\s.,!?'"]/g, "")
-        .trim()
-        .replace(" ", "-")
-    );
+
     // Replace placeholders with the actual values
     gitlabCI = gitlabCI.replace(
       /{ APPLICATION_NAME }/g,
