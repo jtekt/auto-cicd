@@ -66,6 +66,7 @@ export type FrameworkConfig = {
   supportedManagers: AcceptedPackageManager[];
   defaultManager: AcceptedPackageManager;
   runtimeDependencies?: string[];
+  tips?: { text: string; link?: string }[];
 };
 
 export const packageManagers: Record<
@@ -163,6 +164,12 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     configFiles: [{ file: "package.json", checkFor: ["next"] }],
     supportedManagers: ["npm", "yarn", "pnpm"],
     defaultManager: "npm",
+    tips: [
+      {
+        text: `To deploy you need to add the config "output: 'standalone'" in your next.config.js`,
+        link: "https://nextjs.org/docs/pages/api-reference/config/next-config-js/output#automatically-copying-traced-files",
+      },
+    ],
   },
   express: {
     id: "express",

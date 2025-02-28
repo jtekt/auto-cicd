@@ -272,10 +272,32 @@
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
-        </template>
 
-        <!-- Actions -->
+          <template v-if="frameworkSelected.tips">
+            <v-alert
+              v-for="tip in frameworkSelected.tips"
+              type="warning"
+              variant="tonal"
+              density="compact"
+              class="mt-2"
+            >
+              <div class="d-flex align-center ga-4">
+                <p class="flex-fill">
+                  {{ tip.text }}
+                </p>
+                <a
+                  v-if="tip.link"
+                  :href="tip.link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  ><v-icon>mdi-link-variant</v-icon></a
+                >
+              </div>
+            </v-alert>
+          </template>
+        </template>
       </div>
+      <!-- Actions -->
       <template #actions>
         <div
           class="d-flex justify-end ga-2"
