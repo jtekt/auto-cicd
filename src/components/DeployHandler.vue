@@ -269,7 +269,6 @@
                     density="compact"
                     hide-details
                     :error="!!env.value && !env.key"
-                    :warni="!!env.value && !env.key"
                     :disabled="env.protected"
                     @paste="(e: ClipboardEvent) => handlePaste(e, index)"
                   />
@@ -412,10 +411,15 @@
             <v-expansion-panel
               v-for="(fileInfo, index) in injectFiles"
               :key="index"
-              class="mb-1"
             >
               <template #title>
                 <div class="d-flex align-center ga-4">
+                  <v-checkbox
+                    v-model="fileInfo.isChecked"
+                    color="success"
+                    hide-details
+                    @click.stop
+                  ></v-checkbox>
                   <v-chip
                     :color="fileInfo.action === 'update' ? 'info' : 'success'"
                     size="small"
@@ -675,7 +679,12 @@ const managerSelector = ref<AcceptedPackageManager>("npm");
 const projectConfig = ref<ProjectConfig>(getDefaultProjectConfig("unknown"));
 const originalFiles = ref<{ fileName: string; content: string }[]>([]);
 const injectFiles = ref<
-  { fileName: string; content: string; action: CommitAction }[]
+  {
+    fileName: string;
+    content: string;
+    action: CommitAction;
+    isChecked: boolean;
+  }[]
 >([]);
 
 const envKey = "ENV";
@@ -881,6 +890,7 @@ const handleDeploy = async () => {
       fileName: string;
       content: string;
       action: CommitAction;
+      isChecked: boolean;
     }[]
   >((fs, file) => {
     const originalFile = originalFiles.value.find(
@@ -891,11 +901,13 @@ const handleDeploy = async () => {
       fs.push({
         ...file,
         action: "create",
+        isChecked: true,
       });
     } else if (originalFile.content !== file.content) {
       fs.push({
         ...file,
         action: "update",
+        isChecked: true,
       });
     }
 
@@ -938,9 +950,11 @@ const confirmDeploy = async () => {
     success: false,
   };
 
+  const filesToInject = injectFiles.value.filter((f) => f.isChecked);
+
   // Try committing files
-  if (injectFiles.value.length) {
-    commitActions = injectFiles.value.map((f) => ({
+  if (filesToInject.length) {
+    commitActions = filesToInject.map((f) => ({
       action: f.action || "create",
       file_path: f.fileName,
       content: encodeBase64(f.content),
@@ -1032,7 +1046,7 @@ const confirmDeploy = async () => {
       t("components.deployHandler.script.success.deployMessages.trackProgress")
     );
   } else {
-    if (!commitResult.success && injectFiles.value.length) {
+    if (!commitResult.success && filesToInject.length) {
       deploymentInfo.value.errors.push(
         `Failed to commit files: ${commitResult.error || "Unknown error"}`
       );
