@@ -713,13 +713,15 @@ const handlePaste = (event: ClipboardEvent, index: number) => {
   const normalizedText = pastedText.replace(/\r/g, ""); // Remove \r characters
   const envLines = normalizedText
     .split("\n")
-    .filter((line) => line.trim() !== "");
+    .map((l) => l.trim())
+    .filter((line) => line !== "" && !line.startsWith("#"));
 
   const newVariables: { key: string; value: string; visible: boolean }[] = [];
 
   let isValidEnv = true;
   // Validate if the pasted lines are in valid .env format
   for (const line of envLines) {
+    // If starts with #
     const match = line.match(/^([^#=]+)\s*=\s*(.*)$/); // Match key=value pairs and ignore comments
     if (match) {
       const key = match[1].trim();
