@@ -41,6 +41,7 @@ const messages = {
             outputDir: "Output Directory",
             installCommand: "Install Command",
             buildCommand: "Build Command",
+            outputFileName: "Output File Name",
           },
           envSettings: {
             title: "Environment Variables",
@@ -187,6 +188,7 @@ const messages = {
             outputDir: "出力ディレクトリ",
             installCommand: "インストールコマンド",
             buildCommand: "ビルドコマンド",
+            outputFileName: "Output File Name",
           },
           envSettings: {
             title: "環境変数",

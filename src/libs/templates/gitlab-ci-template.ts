@@ -5,7 +5,7 @@ const PUBLIC_BASE = (globalThis as any).BASE_PUBLIC_URL || "";
 
 export const generateGitLabCI = async (
   config: ProjectConfig,
-  project: Pick<ProjectNode, "name" | "fullPath">
+  project: Pick<ProjectNode, "name" | "fullPath" | "repository">
 ): Promise<string> => {
   try {
     const response = await fetch(
@@ -20,22 +20,23 @@ export const generateGitLabCI = async (
     let gitlabCI = await response.text();
 
     // Replace placeholders with the actual values
-    gitlabCI = gitlabCI.replace(
-      /{ APPLICATION_NAME }/g,
-      project.fullPath
-        .split("/")
-        .pop()
-        ?.toLowerCase()
-        .replace(/[^a-zA-Z0-9\s.,!?'"]/g, "")
-        .trim()
-        .replace(" ", "-") ||
-        project.name
-          .toLowerCase()
-          .replace(/[^a-zA-Z0-9\s.,!?'"]/g, "")
+    gitlabCI = gitlabCI
+      .replace(
+        /{ APPLICATION_NAME }/g,
+        project.fullPath
+          .split("/")
+          .pop()
+          ?.toLowerCase()
           .trim()
-          .replace(" ", "-")
-    ); // Set application name from config
-    gitlabCI = gitlabCI.replace(/{ PORT }/g, config.port?.toString() || "80"); // Set application port from config
+          .replace(" ", "-") ||
+          project.name
+            .toLowerCase()
+            .replace(/[^a-zA-Z0-9\s.,!?'"-]/g, "")
+            .trim()
+            .replace(" ", "-")
+      ) // Set application name
+      .replace(/{ PORT }/g, config.port?.toString() || "80") // Set application port from config
+      .replace(/{ ROOT_REF }/g, project.repository.rootRef); // Set application main branch
 
     return gitlabCI;
   } catch (error) {

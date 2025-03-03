@@ -21,6 +21,8 @@ variables:
 # Validate the environment variables
 validate-job:
   stage: validate
+  only:
+    - { ROOT_REF }
   script:
     - |
       echo "Validating environment variables..."
@@ -42,8 +44,7 @@ validate-job:
 build-job:
   stage: build
   only:
-    - master
-    - main
+    - { ROOT_REF }
   before_script:
     # Create repository if needed
     - >
@@ -68,8 +69,7 @@ deploy-job:
   tags:
     - dind
   only:
-    - master
-    - main
+    - { ROOT_REF }
   before_script:
     # Create Kubernetes secret for accessing ECR
     - >
@@ -83,12 +83,7 @@ deploy-job:
     # Deploy the app to Kubernetes using the Kubernetes manifest
 
     # Environment secret
-    - |
-      if [[ -f "$ENV" ]]; then
-        kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
-      else
-        echo "No valid environment variable file"
-      fi
+    - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
 
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 

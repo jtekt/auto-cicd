@@ -230,8 +230,27 @@
                   "
                   variant="outlined"
                   :class="
+                    (frameworkSelected.userConfigurable.buildCommand
+                      .defaultEmpty &&
+                      !projectConfig.buildCommand) ||
                     projectConfig.buildCommand ===
-                    packageManagers[managerSelector].commands.build
+                      packageManagers[managerSelector].commands.build
+                      ? ''
+                      : 'text-warning'
+                  "
+                />
+                <v-text-field
+                  v-if="frameworkSelected.userConfigurable.outputFileName"
+                  v-model="projectConfig.outputFileName"
+                  :label="
+                    t(
+                      'components.deployHandler.deployDialog.buildSettings.outputFileName'
+                    )
+                  "
+                  variant="outlined"
+                  :class="
+                    projectConfig.outputFileName ===
+                    frameworkSelected.outputFileName
                       ? ''
                       : 'text-warning'
                   "

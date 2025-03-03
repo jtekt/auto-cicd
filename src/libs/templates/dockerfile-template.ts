@@ -13,6 +13,8 @@ export const generateDockerfile = async (
       return `# Error: Template not found for ${config.framework}`;
     }
 
+    config = replaceFrameworkSpecifics(config);
+
     let dockerfile = await response.text();
 
     // Replace placeholders with the appropriate values, skipping empty ones
@@ -26,6 +28,7 @@ export const generateDockerfile = async (
           : ""
       )
       .replace(/{OUTPUT_DIR}/g, config.outputDir)
+      .replace(/{OUTPUT_FILENAME}/g, config.outputFileName || "")
       .replace(/{PORT}/g, config.port.toString());
 
     return dockerfile;
@@ -33,4 +36,14 @@ export const generateDockerfile = async (
     console.error("Error loading Dockerfile template:", error);
     return "# Error loading Dockerfile template";
   }
+};
+
+const replaceFrameworkSpecifics = (config: ProjectConfig): ProjectConfig => {
+  if (config.framework === "fastapi") {
+    if (config.outputFileName) {
+      config.outputFileName = config.outputFileName.replace(/\.py$/, "");
+    }
+  }
+
+  return config;
 };

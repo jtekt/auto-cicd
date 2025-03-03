@@ -19,4 +19,4 @@ ENV PORT={PORT}
 EXPOSE {PORT}
 
 # Start the application
-CMD ["node", "{OUTPUT_DIR}"]
+CMD ["node", "{OUTPUT_DIR}{OUTPUT_FILENAME}"]

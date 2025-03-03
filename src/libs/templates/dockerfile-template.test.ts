@@ -60,7 +60,21 @@ describe("generateDockerfile", () => {
     const result = await generateDockerfile(config);
 
     expect(result).equal(
-      `# Use a base image that has Python installed\r\nFROM python:3.9-slim\r\n\r\n# Set the working directory inside the container\r\nWORKDIR /app\r\n\r\n# Copy the requirements file to the container\r\nCOPY requirements.txt ./\r\n\r\n# Install the Python dependencies\r\nRUN pip install -r custom_requirements.txt\r\n\r\n# Copy the rest of the application code into the container\r\nCOPY . .\r\n\r\n# Expose the port that Streamlit will run on\r\nEXPOSE 8502\r\n\r\n# Set the entry point for Streamlit\r\nCMD [\"streamlit\", \"run\", \"distapp.py\", \"--server.port=8502\", \"--server.headless=true\"]\r\n`
+      `# Use a base image that has Python installed\r\nFROM python:3.9-slim\r\n\r\n# Set the working directory inside the container\r\nWORKDIR /app\r\n\r\n# Copy the requirements file to the container\r\nCOPY requirements.txt ./\r\n\r\n# Install the Python dependencies\r\nRUN pip install -r custom_requirements.txt\r\n\r\n# Copy the rest of the application code into the container\r\nCOPY . .\r\n\r\n# Expose the port that Streamlit will run on\r\nEXPOSE 8502\r\n\r\n# Set the entry point for Streamlit\r\nCMD [\"streamlit\", \"run\", \"app.py\", \"--server.port=8502\", \"--server.headless=true\"]\r\n`
+    );
+  });
+
+  it("generates a Dockerfile for FastAPI with custom install command", async () => {
+    const config: ProjectConfig = {
+      ...getDefaultProjectConfig("fastapi"),
+      installCommand: "pip install -r custom_requirements.txt",
+      port: 8502,
+    };
+
+    const result = await generateDockerfile(config);
+
+    expect(result).equal(
+      `# Use an official Python runtime as a parent image\r\nFROM python:3.9-slim\r\n\r\n# Set the working directory inside the container\r\nWORKDIR /app\r\n\r\n# Copy the requirements file into the container\r\nCOPY requirements.txt ./\r\n\r\n# Install dependencies\r\nRUN pip install -r custom_requirements.txt\r\n\r\n# Copy the rest of the application code\r\nCOPY . .\r\n\r\n# Expose the port FastAPI runs on\r\nEXPOSE 8502\r\n\r\n# Command to run FastAPI with Uvicorn\r\nCMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8502\"]\r\n`
     );
   });
 
@@ -75,7 +89,7 @@ describe("generateDockerfile", () => {
     const result = await generateDockerfile(config);
 
     expect(result).equal(
-      `# Start from an appropriate base image\r\nFROM node:22-slim as base\r\n\r\n# Set the working directory for building\r\nWORKDIR /app\r\n\r\n# Install dependencies\r\nCOPY package.json ./\r\nRUN npm install\r\n\r\n# Copy all source code\r\nCOPY . .\r\n\n# Build the project\nRUN npm run build\n\r\n# Define environment variables\r\nENV NODE_ENV=production\r\nENV PORT=8502\r\n\r\n# Expose the port the application will run on\r\nEXPOSE 8502\r\n\r\n# Start the application\r\nCMD [\"node\", \"app.js\"]\r\n`
+      `# Start from an appropriate base image\r\nFROM node:22-slim as base\r\n\r\n# Set the working directory for building\r\nWORKDIR /app\r\n\r\n# Install dependencies\r\nCOPY package.json ./\r\nRUN npm install\r\n\r\n# Copy all source code\r\nCOPY . .\r\n\n# Build the project\nRUN npm run build\n\r\n# Define environment variables\r\nENV NODE_ENV=production\r\nENV PORT=8502\r\n\r\n# Expose the port the application will run on\r\nEXPOSE 8502\r\n\r\n# Start the application\r\nCMD [\"node\", \"./app.js\"]\r\n`
     );
   });
 });

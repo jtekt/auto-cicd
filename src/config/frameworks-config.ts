@@ -3,8 +3,9 @@ export type AcceptedFramework =
   | "vite"
   | "nuxt"
   | "nextjs"
-  | "streamlit"
   | "express"
+  | "streamlit"
+  | "fastapi"
   | "unknown";
 export type AcceptedPackageManager = "npm" | "yarn" | "pnpm" | "pip";
 export type Language = "javascript" | "python";
@@ -37,6 +38,7 @@ export type ProjectConfig = {
   manager: AcceptedPackageManager;
   installCommand: string; // Explicitly set based on manager/framework
   buildCommand?: string; // Optional, based on framework
+  outputFileName?: string; // Optional, based on framework
   outputDir: string;
   rootDir: string;
   port: number;
@@ -56,9 +58,11 @@ export type FrameworkConfig = {
       defaultEmpty: boolean;
     };
     outputDir?: true;
+    outputFileName?: true;
     rootDir?: true;
   };
   outputDir?: string;
+  outputFileName?: string;
   rootDir?: string;
   port?: number;
   files?: OptionalFiles[];
@@ -186,14 +190,35 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
       installCommand: true,
       outputDir: true,
       rootDir: true,
+      outputFileName: true,
     },
-    outputDir: "app.js",
+    outputDir: "./",
     rootDir: "./",
+    outputFileName: "app.js",
     port: 3000,
     files: [],
     configFiles: [{ file: "package.json", checkFor: ["express"] }],
     supportedManagers: ["npm", "yarn"],
     defaultManager: "npm",
+  },
+  fastapi: {
+    id: "fastapi",
+    name: "FastAPI",
+    language: "python",
+    image: { type: "img", value: "/icons/FastAPI.svg" },
+    langs: ["python"],
+    userConfigurable: {
+      rootDir: true,
+      installCommand: true,
+      outputFileName: true,
+    },
+    rootDir: "./",
+    outputFileName: "main.py",
+    port: 8000,
+    files: [],
+    configFiles: [{ file: "requirements.txt", checkFor: ["fastapi"] }],
+    supportedManagers: ["pip"],
+    defaultManager: "pip",
   },
   streamlit: {
     id: "streamlit",
@@ -202,15 +227,17 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     image: { type: "img", value: "/icons/Streamlit.svg" },
     langs: ["python"],
     userConfigurable: {
+      rootDir: true,
       installCommand: true,
+      outputFileName: true,
     },
     rootDir: "./",
+    outputFileName: "app.py",
     port: 8501,
     files: [],
     configFiles: [{ file: "requirements.txt", checkFor: ["streamlit"] }],
     supportedManagers: ["pip"],
     defaultManager: "pip",
-    runtimeDependencies: ["gunicorn"],
   },
   unknown: {
     id: "unknown",
@@ -243,7 +270,8 @@ export const getDefaultProjectConfig = (
     buildCommand: !framework.userConfigurable?.buildCommand?.defaultEmpty
       ? managerConfig.commands.build
       : undefined,
-    outputDir: framework.outputDir || "dist",
+    outputFileName: framework.outputFileName,
+    outputDir: framework.outputDir || "",
     rootDir: framework.rootDir || "./",
     port: framework.port || 3000,
     files: framework.files || [],
