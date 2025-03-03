@@ -458,20 +458,80 @@
         </div>
 
         <!-- Environment Variables Section -->
-        <div v-if="environmentVariables.length" class="mb-6">
+        <!-- Environment Variables Section -->
+        <div
+          v-if="
+            environmentVariables.length || originalEnvironmentVariables.length
+          "
+          class="mb-6"
+        >
           <h3 class="text-subtitle-s font-weight-medium mb-2">
             {{ t("components.deployHandler.confirmDialog.envSection") }}
           </h3>
-          <p class="text-body-2 text-grey-darken-1 mb-2">
+          <p
+            v-if="environmentVariables.length"
+            class="text-body-2 text-grey-darken-1 mb-2"
+          >
             {{ t("components.deployHandler.confirmDialog.envDescription") }}
           </p>
+
+          <!-- Added Variables -->
+          <div v-if="envChanges.added.length" class="mb-2">
+            <p class="text-body-2 font-weight-medium">Added Variables:</p>
+            <v-alert
+              v-for="(env, index) in envChanges.added"
+              :key="`added-${index}`"
+              type="success"
+              variant="tonal"
+              density="compact"
+              class="mb-1"
+            >
+              <span class="font-weight-medium">{{ env.key }}</span>
+            </v-alert>
+          </div>
+
+          <!-- Modified Variables -->
+          <div v-if="envChanges.modified.length" class="mb-2">
+            <p class="text-body-2 font-weight-medium">Modified Variables:</p>
+            <v-alert
+              v-for="(env, index) in envChanges.modified"
+              :key="`modified-${index}`"
+              type="info"
+              variant="tonal"
+              density="compact"
+              class="mb-1"
+            >
+              <span class="font-weight-medium">{{ env.key }}</span>
+            </v-alert>
+          </div>
+
+          <!-- Removed Variables -->
+          <div v-if="envChanges.removed.length" class="mb-2">
+            <p class="text-body-2 font-weight-medium">Removed Variables:</p>
+            <v-alert
+              v-for="(env, index) in envChanges.removed"
+              :key="`removed-${index}`"
+              type="warning"
+              variant="tonal"
+              density="compact"
+              class="mb-1"
+            >
+              <span class="font-weight-medium">{{ env.key }}</span>
+            </v-alert>
+          </div>
+
+          <!-- No changes message -->
           <v-alert
-            v-for="(env, index) in environmentVariables"
-            :key="index"
-            class="mb-2"
+            v-if="
+              !envChanges.added.length &&
+              !envChanges.modified.length &&
+              !envChanges.removed.length
+            "
+            type="info"
+            variant="tonal"
             density="compact"
           >
-            <span class="font-weight-medium">{{ env.key }}</span>
+            No changes to environment variables
           </v-alert>
         </div>
       </v-card-text>
@@ -479,7 +539,11 @@
       <v-card-actions class="pa-4">
         <v-spacer />
         <v-btn
-          v-if="injectFiles.length || environmentVariables.length"
+          v-if="
+            injectFiles.length ||
+            environmentVariables.length ||
+            originalEnvironmentVariables.length
+          "
           color="success"
           class="px-4"
           variant="tonal"
@@ -644,6 +708,7 @@ import {
   type ProjectConfig,
   type AcceptedPackageManager,
   type FrameworkConfig,
+  envKey,
 } from "@/config/frameworks-config";
 import type { CommitAction } from "@/libs/gitlab";
 import { useSnackbarStore } from "@/stores/snackbar";
@@ -687,10 +752,53 @@ const injectFiles = ref<
   }[]
 >([]);
 
-const envKey = "ENV";
-const environmentVariables = ref<
-  { key: string; value: string; visible: boolean; protected?: boolean }[]
->([]);
+type Env = {
+  key: string;
+  value: string;
+  visible: boolean;
+  protected?: boolean;
+};
+const originalEnvironmentVariables = ref<Env[]>([]);
+const environmentVariables = ref<Env[]>([]);
+
+const envChanges = ref<{
+  added: Env[];
+  modified: Env[];
+  removed: Env[];
+}>({
+  added: [],
+  modified: [],
+  removed: [],
+});
+
+const updateEnvChanges = () => {
+  envChanges.value = {
+    added: [],
+    modified: [],
+    removed: [],
+  };
+
+  // Process new environment variables
+  environmentVariables.value.forEach((newEnv) => {
+    const origEnv = originalEnvironmentVariables.value.find(
+      (e) => e.key === newEnv.key
+    );
+
+    if (!origEnv) {
+      // New variable (added)
+      envChanges.value.added.push(newEnv);
+    } else if (origEnv.value !== newEnv.value) {
+      // Existing variable with different value (modified)
+      envChanges.value.modified.push(newEnv);
+    }
+  });
+
+  // Find removed variables
+  envChanges.value.removed = originalEnvironmentVariables.value.filter(
+    (origEnv) =>
+      !environmentVariables.value.some((newEnv) => newEnv.key === origEnv.key)
+  );
+};
 
 const addEnv = () => {
   environmentVariables.value.push({ key: "", value: "", visible: false });
@@ -700,6 +808,89 @@ const removeEnv = (index: number) => {
   environmentVariables.value.splice(index, 1);
 };
 
+// Framework and package manager options
+const frameworks = Object.values(frameworksConfig);
+const packageManagersOptions = computed(() =>
+  frameworksConfig[frameworkSelector.value].supportedManagers.map((m) => ({
+    title: m,
+    value: m,
+  }))
+);
+const frameworkSelected = computed(
+  () => frameworksConfig[frameworkSelector.value]
+);
+
+// Open deploy dialog and detect framework/language
+const handleDeployBtn = async () => {
+  if (!authStore.session)
+    return snackbarStore.showSnackbar(
+      t("components.deployHandler.script.errors.unauthorized"),
+      "error"
+    );
+
+  // Check namespace (example logic, adjust as needed)
+  if (
+    !project.namespace ||
+    !env.ALLOWED_NAMESPACES.includes(project.namespace.fullPath.split("/")[0])
+  ) {
+    actionNeeded.value = [
+      {
+        descripton: t(
+          "components.deployHandler.script.errors.namespaceNotAllowed"
+        ),
+        link: {
+          url: `${env.GITLAB_URL}/${env.ALLOWED_NAMESPACES[0]}`,
+          text: t("components.deployHandler.script.actions.allowedGroup"),
+        },
+        posDescription: t(
+          "components.deployHandler.script.actions.moveInstruction"
+        ),
+      },
+    ];
+    actionNeededDialog.value = true;
+    return;
+  }
+
+  isLoading.value = true;
+  deployDialog.value = true;
+  // Get envs
+  const envs = await getEnvs();
+
+  // Create deep copies of the array
+  originalEnvironmentVariables.value = JSON.parse(JSON.stringify(envs));
+  environmentVariables.value = JSON.parse(JSON.stringify(envs));
+
+  const detectedConfig = await identifyProject();
+
+  frameworkSelector.value = detectedConfig.framework;
+  managerSelector.value = detectedConfig.manager;
+  projectConfig.value = detectedConfig;
+
+  isLoading.value = false;
+};
+
+// Handle framework change
+const handleChangeFramework = (id: AcceptedFramework) => {
+  const newConfig = getDefaultProjectConfig(id);
+  managerSelector.value = newConfig.manager; // Reset to default manager
+  projectConfig.value = { ...newConfig };
+};
+
+// Handle package manager change
+const handleChangeManager = (manager: AcceptedPackageManager) => {
+  const managerConfig = packageManagers[manager];
+  projectConfig.value = {
+    ...projectConfig.value,
+    manager,
+    installCommand: managerConfig.commands.install,
+    buildCommand:
+      projectConfig.value.language === "javascript"
+        ? managerConfig.commands.build
+        : undefined,
+  };
+};
+
+// Handle past environment variables directly from .env file
 const handlePaste = (event: ClipboardEvent, index: number) => {
   // Prevent default paste action
   event.preventDefault();
@@ -757,84 +948,6 @@ const handlePaste = (event: ClipboardEvent, index: number) => {
       focusedElement.value = textBefore + pastedText + textAfter;
     }
   }
-};
-
-// Framework and package manager options
-const frameworks = Object.values(frameworksConfig);
-const packageManagersOptions = computed(() =>
-  frameworksConfig[frameworkSelector.value].supportedManagers.map((m) => ({
-    title: m,
-    value: m,
-  }))
-);
-const frameworkSelected = computed(
-  () => frameworksConfig[frameworkSelector.value]
-);
-
-// Open deploy dialog and detect framework/language
-const handleDeployBtn = async () => {
-  if (!authStore.session)
-    return snackbarStore.showSnackbar(
-      t("components.deployHandler.script.errors.unauthorized"),
-      "error"
-    );
-
-  // Check namespace (example logic, adjust as needed)
-  if (
-    !project.namespace ||
-    !env.ALLOWED_NAMESPACES.includes(project.namespace.fullPath.split("/")[0])
-  ) {
-    actionNeeded.value = [
-      {
-        descripton: t(
-          "components.deployHandler.script.errors.namespaceNotAllowed"
-        ),
-        link: {
-          url: `${env.GITLAB_URL}/${env.ALLOWED_NAMESPACES[0]}`,
-          text: t("components.deployHandler.script.actions.allowedGroup"),
-        },
-        posDescription: t(
-          "components.deployHandler.script.actions.moveInstruction"
-        ),
-      },
-    ];
-    actionNeededDialog.value = true;
-    return;
-  }
-
-  isLoading.value = true;
-  deployDialog.value = true;
-  // Get envs
-  environmentVariables.value = (await getEnvs()) || [];
-
-  const detectedConfig = await identifyProject();
-
-  frameworkSelector.value = detectedConfig.framework;
-  managerSelector.value = detectedConfig.manager;
-  projectConfig.value = detectedConfig;
-
-  isLoading.value = false;
-};
-
-// Handle framework change
-const handleChangeFramework = (id: AcceptedFramework) => {
-  const newConfig = getDefaultProjectConfig(id);
-  managerSelector.value = newConfig.manager; // Reset to default manager
-  projectConfig.value = { ...newConfig };
-};
-
-// Handle package manager change
-const handleChangeManager = (manager: AcceptedPackageManager) => {
-  const managerConfig = packageManagers[manager];
-  projectConfig.value = {
-    ...projectConfig.value,
-    manager,
-    installCommand: managerConfig.commands.install,
-    buildCommand:
-      projectConfig.value.language === "javascript"
-        ? managerConfig.commands.build
-        : undefined,
-  };
 };
 
 // Deploy logic
@@ -915,6 +1028,8 @@ const handleDeploy = async () => {
 
     return fs;
   }, []);
+
+  updateEnvChanges();
 
   isLoading.value = false;
   confirmDeployDialog.value = true; // Open confirmation dialog
@@ -1003,15 +1118,13 @@ const confirmDeploy = async () => {
 
   // Try updating environment variables
   try {
-    if (environmentVariables.value.length > 0) {
-      await updateEnvs();
+    await updateEnvs();
 
-      envUpdateResult = { success: true };
-      snackbarStore.showSnackbar(
-        t("components.deployHandler.script.success.envUpdateSuccess"),
-        "success"
-      );
-    }
+    envUpdateResult = { success: true };
+    snackbarStore.showSnackbar(
+      t("components.deployHandler.script.success.envUpdateSuccess"),
+      "success"
+    );
   } catch (err) {
     if (err instanceof AxiosError || err instanceof Error) {
       envUpdateResult = {
@@ -1041,6 +1154,7 @@ const confirmDeploy = async () => {
     errors: [],
   };
 
+  // Files commit
   if (commitResult.success) {
     deploymentInfo.value.messages.push(
       t("components.deployHandler.script.success.deployMessages.deploying"),
@@ -1048,23 +1162,25 @@ const confirmDeploy = async () => {
       t("components.deployHandler.script.success.deployMessages.trackProgress")
     );
   } else {
-    if (!commitResult.success && filesToInject.length) {
+    if (filesToInject.length) {
       deploymentInfo.value.errors.push(
         `Failed to commit files: ${commitResult.error || "Unknown error"}`
       );
     }
     if (!envUpdateResult.success) {
       deploymentInfo.value.errors.push(
-        `Failed to update environment variables: ${
-          envUpdateResult.error || "Unknown error"
-        }`
-      );
-    }
-    if (!commitResult.success && !envUpdateResult.success) {
-      deploymentInfo.value.errors.push(
         t("components.deployHandler.script.errors.deployFailed")
       );
     }
+  }
+
+  // Env update
+  if (!envUpdateResult.success) {
+    deploymentInfo.value.errors.push(
+      `Failed to update environment variables: ${
+        envUpdateResult.error || "Unknown error"
+      }`
+    );
   }
 
   isLoading.value = false;
@@ -1074,34 +1190,40 @@ const confirmDeploy = async () => {
 
 // Update or create environment variables in GitLab
 const updateEnvs = async () => {
-  if (environmentVariables.value.length === 0) return;
-
   if (!authStore.session) throw new Error("Unauthorized");
 
   const existingEnvs = await getEnvs();
 
-  // Add or update new variables
-  const method = existingEnvs ? "put" : "post";
-  const url = existingEnvs
-    ? `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables/${envKey}`
-    : `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables`;
-
-  await axios[method](
-    url,
-    {
-      key: envKey,
-      value: environmentVariables.value
-        .map((e) => `${e.key}=${e.value}`)
-        .join("\n"),
-      description: "Generated in the Auto CI/CD App",
-      variable_type: "file",
+  const url = `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables`;
+  const body = {
+    key: envKey,
+    value: environmentVariables.value
+      .map((e) => `${e.key}=${e.value}`)
+      .join("\n"),
+    description: "Generated in the Auto CI/CD App",
+    variable_type: "file",
+  };
+  const config = {
+    headers: {
+      Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
     },
-    {
-      headers: {
-        Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-      },
+  };
+
+  if (environmentVariables.value.length === 0) {
+    // Delete
+    if (existingEnvs.length === 0) return; // There are no envs to delete
+
+    await axios.delete(url + `/${envKey}`, config);
+  } else {
+    // Upsert
+    if (existingEnvs.length) {
+      // Update
+      await axios.put(url + `/${envKey}`, body, config);
+    } else {
+      // Insert
+      await axios.post(url, body, config);
     }
-  );
+  }
 };
 
 // Cancel deployment
@@ -1235,7 +1357,7 @@ const getRepositoryFiles = async (paths: string[]) => {
 
 // Fetch envs
 const getEnvs = async () => {
-  if (!authStore.session) return;
+  if (!authStore.session) return [];
 
   const apiUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables/${envKey}`;
 
@@ -1289,6 +1411,8 @@ const getEnvs = async () => {
   } catch (error) {
     console.error(error);
   }
+
+  return [];
 };
 </script>
 

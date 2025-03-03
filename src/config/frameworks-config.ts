@@ -69,6 +69,8 @@ export type FrameworkConfig = {
   tips?: { text: string; link?: string }[];
 };
 
+export const envKey = "ENV"; // Name of the file saved in gitlab with the envs
+
 export const packageManagers: Record<
   AcceptedPackageManager,
   PackageManagerConfig
@@ -121,7 +123,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     rootDir: "./",
     port: 5173,
     files: ["nginx.conf"],
-    configFiles: [{ file: "package.json", checkFor: ["vite"] }],
+    configFiles: [{ file: "vite.config.ts", checkFor: ["defineConfig"] }],
     supportedManagers: ["npm", "yarn", "pnpm"],
     defaultManager: "npm",
   },
@@ -141,7 +143,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     rootDir: "./",
     port: 3000,
     files: [],
-    configFiles: [{ file: "package.json", checkFor: ["nuxt"] }],
+    configFiles: [{ file: "nuxt.config.ts", checkFor: ["defineNuxtConfig"] }],
     supportedManagers: ["npm", "yarn"],
     defaultManager: "npm",
   },
@@ -161,7 +163,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     rootDir: "./",
     port: 3000,
     files: [],
-    configFiles: [{ file: "package.json", checkFor: ["next"] }],
+    configFiles: [{ file: "next.config.ts", checkFor: ["NextConfig"] }],
     supportedManagers: ["npm", "yarn", "pnpm"],
     defaultManager: "npm",
     tips: [
