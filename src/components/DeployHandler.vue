@@ -897,6 +897,7 @@ const handleDeployBtn = async () => {
 
   isLoading.value = true;
   deployDialog.value = true;
+
   // Get envs
   const envs = await getEnvs();
 
@@ -1302,6 +1303,7 @@ const identifyProject = async (): Promise<ProjectConfig> => {
 
   for (const framework of Object.values(frameworksConfig)) {
     if (!framework.langs?.includes(mainLang)) continue;
+
     framework.supportedManagers.forEach((manager) => {
       packageManagers[manager].detectionFiles.forEach((df) =>
         allConfigFiles.add(df.file)
@@ -1311,7 +1313,6 @@ const identifyProject = async (): Promise<ProjectConfig> => {
 
   const files = await getRepositoryFiles(Array.from(allConfigFiles));
   if (!files.success) return getDefaultProjectConfig("unknown");
-
   identificationFiles.value = files.data;
 
   for (const framework of Object.values(frameworksConfig)) {
@@ -1460,7 +1461,16 @@ const getEnvs = async () => {
       ];
     }
   } catch (error) {
-    console.error(error);
+    if (error instanceof AxiosError) {
+      if (error.status !== 404) {
+        console.error(error);
+
+        snackbarStore.showSnackbar(error.message, "error");
+        throw error;
+      }
+    } else {
+      console.error(error);
+    }
   }
 
   return [];
