@@ -70,6 +70,7 @@ export type FrameworkConfig = {
   supportedManagers: AcceptedPackageManager[];
   defaultManager: AcceptedPackageManager;
   runtimeDependencies?: string[];
+  requiredFiles?: string[];
   tips?: { text: string; link?: string }[];
 };
 
@@ -130,6 +131,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     configFiles: [{ file: "vite.config.ts", checkFor: ["defineConfig"] }],
     supportedManagers: ["npm", "yarn", "pnpm"],
     defaultManager: "npm",
+    requiredFiles: ["vite.config.ts", "package.json"],
   },
   nuxt: {
     id: "nuxt",
@@ -150,6 +152,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     configFiles: [{ file: "nuxt.config.ts", checkFor: ["defineNuxtConfig"] }],
     supportedManagers: ["npm", "yarn"],
     defaultManager: "npm",
+    requiredFiles: ["nuxt.config.ts", "package.json"],
   },
   nextjs: {
     id: "nextjs",
@@ -176,6 +179,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
         link: "https://nextjs.org/docs/pages/api-reference/config/next-config-js/output#automatically-copying-traced-files",
       },
     ],
+    requiredFiles: ["next.config.ts", "package.json"],
   },
   express: {
     id: "express",
@@ -200,6 +204,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     configFiles: [{ file: "package.json", checkFor: ["express"] }],
     supportedManagers: ["npm", "yarn"],
     defaultManager: "npm",
+    requiredFiles: ["package.json"],
   },
   fastapi: {
     id: "fastapi",
@@ -219,6 +224,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     configFiles: [{ file: "requirements.txt", checkFor: ["fastapi"] }],
     supportedManagers: ["pip"],
     defaultManager: "pip",
+    requiredFiles: ["requirements.txt"],
   },
   streamlit: {
     id: "streamlit",
@@ -238,6 +244,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     configFiles: [{ file: "requirements.txt", checkFor: ["streamlit"] }],
     supportedManagers: ["pip"],
     defaultManager: "pip",
+    requiredFiles: ["requirements.txt"],
   },
   unknown: {
     id: "unknown",

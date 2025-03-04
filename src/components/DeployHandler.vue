@@ -94,6 +94,15 @@
 
         <!-- Configuration Form -->
         <template v-else-if="!isLoading || frameworkSelected.id !== 'unknown'">
+          <v-alert
+            variant="tonal"
+            color="warning"
+            class="mb-5"
+            v-if="filesMightHaveMissed?.length"
+          >
+            Files [{{ filesMightHaveMissed.join(", ") }}] are required to use
+            the auto deploy with <strong>{{ frameworkSelected.name }}</strong>
+          </v-alert>
           <!-- Framework Selector -->
           <v-select
             v-model="frameworkSelector"
@@ -411,6 +420,16 @@
       </template>
 
       <v-card-text class="mt-4">
+        <v-alert
+          variant="tonal"
+          color="warning"
+          class="mb-5"
+          v-if="filesMightHaveMissed?.length"
+        >
+          Files [{{ filesMightHaveMissed.join(", ") }}] are required to use the
+          auto deploy with <strong>{{ frameworkSelected.name }}</strong>
+        </v-alert>
+
         <!-- Main instruction message -->
         <p class="text-body-1 mb-4">
           {{ t("components.deployHandler.confirmDialog.message") }}
@@ -476,7 +495,6 @@
           </v-alert>
         </div>
 
-        <!-- Environment Variables Section -->
         <!-- Environment Variables Section -->
         <div
           v-if="
@@ -761,6 +779,7 @@ const error = ref<string | null>(null);
 const frameworkSelector = ref<AcceptedFramework>("unknown");
 const managerSelector = ref<AcceptedPackageManager>("npm");
 const projectConfig = ref<ProjectConfig>(getDefaultProjectConfig("unknown"));
+const identificationFiles = ref<{ fileName: string; content: string }[]>([]);
 const originalFiles = ref<{ fileName: string; content: string }[]>([]);
 const injectFiles = ref<
   {
@@ -770,6 +789,12 @@ const injectFiles = ref<
     isChecked: boolean;
   }[]
 >([]);
+
+const filesMightHaveMissed = computed(() =>
+  frameworkSelected.value.requiredFiles?.filter(
+    (f) => !identificationFiles.value.find((id) => id.fileName === f)
+  )
+);
 
 type Env = {
   key: string;
@@ -893,6 +918,11 @@ const handleChangeFramework = (id: AcceptedFramework) => {
   const newConfig = getDefaultProjectConfig(id);
   managerSelector.value = newConfig.manager; // Reset to default manager
   projectConfig.value = { ...newConfig };
+
+  console.log(
+    filesMightHaveMissed.value,
+    frameworkSelected.value.requiredFiles
+  );
 };
 
 // Handle package manager change
@@ -1281,6 +1311,8 @@ const identifyProject = async (): Promise<ProjectConfig> => {
 
   const files = await getRepositoryFiles(Array.from(allConfigFiles));
   if (!files.success) return getDefaultProjectConfig("unknown");
+
+  identificationFiles.value = files.data;
 
   for (const framework of Object.values(frameworksConfig)) {
     if (!framework.configFiles || !framework.langs?.includes(mainLang))
