@@ -1304,10 +1304,16 @@ const identifyProject = async (): Promise<ProjectConfig> => {
   for (const framework of Object.values(frameworksConfig)) {
     if (!framework.langs?.includes(mainLang)) continue;
 
+    // Package Managers
     framework.supportedManagers.forEach((manager) => {
       packageManagers[manager].detectionFiles.forEach((df) =>
         allConfigFiles.add(df.file)
       );
+    });
+
+    // Required FIles
+    framework.requiredFiles?.forEach((f) => {
+      allConfigFiles.add(f);
     });
   }
 
