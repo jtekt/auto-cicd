@@ -61,11 +61,9 @@ const url = createGitlabAuthUrl();
 const isLoading = ref(true);
 
 const authStore = useAuthStore();
-
 const router = useRouter();
 const route = useRoute();
-
-const stackbarStore = useSnackbarStore();
+const snackbarStore = useSnackbarStore();
 
 onMounted(async () => {
   if (
@@ -81,17 +79,18 @@ onMounted(async () => {
 
   if (!accessToken) {
     isLoading.value = false;
-
-    return stackbarStore.showSnackbar(t("views.auth.errors.token"), "error");
+    return snackbarStore.showSnackbar(t("views.auth.errors.token"), "error");
   }
 
   // Get user info
-  const user = await getGitlabProfile(accessToken.access_token);
+  const profile = await getGitlabProfile(accessToken.access_token);
 
-  if (!user) {
+  if (!profile?.user) {
     isLoading.value = false;
-
-    return stackbarStore.showSnackbar(t("views.auth.errors.profile"), "error");
+    return snackbarStore.showSnackbar(t("views.auth.errors.profile"), "error");
+  } else if (!profile.hasGroup) {
+    // Redirect to no-group page instead of showing snackbar
+    return router.push("/no-group");
   }
 
   // Set the session state
@@ -102,13 +101,12 @@ onMounted(async () => {
       refresh_token: accessToken.refresh_token,
       expires_at: Math.floor(Date.now() / 1000) + accessToken.expires_in,
     },
-
     user: {
-      nickname: user.nickname,
-      sub: user.sub,
-      email: user.email,
-      picture: user.picture,
-      name: user.name,
+      nickname: profile.user.nickname,
+      sub: profile.user.sub,
+      email: profile.user.email,
+      picture: profile.user.picture,
+      name: profile.user.name,
     },
   });
 

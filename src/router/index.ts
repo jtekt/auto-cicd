@@ -36,6 +36,11 @@ const routes: RouteRecordRaw[] = [
         name: "FAQ",
         component: () => import("@/views/faq.vue"),
       },
+      {
+        path: "/no-group",
+        name: "NoGroup",
+        component: () => import("@/views/no-group.vue"),
+      },
     ],
   },
 ];
@@ -45,17 +50,20 @@ const router = createRouter({
   routes,
 });
 
+const privatePages = ["Home"];
+const authPages = ["Auth", "NoGroup"];
+
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
 
   if (!authStore.isAuthenticated()) {
-    if (to.name !== "Auth") {
+    if (privatePages.includes(to.name?.toString() || "")) {
       return {
         name: "Auth",
       };
     }
   } else {
-    if (to.name === "Auth") {
+    if (authPages.includes(to.name?.toString() || "")) {
       return {
         name: "Home",
       };

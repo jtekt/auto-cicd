@@ -126,7 +126,7 @@ const messages = {
           "Sign in to your account to access your projects and deploy them.",
         errors: {
           token: "Error creating GitLab access token.",
-          profile: "rror retrieving user profile from GitLab.",
+          profile: "Error retrieving user profile from GitLab.",
         },
       },
       index: {
@@ -161,6 +161,16 @@ const messages = {
           "6": "Choose the New Namespace: A dialog will pop up asking you to select the target namespace. You can select either a Group or another user namespace. Select the appropriate namespace (auto-cicd or a subgroup) and click Transfer project.",
           "7": "Confirmation: GitLab will ask you to confirm the move. Once confirmed, the repository will be transferred to the new namespace.",
         },
+      },
+      noGroup: {
+        title: "Group Membership Required",
+        alert:
+          "You need to be a member of an Auto CI/CD subgroup to use this application.",
+        instructions: "To gain access, please follow these steps:",
+        step1: "Visit our group management app to create your subgroup",
+        step2: "Return here and log in again after creating your subgroup",
+        createButton: "Create Subgroup in GitLab",
+        backButton: "Back to Login",
       },
     },
   },
@@ -308,6 +318,16 @@ const messages = {
           "6": "新しい名前空間を選択：ダイアログが表示され、移動先の名前空間を選択するように求められます。グループまたは別のユーザーの名前空間を選択できます。適切な名前空間（auto-cicdまたはサブグループ）を選択し、「プロジェクトの転送」をクリックします。",
           "7": "確認：GitLabは移動の確認を求めます。確認すると、リポジトリが新しい名前空間に転送されます。",
         },
+      },
+      noGroup: {
+        title: "グループメンバーシップが必要です",
+        alert:
+          "このアプリケーションを使用するには、Auto CI/CD サブグループのメンバーである必要があります。",
+        instructions: "アクセスするには、以下の手順に従ってください：",
+        step1: "グループ管理アプリにアクセスしてサブグループを作成します",
+        step2: "サブグループ作成後、ここに戻って再度ログインしてください",
+        createButton: "GitLabでサブグループを作成",
+        backButton: "ログインに戻る",
       },
     },
   },

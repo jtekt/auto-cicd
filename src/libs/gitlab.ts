@@ -2,6 +2,7 @@ import { env } from "@/config/env";
 import axios from "axios";
 import type { Session } from "./auth";
 import { z } from "zod";
+import type { Group } from "@/types/group";
 
 export const TokenSchema = z.object({
   access_token: z.string(),
@@ -96,7 +97,9 @@ export const refreshAccessToken = async (session: Session) => {
   }
 };
 
-export const getGitlabProfile = async (access_token: string) => {
+export const getGitlabProfile = async (
+  access_token: string
+): Promise<{ user?: User; hasGroup: boolean } | null> => {
   try {
     const res = await axios.get<User>(env.GITLAB_URL + "/oauth/userinfo", {
       headers: {
@@ -107,7 +110,28 @@ export const getGitlabProfile = async (access_token: string) => {
     if (res.status !== 200) return null;
 
     // Validate
-    return UserSchema.parse(res.data);
+    const user = UserSchema.parse(res.data);
+
+    // Verify if user has auto-cicd group already
+    try {
+      const autoCICDGroup = await axios.get<Group[]>(
+        `${env.GITLAB_URL}/api/v4/groups?search=${encodeURIComponent(
+          `on-premise-k8s-cluster/auto-cicd/${user.nickname}`
+        )}`
+      );
+
+      const hasGroup = !!autoCICDGroup.data.find((g) =>
+        g.full_path.startsWith(
+          `on-premise-k8s-cluster/auto-cicd/${user.nickname}`
+        )
+      );
+
+      if (hasGroup) return { user, hasGroup };
+    } catch (error) {
+      console.log(error);
+    }
+
+    return { user, hasGroup: false };
   } catch (error) {
     console.error(error);
     return null;

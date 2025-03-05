@@ -184,7 +184,7 @@ const searchQuery = ref(
   typeof route.query.search === "string" ? route.query.search : ""
 );
 
-enum Sortoptions {
+enum SortOptions {
   updated_desc = "updated_desc",
   updated_asc = "updated_asc",
   name_desc = "name_desc",
@@ -192,9 +192,9 @@ enum Sortoptions {
 }
 
 const sortBy = ref(
-  typeof route.query.sort === "string" && route.query.sort in Sortoptions
+  typeof route.query.sort === "string" && route.query.sort in SortOptions
     ? route.query.sort
-    : Sortoptions.updated_desc
+    : SortOptions.updated_desc
 );
 
 const lastCursor = ref<string | null>(null);
@@ -221,22 +221,22 @@ onMounted(() => {
 const sortOptions = computed(() => [
   {
     text: t("views.index.projects.sort.nameAscText"),
-    value: Sortoptions.name_asc,
+    value: SortOptions.name_asc,
     icon: "mdi-sort-alphabetical-ascending",
   },
   {
     text: t("views.index.projects.sort.nameDscText"),
-    value: Sortoptions.name_desc,
+    value: SortOptions.name_desc,
     icon: "mdi-sort-alphabetical-descending",
   },
   {
     text: t("views.index.projects.sort.editedAscText"),
-    value: Sortoptions.updated_desc,
+    value: SortOptions.updated_desc,
     icon: "mdi-sort-clock-descending",
   },
   {
     text: t("views.index.projects.sort.editedDscText"),
-    value: Sortoptions.updated_asc,
+    value: SortOptions.updated_asc,
     icon: "mdi-sort-clock-ascending",
   },
 ]);
@@ -299,7 +299,9 @@ const fetchProjects = async (clear?: boolean) => {
           membership: true,
           searchNamespaces: true,
           archived: EXCLUDE,
-          search: "on-premise-k8s-cluster/auto-cicd/${searchQuery.value}",
+          search: "on-premise-k8s-cluster/auto-cicd/${
+            authStore.session.user.nickname
+          }/${searchQuery.value}",
           sort: "${sortBy.value}",
           first: ${pageSize},
           after: "${lastCursor.value || ""}"
@@ -357,7 +359,7 @@ const fetchProjects = async (clear?: boolean) => {
       }
     );
 
-    const notIdentifingLang = ["dockerfile", "html", "css", "scss"]; // TODO: Add more languages to filter
+    const filteredLangs = ["dockerfile", "html", "css", "scss"]; // TODO: Add more languages to filter
 
     const { edges, pageInfo } = res.data.data.projects;
 
@@ -369,7 +371,7 @@ const fetchProjects = async (clear?: boolean) => {
           const languages = project.node.languages
             .reduce<{ name: string; share: number }[]>((acc, l) => {
               const lowercasedName = l.name.toLowerCase();
-              if (!notIdentifingLang.includes(lowercasedName)) {
+              if (!filteredLangs.includes(lowercasedName)) {
                 acc.push({ name: lowercasedName, share: l.share });
               }
               return acc;
@@ -444,9 +446,9 @@ watch(
     searchQuery.value =
       typeof route.query.search === "string" ? route.query.search : "";
     sortBy.value =
-      typeof route.query.sort === "string" && route.query.sort in Sortoptions
+      typeof route.query.sort === "string" && route.query.sort in SortOptions
         ? route.query.sort
-        : Sortoptions.updated_desc;
+        : SortOptions.updated_desc;
 
     await fetchProjects(true); // Fetch the first set of projects
   },

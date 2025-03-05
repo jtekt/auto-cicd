@@ -96,7 +96,7 @@
 import { useAuthStore } from "@/stores/auth";
 import { onMounted, ref } from "vue";
 import AppLoader from "./AppLoader.vue";
-import { createGitlabAuthUrl, refreshAccessToken } from "@/libs/gitlab";
+import { refreshAccessToken } from "@/libs/gitlab";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale, useTheme } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
@@ -138,8 +138,7 @@ onMounted(async () => {
 
   // Reset Auth session
   authStore.setSession(null);
-
-  window.location.href = createGitlabAuthUrl();
+  isLoading.value = false;
 });
 
 // Set up automatic token refresh
