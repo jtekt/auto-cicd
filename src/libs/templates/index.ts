@@ -7,7 +7,8 @@ import type { ProjectNode } from "@/types/project";
 
 export const generateFiles = async (
   config: ProjectConfig,
-  project: ProjectNode
+  project: ProjectNode,
+  username: string
 ): Promise<{ fileName: ManagedFile; content: string }[]> => {
   const files: { fileName: ManagedFile; content: string }[] = [];
 
@@ -18,7 +19,7 @@ export const generateFiles = async (
   });
   files.push({
     fileName: ".gitlab-ci.yml",
-    content: await generateGitLabCI(config, project),
+    content: await generateGitLabCI(config, project, username),
   });
   files.push({
     fileName: "kubernetes_manifest.yml",

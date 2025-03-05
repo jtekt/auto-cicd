@@ -1048,7 +1048,11 @@ const handleDeploy = async () => {
   originalFiles.value = files.data;
 
   // Create the files to insert in the repository
-  const generatedFiles = await generateFiles(projectConfig.value, project);
+  const generatedFiles = await generateFiles(
+    projectConfig.value,
+    project,
+    authStore.session.user.nickname
+  );
 
   injectFiles.value = generatedFiles.reduce<
     {

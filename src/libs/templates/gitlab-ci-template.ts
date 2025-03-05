@@ -5,7 +5,8 @@ const PUBLIC_BASE = (globalThis as any).BASE_PUBLIC_URL || "";
 
 export const generateGitLabCI = async (
   config: ProjectConfig,
-  project: Pick<ProjectNode, "name" | "fullPath" | "repository">
+  project: Pick<ProjectNode, "namespace" | "repository">,
+  username: string
 ): Promise<string> => {
   try {
     const response = await fetch(
@@ -19,22 +20,13 @@ export const generateGitLabCI = async (
 
     let gitlabCI = await response.text();
 
+    if (!project.namespace) throw new Error("Project without namespace");
+
+    const appName = `${username}-${project.namespace.path}`;
+
     // Replace placeholders with the actual values
     gitlabCI = gitlabCI
-      .replace(
-        /{ APPLICATION_NAME }/g,
-        project.fullPath
-          .split("/")
-          .pop()
-          ?.toLowerCase()
-          .trim()
-          .replace(" ", "-") ||
-          project.name
-            .toLowerCase()
-            .replace(/[^a-zA-Z0-9\s.,!?'"-]/g, "")
-            .trim()
-            .replace(" ", "-")
-      ) // Set application name
+      .replace(/{ APPLICATION_NAME }/g, appName) // Set application name
       .replace(/{ PORT }/g, config.port?.toString() || "80") // Set application port from config
       .replace(/{ ROOT_REF }/g, project.repository.rootRef); // Set application main branch
 
