@@ -9,6 +9,22 @@ This project provides a frontend interface built with **Vue 3**, **Vuetify**, an
 - **Template-Based Dockerfile Creation**: Users can choose from predefined templates to generate a `.Dockerfile`.
 - **Automatic GitLab CI/CD Deployment**: The app can automatically generate a `.gitlab-ci.yml` file for CI/CD pipelines, simplifying the deployment process.
 - **Deployment to Kubernetes**: Once configured, the project is deployed directly to JTEKT’s Kubernetes cluster using the created Dockerfile and CI/CD pipeline.
+- **Supported Frameworks**:
+  - Vite (`vite`)
+  - Nuxt.js (`nuxt`)
+  - Next.js (`nextjs`)
+  - Express (`express`)
+  - Streamlit (`streamlit`)
+  - FastAPI (`fastapi`)
+  - Default (`unknown`)
+- **Supported Package Managers**:
+  - npm (`npm`)
+  - Yarn (`yarn`)
+  - pnpm (`pnpm`)
+  - pip (`pip`)
+- **Supported Languages**:
+  - JavaScript/TypeScript (`javascript`)
+  - Python (`python`)
 
 ## How It Works
 
