@@ -1,9 +1,11 @@
+# Define the pipeline stages
 stages:
-  - validate
-  - build
-  - deploy
+  - build  # Stage responsible for building the Docker image
+  - deploy # Stage responsible for deploying the application to Kubernetes
 
 # Needed to use Docker command in CICD
+# Using moreillon/ci-dind:4bca50d7 as it provides a lightweight DinD (Docker-in-Docker) environment
+# with the necessary tools to build and push container images efficiently.
 image: moreillon/ci-dind:4bca50d7
 services:
   - name: docker:24.0.7-dind
@@ -18,35 +20,15 @@ variables:
   K8S_ENV_SECRET_NAME: { APPLICATION_NAME }-env
   PORT: { PORT }
 
-# Validate the environment variables
-validate-job:
-  stage: validate
-  only:
-    - { ROOT_REF }
-  script:
-    - |
-      echo "Validating environment variables..."
-      if [ -z "$APPLICATION_NAME" ]; then
-        echo "ERROR: APPLICATION_NAME is not set!"
-        exit 1
-      fi
-      if [ -z "$PORT" ]; then
-        echo "ERROR: PORT is not set!"
-        exit 1
-      fi
-      if [ -z "$GITLAB_USER_EMAIL" ]; then
-        echo "ERROR: GITLAB_USER_EMAIL is not set!"
-        exit 1
-      fi
-      echo "All environment variables are set correctly."
-
 # Build the Docker container image
 build-job:
   stage: build
-  only:
+  only: 
+    # Branches to run the Build stage
     - { ROOT_REF }
   before_script:
     # Create repository if needed
+    # The repository might already exist if the pipeline have already run
     - >
       aws ecr create-repository --repository-name ${CONTAINER_IMAGE_NAME}
       || echo "Repository might have already existed"
@@ -66,9 +48,8 @@ build-job:
 # Deploy to Kubernetes
 deploy-job:
   stage: deploy
-  tags:
-    - dind
   only:
+    # Branches to run the Deploy stage
     - { ROOT_REF }
   before_script:
     # Create Kubernetes secret for accessing ECR
@@ -82,13 +63,18 @@ deploy-job:
   script:
     # Deploy the app to Kubernetes using the Kubernetes manifest
 
-    # Environment secret
+    # Create an environment secret containing necessary variables
+    # The ENV file is saved as a CI/CD variable in GitLab under Settings -> CI/CD -> Variables with the key `ENV` and the type set to `File`.
+    # This file contains key-value pairs of environment variables needed for the application.
     - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
 
+    # Apply the Kubernetes manifest
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 
+    # Get the Kubernetes service details
     - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
 
+    # Ensure the service exists and extract the exposed port
     - |
       if [[ -z "$KUBECTL_GET_SVC" ]]; then
         echo "Error: Could not find service port for $APPLICATION_NAME"
@@ -97,8 +83,10 @@ deploy-job:
 
     - PORT=$(sed "s/.*\([0-9]\+\):\([0-9]\+\)\/TCP.*/\2/" <<< "$KUBECTL_GET_SVC")
 
+    # The IP address 172.16.98.151 is the static IP of the Kubernetes cluster
     - echo "The APP is available at http://172.16.98.151:$PORT"
 
+    # Send an email notification if the deployment was newly created
     - |
       if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
 
