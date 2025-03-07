@@ -4,39 +4,6 @@
     {{ t("components.deployHandler.actionBtn") }}
   </v-btn>
 
-  <!-- Action Needed Dialog -->
-  <v-dialog
-    v-model="actionNeededDialog"
-    width="600"
-    max-width="90vw"
-    max-height="90vh"
-  >
-    <v-card>
-      <template #title>{{
-        t("components.deployHandler.actionsNeededDialog.title")
-      }}</template>
-      <v-card-text>
-        <v-list>
-          <v-list-item v-for="(action, index) in actionNeeded" :key="index">
-            {{ index + 1 }}. {{ action.descripton }}
-            <a v-if="action.link" :href="action.link.url" target="_blank">{{
-              action.link.text
-            }}</a
-            >{{ action.posDescription }}.
-          </v-list-item>
-        </v-list>
-        <RouterLink to="/faq#move-project">
-          {{ t("components.deployHandler.actionsNeededDialog.faqLink") }}
-        </RouterLink>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn color="primary" @click="actionNeededDialog = false">
-          {{ t("close") }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
   <!-- Deploy Dialog -->
   <v-dialog
     v-model="deployDialog"
@@ -100,8 +67,16 @@
             class="mb-5"
             v-if="filesMightHaveMissed?.length"
           >
-            Files [{{ filesMightHaveMissed.join(", ") }}] are required to use
-            the auto deploy with <strong>{{ frameworkSelected.name }}</strong>
+            Files [
+            <template v-for="(fm, index) in filesMightHaveMissed">
+              <strong>{{ fm }}</strong
+              ><template v-if="index < filesMightHaveMissed.length - 1"
+                >,
+              </template></template
+            >
+            ] are required in the repository to use the auto deploy with
+            <strong>{{ managerSelector }}</strong
+            >-<strong>{{ frameworkSelected.name }}</strong>
           </v-alert>
           <!-- Framework Selector -->
           <v-select
@@ -426,8 +401,16 @@
           class="mb-5"
           v-if="filesMightHaveMissed?.length"
         >
-          Files [{{ filesMightHaveMissed.join(", ") }}] are required to use the
-          auto deploy with <strong>{{ frameworkSelected.name }}</strong>
+          Files [
+          <template v-for="(fm, index) in filesMightHaveMissed">
+            <strong>{{ fm }}</strong
+            ><template v-if="index < filesMightHaveMissed.length - 1"
+              >,
+            </template></template
+          >
+          ] are required in the repository to use the auto deploy with
+          <strong>{{ managerSelector }}</strong
+          >-<strong>{{ frameworkSelected.name }}</strong>
         </v-alert>
 
         <!-- Main instruction message -->
@@ -757,14 +740,6 @@ const { t } = useLocale();
 const { project } = defineProps<{ project: ProjectNode }>();
 
 const deployDialog = ref(false);
-const actionNeededDialog = ref(false);
-const actionNeeded = ref<
-  {
-    descripton: string;
-    link?: { text: string; url: string };
-    posDescription?: string;
-  }[]
->([]);
 const confirmDeployDialog = ref(false);
 const nextStepsDialog = ref(false);
 const deploymentInfo = ref<{
@@ -790,11 +765,22 @@ const injectFiles = ref<
   }[]
 >([]);
 
-const filesMightHaveMissed = computed(() =>
-  frameworkSelected.value.requiredFiles?.filter(
+const filesMightHaveMissed = computed(() => {
+  const requiredByFramework = frameworkSelected.value.requiredFiles || [];
+
+  const requiredByPackageManager =
+    frameworkSelected.value.supportedManagers.find(
+      (sm) => sm.manager === projectConfig.value.manager
+    )?.requiredFiles || [];
+
+  const requiredFilesForConfig = [
+    ...new Set([...requiredByFramework, ...requiredByPackageManager]),
+  ];
+
+  return requiredFilesForConfig.filter(
     (f) => !identificationFiles.value.find((id) => id.fileName === f)
-  )
-);
+  );
+});
 
 type Env = {
   key: string;
@@ -856,10 +842,11 @@ const removeEnv = (index: number) => {
 const frameworks = Object.values(frameworksConfig);
 const packageManagersOptions = computed(() =>
   frameworksConfig[frameworkSelector.value].supportedManagers.map((m) => ({
-    title: m,
-    value: m,
+    title: m.manager,
+    value: m.manager,
   }))
 );
+
 const frameworkSelected = computed(
   () => frameworksConfig[frameworkSelector.value]
 );
@@ -871,29 +858,6 @@ const handleDeployBtn = async () => {
       t("components.deployHandler.script.errors.unauthorized"),
       "error"
     );
-
-  // Check namespace (example logic, adjust as needed)
-  if (
-    !project.namespace ||
-    !env.ALLOWED_NAMESPACES.includes(project.namespace.fullPath.split("/")[0])
-  ) {
-    actionNeeded.value = [
-      {
-        descripton: t(
-          "components.deployHandler.script.errors.namespaceNotAllowed"
-        ),
-        link: {
-          url: `${env.GITLAB_URL}/${env.ALLOWED_NAMESPACES[0]}`,
-          text: t("components.deployHandler.script.actions.allowedGroup"),
-        },
-        posDescription: t(
-          "components.deployHandler.script.actions.moveInstruction"
-        ),
-      },
-    ];
-    actionNeededDialog.value = true;
-    return;
-  }
 
   isLoading.value = true;
   deployDialog.value = true;
@@ -1310,7 +1274,7 @@ const identifyProject = async (): Promise<ProjectConfig> => {
 
     // Package Managers
     framework.supportedManagers.forEach((manager) => {
-      packageManagers[manager].detectionFiles.forEach((df) =>
+      packageManagers[manager.manager].detectionFiles.forEach((df) =>
         allConfigFiles.add(df.file)
       );
     });
@@ -1340,19 +1304,20 @@ const identifyProject = async (): Promise<ProjectConfig> => {
     if (hasFramework) {
       let detectedManager: AcceptedPackageManager | undefined;
       for (const manager of framework.supportedManagers) {
-        const pmConfig = packageManagers[manager];
+        const pmConfig = packageManagers[manager.manager];
         const hasManager = pmConfig.detectionFiles.some((df) => {
           const file = files.data.find((f) => f.fileName === df.file);
           return file && (!df.checkFor || file.content.includes(df.checkFor));
         });
         if (hasManager) {
-          detectedManager = manager;
+          detectedManager = manager.manager;
           break;
         }
       }
 
       const packageManager =
-        detectedManager && framework.supportedManagers.includes(detectedManager)
+        detectedManager &&
+        framework.supportedManagers.some((sm) => sm.manager === detectedManager)
           ? detectedManager
           : framework.defaultManager;
 
