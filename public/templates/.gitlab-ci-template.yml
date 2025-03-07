@@ -55,6 +55,9 @@ deploy-job:
     # Uses the correct Kubernetes context
     - kubectl config use-context ${K8S_NAMESPACE}/gitlab-agent-for-kubernetes:${K8S_NAMESPACE}
 
+    # Uses the correct Kubernetes namespace
+    - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
+
     # Create Kubernetes secret for accessing ECR
     - >
       kubectl create secret docker-registry ${K8S_ECR_SECRET_NAME}
@@ -108,8 +111,3 @@ deploy-job:
       else
         echo "Please note that it might take a few minutes for the application to update."
       fi
-
-  environment:
-    name: production
-    kubernetes:
-      namespace: ${K8S_NAMESPACE}

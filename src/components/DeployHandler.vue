@@ -883,11 +883,6 @@ const handleChangeFramework = (id: AcceptedFramework) => {
   const newConfig = getDefaultProjectConfig(id);
   managerSelector.value = newConfig.manager; // Reset to default manager
   projectConfig.value = { ...newConfig };
-
-  console.log(
-    filesMightHaveMissed.value,
-    frameworkSelected.value.requiredFiles
-  );
 };
 
 // Handle package manager change
@@ -1136,13 +1131,18 @@ const confirmDeploy = async () => {
 
   // Try updating environment variables
   try {
-    await updateEnvs();
+    if (
+      originalEnvironmentVariables.value.length > 0 ||
+      environmentVariables.value.length > 0
+    ) {
+      await updateEnvs();
 
-    envUpdateResult = { success: true };
-    snackbarStore.showSnackbar(
-      t("components.deployHandler.script.success.envUpdateSuccess"),
-      "success"
-    );
+      envUpdateResult = { success: true };
+      snackbarStore.showSnackbar(
+        t("components.deployHandler.script.success.envUpdateSuccess"),
+        "success"
+      );
+    }
   } catch (err) {
     if (err instanceof AxiosError || err instanceof Error) {
       envUpdateResult = {
