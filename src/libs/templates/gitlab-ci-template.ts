@@ -1,3 +1,4 @@
+import { env } from "@/config/env";
 import type { ProjectConfig } from "@/config/frameworks-config";
 import type { ProjectNode } from "@/types/project";
 
@@ -28,7 +29,8 @@ export const generateGitLabCI = async (
     gitlabCI = gitlabCI
       .replace(/{ APPLICATION_NAME }/g, appName) // Set application name
       .replace(/{ PORT }/g, config.port?.toString() || "80") // Set application port from config
-      .replace(/{ ROOT_REF }/g, project.repository.rootRef); // Set application main branch
+      .replace(/{ ROOT_REF }/g, project.repository.rootRef) // Set application main branch
+      .replace(/{ DEPLOYED_NAMESPACE }/g, env.DEPLOYED_NAMESPACE); // Set kubernetes context
 
     return gitlabCI;
   } catch (error) {

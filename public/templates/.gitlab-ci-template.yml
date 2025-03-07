@@ -52,6 +52,9 @@ deploy-job:
     # Branches to run the Deploy stage
     - { ROOT_REF }
   before_script:
+    # Uses the correct Kubernetes context
+    - kubectl config use-context { DEPLOYED_NAMESPACE }/gitlab-agent-for-kubernetes:{ DEPLOYED_NAMESPACE }
+    
     # Create Kubernetes secret for accessing ECR
     - >
       kubectl create secret docker-registry ${K8S_ECR_SECRET_NAME}
