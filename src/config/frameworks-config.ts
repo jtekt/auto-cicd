@@ -72,7 +72,6 @@ export type FrameworkConfig = {
     requiredFiles: string[];
   }[];
   defaultManager: AcceptedPackageManager;
-  runtimeDependencies?: string[];
   requiredFiles?: string[];
   tips?: { text: string; link?: string }[];
 };
@@ -317,7 +316,6 @@ export const getDefaultProjectConfig = (
     rootDir: framework.rootDir || "./",
     port: framework.port || 3000,
     files: framework.files || [],
-    runtimeDependencies: framework.runtimeDependencies,
   };
 };
 
