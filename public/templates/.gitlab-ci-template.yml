@@ -12,10 +12,10 @@ services:
 
 variables:
   APPLICATION_NAME: { APPLICATION_NAME }
-  CONTAINER_IMAGE_NAME: auto-cicd/{ APPLICATION_NAME }
+  K8S_NAMESPACE: { DEPLOYED_NAMESPACE }
+  CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{ USERNAME }/{ APPLICATION_NAME }
   CONTAINER_IMAGE: ${AWS_ECR_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  K8S_NAMESPACE: auto-cicd
   K8S_ECR_SECRET_NAME: ecr-credentials
   K8S_ENV_SECRET_NAME: { APPLICATION_NAME }-env
   PORT: { PORT }
@@ -53,8 +53,8 @@ deploy-job:
     - { ROOT_REF }
   before_script:
     # Uses the correct Kubernetes context
-    - kubectl config use-context { DEPLOYED_NAMESPACE }/gitlab-agent-for-kubernetes:{ DEPLOYED_NAMESPACE }
-    
+    - kubectl config use-context ${K8S_NAMESPACE}/gitlab-agent-for-kubernetes:${K8S_NAMESPACE}
+
     # Create Kubernetes secret for accessing ECR
     - >
       kubectl create secret docker-registry ${K8S_ECR_SECRET_NAME}

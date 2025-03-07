@@ -30,7 +30,8 @@ export const generateGitLabCI = async (
       .replace(/{ APPLICATION_NAME }/g, appName) // Set application name
       .replace(/{ PORT }/g, config.port?.toString() || "80") // Set application port from config
       .replace(/{ ROOT_REF }/g, project.repository.rootRef) // Set application main branch
-      .replace(/{ DEPLOYED_NAMESPACE }/g, env.DEPLOYED_NAMESPACE); // Set kubernetes context
+      .replace(/{ DEPLOYED_NAMESPACE }/g, env.DEPLOYED_NAMESPACE) // Set kubernetes context
+      .replace(/{ USERNAME }/g, username); // Set Username
 
     return gitlabCI;
   } catch (error) {
