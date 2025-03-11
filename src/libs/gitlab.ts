@@ -116,14 +116,12 @@ export const getGitlabProfile = async (
     try {
       const autoCICDGroup = await axios.get<Group[]>(
         `${env.GITLAB_URL}/api/v4/groups?search=${encodeURIComponent(
-          `on-premise-k8s-cluster/auto-cicd/${user.nickname}`
+          `${env.DEPLOYED_NAMESPACE}/${user.nickname}`
         )}`
       );
 
       const hasGroup = !!autoCICDGroup.data.find((g) =>
-        g.full_path.startsWith(
-          `on-premise-k8s-cluster/auto-cicd/${user.nickname}`
-        )
+        g.full_path.startsWith(`${env.DEPLOYED_NAMESPACE}/${user.nickname}`)
       );
 
       if (hasGroup) return { user, hasGroup };
