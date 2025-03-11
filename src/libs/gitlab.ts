@@ -120,9 +120,11 @@ export const getGitlabProfile = async (
         )}`
       );
 
-      const hasGroup = !!autoCICDGroup.data.find((g) =>
-        g.full_path.startsWith(`${env.DEPLOYED_NAMESPACE}/${user.nickname}`)
-      );
+      const hasGroup =
+        autoCICDGroup.data.length &&
+        !!autoCICDGroup.data.find(
+          (g) => g.full_path === `${env.DEPLOYED_NAMESPACE}/${user.nickname}`
+        );
 
       if (hasGroup) return { user, hasGroup };
     } catch (error) {

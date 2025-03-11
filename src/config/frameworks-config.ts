@@ -66,13 +66,13 @@ export type FrameworkConfig = {
   rootDir?: string;
   port?: number;
   files?: OptionalFiles[];
-  configFiles?: { file: string; checkFor: string[] }[]; // What files to check and what key words to look for
+  configFiles?: { file: string[]; checkFor: string[] }[]; // What files and variations to check and what key words to look for
   supportedManagers: {
     manager: AcceptedPackageManager;
     requiredFiles: string[];
   }[];
   defaultManager: AcceptedPackageManager;
-  requiredFiles?: string[];
+  requiredFiles?: (string | string[])[];
   tips?: { text: string; link?: string }[];
 };
 
@@ -101,8 +101,8 @@ export const packageManagers: Record<
   pnpm: {
     name: "pnpm",
     commands: {
-      install: "corepack enable pnpm && pnpm i --frozen-lockfile",
-      build: "corepack enable pnpm && pnpm run build --frozen-lockfile",
+      install: "corepack enable pnpm && pnpm i",
+      build: "corepack enable pnpm && pnpm run build",
     },
     detectionFiles: [{ file: "pnpm-lock.yaml" }],
   },
@@ -137,14 +137,32 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     rootDir: "./",
     port: 5173,
     files: ["nginx.conf"],
-    configFiles: [{ file: "vite.config.ts", checkFor: ["defineConfig"] }],
+    configFiles: [
+      {
+        file: [
+          "vite.config.ts",
+          "vite.config.mts",
+          "vite.config.js",
+          "vite.config.mjs",
+        ],
+        checkFor: ["defineConfig"],
+      },
+    ],
     supportedManagers: [
       { manager: "npm", requiredFiles: ["package-lock.json"] },
       { manager: "yarn", requiredFiles: ["yarn.lock"] },
       { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
     ],
     defaultManager: "npm",
-    requiredFiles: ["vite.config.ts", "package.json"],
+    requiredFiles: [
+      [
+        "vite.config.ts",
+        "vite.config.mts",
+        "vite.config.js",
+        "vite.config.mjs",
+      ],
+      "package.json",
+    ],
   },
   nuxt: {
     id: "nuxt",
@@ -162,14 +180,32 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     rootDir: "./",
     port: 3000,
     files: [],
-    configFiles: [{ file: "nuxt.config.ts", checkFor: ["defineNuxtConfig"] }],
+    configFiles: [
+      {
+        file: [
+          "nuxt.config.ts",
+          "nuxt.config.mts",
+          "nuxt.config.js",
+          "nuxt.config.mjs",
+        ],
+        checkFor: ["defineNuxtConfig"],
+      },
+    ],
     supportedManagers: [
       { manager: "npm", requiredFiles: ["package-lock.json"] },
       { manager: "yarn", requiredFiles: ["yarn.lock"] },
       { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
     ],
     defaultManager: "npm",
-    requiredFiles: ["nuxt.config.ts", "package.json"],
+    requiredFiles: [
+      [
+        "nuxt.config.ts",
+        "nuxt.config.mts",
+        "nuxt.config.js",
+        "nuxt.config.mjs",
+      ],
+      "package.json",
+    ],
   },
   nextjs: {
     id: "nextjs",
@@ -187,14 +223,32 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     rootDir: "./",
     port: 3000,
     files: [],
-    configFiles: [{ file: "next.config.ts", checkFor: ["NextConfig"] }],
+    configFiles: [
+      {
+        file: [
+          "next.config.ts",
+          "next.config.mts",
+          "next.config.js",
+          "next.config.mjs",
+        ],
+        checkFor: ["NextConfig"],
+      },
+    ],
     supportedManagers: [
       { manager: "npm", requiredFiles: ["package-lock.json"] },
       { manager: "yarn", requiredFiles: ["yarn.lock"] },
       { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
     ],
     defaultManager: "npm",
-    requiredFiles: ["next.config.ts", "package.json"],
+    requiredFiles: [
+      [
+        "next.config.ts",
+        "next.config.mts",
+        "next.config.js",
+        "next.config.mjs",
+      ],
+      "package.json",
+    ],
     tips: [
       {
         text: `To deploy you need to add the config "output: 'standalone'" in your next.config.js`,
@@ -222,7 +276,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     outputFileName: "app.js",
     port: 3000,
     files: [],
-    configFiles: [{ file: "package.json", checkFor: ["express"] }],
+    configFiles: [{ file: ["package.json"], checkFor: ["express"] }],
     supportedManagers: [
       { manager: "npm", requiredFiles: ["package-lock.json"] },
       { manager: "yarn", requiredFiles: ["yarn.lock"] },
@@ -247,8 +301,8 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     port: 8000,
     files: [],
     configFiles: [
-      { file: "requirements.txt", checkFor: ["fastapi"] },
-      { file: "pyproject.toml", checkFor: ["fastapi"] },
+      { file: ["requirements.txt"], checkFor: ["fastapi"] },
+      { file: ["pyproject.toml"], checkFor: ["fastapi"] },
     ],
     supportedManagers: [
       { manager: "pip", requiredFiles: ["requirements.txt"] },
@@ -272,8 +326,8 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     port: 8501,
     files: [],
     configFiles: [
-      { file: "requirements.txt", checkFor: ["streamlit"] },
-      { file: "pyproject.toml", checkFor: ["streamlit"] },
+      { file: ["requirements.txt"], checkFor: ["streamlit"] },
+      { file: ["pyproject.toml"], checkFor: ["streamlit"] },
     ],
     supportedManagers: [
       { manager: "pip", requiredFiles: ["requirements.txt"] },

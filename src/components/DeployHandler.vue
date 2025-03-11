@@ -778,7 +778,14 @@ const filesMightHaveMissed = computed(() => {
   ];
 
   return requiredFilesForConfig.filter(
-    (f) => !identificationFiles.value.find((id) => id.fileName === f)
+    (f) =>
+      !identificationFiles.value.find((id) => {
+        if (typeof f === "string") {
+          return id.fileName === f;
+        }
+
+        return f.find((fc) => id.fileName === fc);
+      })
   );
 });
 
@@ -1208,7 +1215,7 @@ const confirmDeploy = async () => {
 
 // Update or create environment variables in GitLab
 const updateEnvs = async () => {
-  if (!authStore.session) throw new Error("Unauthorized");
+  if (!authStore.session) return;
 
   const existingEnvs = await getEnvs();
 
@@ -1262,8 +1269,13 @@ const identifyProject = async (): Promise<ProjectConfig> => {
       continue;
 
     framework.configFiles.forEach((config) => {
-      allConfigFiles.add(config.file);
       frameworkFileMap.set(framework.id, framework);
+
+      if (typeof config.file === "string") {
+        allConfigFiles.add(config.file);
+      } else {
+        config.file.forEach((cf) => allConfigFiles.add(cf));
+      }
     });
   }
 
@@ -1281,7 +1293,11 @@ const identifyProject = async (): Promise<ProjectConfig> => {
 
     // Required FIles
     framework.requiredFiles?.forEach((f) => {
-      allConfigFiles.add(f);
+      if (typeof f === "string") {
+        allConfigFiles.add(f);
+      } else {
+        f.forEach((cf) => allConfigFiles.add(cf));
+      }
     });
   }
 
@@ -1294,7 +1310,12 @@ const identifyProject = async (): Promise<ProjectConfig> => {
       continue;
 
     const hasFramework = framework.configFiles.some((configFile) => {
-      const file = files.data.find((f) => f.fileName === configFile.file);
+      const file = files.data.find((f) => {
+        if (typeof configFile.file === "string")
+          return f.fileName === configFile.file;
+
+        return configFile.file.includes(f.fileName);
+      });
       return (
         file &&
         configFile.checkFor.some((check) => file.content.includes(check))
@@ -1438,7 +1459,7 @@ const getEnvs = async () => {
   } catch (error) {
     if (error instanceof AxiosError) {
       if (error.status !== 404) {
-        console.error(error);
+        console.error("Unknown Error", error);
 
         snackbarStore.showSnackbar(error.message, "error");
         throw error;
