@@ -6,7 +6,7 @@ const PUBLIC_BASE = (globalThis as any).BASE_PUBLIC_URL || "";
 
 export const generateGitLabCI = async (
   config: ProjectConfig,
-  project: Pick<ProjectNode, "namespace" | "repository">,
+  project: Pick<ProjectNode, "namespace" | "repository" | "fullPath">,
   username: string
 ): Promise<string> => {
   try {
@@ -23,7 +23,8 @@ export const generateGitLabCI = async (
 
     if (!project.namespace) throw new Error("Project without namespace");
 
-    const appName = `${username}-${project.namespace.path}`;
+    const appPaths = project.fullPath.split("/");
+    const appName = `${username}-${appPaths[appPaths.length - 1]}`;
 
     // Replace placeholders with the actual values
     gitlabCI = gitlabCI
