@@ -664,7 +664,7 @@
 
         <!-- Success Messages Section -->
         <div v-if="deploymentInfo.messages.length" class="mb-6">
-          <h3 class="text-h5 font-weight-medium mb-2">
+          <h3 class="text-h6 font-weight-medium mb-2">
             {{ t("components.deployHandler.nextStepsDialog.notes.title") }}
           </h3>
           <v-alert
@@ -679,7 +679,7 @@
 
         <!-- Errors Section -->
         <div v-if="deploymentInfo.errors?.length">
-          <h3 class="text-subtitle-1 font-weight-medium mb-2 text-error">
+          <h3 class="text-h6 font-weight-medium mb-2 text-error">
             {{ t("components.deployHandler.nextStepsDialog.errors.title") }}
           </h3>
           <v-alert type="error" variant="tonal" density="compact" class="mb-3">
@@ -730,7 +730,7 @@ import {
   type FrameworkConfig,
   envKey,
 } from "@/config/frameworks-config";
-import type { CommitAction } from "@/libs/gitlab";
+import type { CommitAction, CommitActionObject } from "@/libs/gitlab";
 import { useSnackbarStore } from "@/stores/snackbar";
 
 const authStore = useAuthStore();
@@ -1075,29 +1075,31 @@ const confirmDeploy = async () => {
     );
   };
 
-  let commitActions: {
-    action: CommitAction;
-    file_path: string;
-    content: string;
-    encoding: string;
-  }[] = [];
+  const result: {
+    env?: { success: boolean; error?: string };
+    commit?: { success: boolean; error?: string };
+  } = {};
 
-  let commitResult: { success: boolean; error?: string } = { success: false };
-  let envUpdateResult: { success: boolean; error?: string } = {
-    success: false,
+  const actions = {
+    commit: injectFiles.value.reduce<CommitActionObject[]>((acc, f) => {
+      if (!f.isChecked) {
+        acc.push({
+          action: f.action || "create",
+          file_path: f.fileName,
+          content: encodeBase64(f.content),
+          encoding: "base64",
+        });
+      }
+
+      return acc;
+    }, []),
+    env:
+      originalEnvironmentVariables.value.length > 0 ||
+      environmentVariables.value.length > 0,
   };
 
-  const filesToInject = injectFiles.value.filter((f) => f.isChecked);
-
   // Try committing files
-  if (filesToInject.length) {
-    commitActions = filesToInject.map((f) => ({
-      action: f.action || "create",
-      file_path: f.fileName,
-      content: encodeBase64(f.content),
-      encoding: "base64",
-    }));
-
+  if (actions.commit.length) {
     try {
       const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.id}/repository/commits`;
       await axios.post(
@@ -1105,7 +1107,7 @@ const confirmDeploy = async () => {
         {
           branch: project.repository.rootRef,
           commit_message: `Auto-generated deployment files`,
-          actions: commitActions,
+          actions: actions.commit,
         },
         {
           headers: {
@@ -1113,20 +1115,18 @@ const confirmDeploy = async () => {
           },
         }
       );
-      commitResult = { success: true };
+      result.commit = { success: true };
       snackbarStore.showSnackbar(
         t("components.deployHandler.script.success.commitSuccess"),
         "success"
       );
     } catch (err) {
+      let errorMessage = "Unknown error";
       if (err instanceof AxiosError || err instanceof Error) {
-        commitResult = {
-          success: false,
-          error: err.message || "Unknown error",
-        };
-      } else {
-        commitResult = { success: false, error: "Unknown error" };
+        errorMessage = err.message;
       }
+
+      result.commit = { success: false, error: errorMessage };
 
       snackbarStore.showSnackbar(
         t("components.deployHandler.script.errors.commitFailed"),
@@ -1138,27 +1138,22 @@ const confirmDeploy = async () => {
 
   // Try updating environment variables
   try {
-    if (
-      originalEnvironmentVariables.value.length > 0 ||
-      environmentVariables.value.length > 0
-    ) {
+    if (actions.env) {
       await updateEnvs();
 
-      envUpdateResult = { success: true };
+      result.env = { success: true };
       snackbarStore.showSnackbar(
         t("components.deployHandler.script.success.envUpdateSuccess"),
         "success"
       );
     }
   } catch (err) {
+    let errorMessage = "Unknown error";
     if (err instanceof AxiosError || err instanceof Error) {
-      envUpdateResult = {
-        success: false,
-        error: err.message || "Unknown error",
-      };
-    } else {
-      envUpdateResult = { success: false, error: "Unknown error" };
+      errorMessage = err.message;
     }
+
+    result.env = { success: false, error: errorMessage };
 
     snackbarStore.showSnackbar(
       t("components.deployHandler.script.errors.envUpdateFailed"),
@@ -1169,43 +1164,50 @@ const confirmDeploy = async () => {
 
   // Set Deployment Info based on results
   deploymentInfo.value = {
-    filesCommitted: commitResult.success
-      ? commitActions.map((a) => a.file_path)
+    filesCommitted: result.commit?.success
+      ? actions.commit.map((c) => c.file_path)
       : [],
-    envs: envUpdateResult.success
+    envs: result.env?.success
       ? environmentVariables.value.map((env) => env.key)
       : [],
     messages: [],
     errors: [],
   };
 
-  // Files commit
-  if (commitResult.success) {
-    deploymentInfo.value.messages.push(
-      t("components.deployHandler.script.success.deployMessages.deploying"),
-      t("components.deployHandler.script.success.deployMessages.firstDeploy"),
-      t("components.deployHandler.script.success.deployMessages.trackProgress")
-    );
-  } else {
-    if (filesToInject.length) {
-      deploymentInfo.value.errors.push(
-        `Failed to commit files: ${commitResult.error || "Unknown error"}`
-      );
-    }
-    if (!envUpdateResult.success) {
-      deploymentInfo.value.errors.push(
-        t("components.deployHandler.script.errors.deployFailed")
-      );
-    }
-  }
+  // Determine overall deployment status and set messages/errors
+  const hasCommitAttempt = actions.commit.length > 0;
+  const hasEnvAttempt = actions.env;
+  const commitSuccess = result.commit?.success ?? !hasCommitAttempt; // Success if no commit needed
+  const envSuccess = result.env?.success ?? !hasEnvAttempt; // Success if no env update needed
 
-  // Env update
-  if (!envUpdateResult.success) {
-    deploymentInfo.value.errors.push(
-      `Failed to update environment variables: ${
-        envUpdateResult.error || "Unknown error"
-      }`
-    );
+  if (commitSuccess && envSuccess) {
+    if (hasCommitAttempt || hasEnvAttempt) {
+      deploymentInfo.value.messages.push(
+        t("components.deployHandler.script.success.deployMessages.deploying"),
+        t("components.deployHandler.script.success.deployMessages.firstDeploy"),
+        t(
+          "components.deployHandler.script.success.deployMessages.trackProgress"
+        )
+      );
+    } else {
+      deploymentInfo.value.messages.push(
+        t("components.deployHandler.confirmDialog.noChanges") ||
+          "No changes to deploy"
+      );
+    }
+  } else {
+    if (hasCommitAttempt && !result.commit?.success) {
+      deploymentInfo.value.errors.push(
+        `Failed to commit files: ${result.commit?.error || "Unknown error"}`
+      );
+    }
+    if (hasEnvAttempt && !result.env?.success) {
+      deploymentInfo.value.errors.push(
+        `Failed to update environment variables: ${
+          result.env?.error || "Unknown error"
+        }`
+      );
+    }
   }
 
   isLoading.value = false;
@@ -1220,14 +1222,6 @@ const updateEnvs = async () => {
   const existingEnvs = await getEnvs();
 
   const url = `${env.GITLAB_URL}/api/v4/projects/${project.id}/variables`;
-  const body = {
-    key: envKey,
-    value: environmentVariables.value
-      .map((e) => `${e.key}=${e.value}`)
-      .join("\n"),
-    description: "Generated in the Auto CI/CD App",
-    variable_type: "file",
-  };
   const config = {
     headers: {
       Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
@@ -1238,17 +1232,26 @@ const updateEnvs = async () => {
     // Delete
     if (existingEnvs.length === 0) return; // There are no envs to delete
 
-    await axios.delete(url + `/${envKey}`, config);
-  } else {
-    // Upsert
-    if (existingEnvs.length) {
-      // Update
-      await axios.put(url + `/${envKey}`, body, config);
-    } else {
-      // Insert
-      await axios.post(url, body, config);
-    }
+    return await axios.delete(url + `/${envKey}`, config);
   }
+
+  const body = {
+    key: envKey,
+    value: environmentVariables.value
+      .map((e) => `${e.key}=${e.value}`)
+      .join("\n"),
+    description: "Generated in the Auto CI/CD App",
+    variable_type: "file",
+  };
+
+  // Upsert
+  if (existingEnvs.length) {
+    // Update
+    return await axios.put(url + `/${envKey}`, body, config);
+  }
+
+  // Insert
+  return await axios.post(url, body, config);
 };
 
 // Cancel deployment
