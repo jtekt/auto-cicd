@@ -16,6 +16,12 @@ export const TokenSchema = z.object({
 
 type AccessTokenResponse = z.infer<typeof TokenSchema>;
 export type CommitAction = "create" | "update" | "delete" | "move" | "chmod";
+export interface CommitActionObject {
+  action: CommitAction;
+  file_path: string;
+  content: string;
+  encoding: "base64";
+}
 
 export const UserSchema = z.object({
   sub: z.string(),
