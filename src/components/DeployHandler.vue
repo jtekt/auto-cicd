@@ -1082,7 +1082,7 @@ const confirmDeploy = async () => {
 
   const actions = {
     commit: injectFiles.value.reduce<CommitActionObject[]>((acc, f) => {
-      if (!f.isChecked) {
+      if (f.isChecked) {
         acc.push({
           action: f.action || "create",
           file_path: f.fileName,

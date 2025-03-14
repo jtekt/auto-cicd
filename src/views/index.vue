@@ -292,6 +292,8 @@ const fetchProjects = async (clear?: boolean) => {
 
     const pageSize = 16;
 
+    const search = `${env.DEPLOYED_NAMESPACE}/${authStore.session.user.nickname}/${searchQuery.value}`;
+
     const query = `
       {
         projects(
@@ -299,9 +301,7 @@ const fetchProjects = async (clear?: boolean) => {
           membership: true,
           searchNamespaces: true,
           archived: EXCLUDE,
-          search: "${env.DEPLOYED_NAMESPACE}/${
-            authStore.session.user.nickname
-          }/${searchQuery.value}",
+          search: "${search}",
           sort: "${sortBy.value}",
           first: ${pageSize},
           after: "${lastCursor.value || ""}"
