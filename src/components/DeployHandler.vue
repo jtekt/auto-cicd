@@ -1182,7 +1182,6 @@ const confirmDeploy = async () => {
 
   if (commitSuccess && envSuccess) {
     if (hasCommitAttempt) {
-      console.log(hasCommitAttempt);
       deploymentInfo.value.messages.push(
         t("components.deployHandler.script.success.deployMessages.deploying"),
         t("components.deployHandler.script.success.deployMessages.firstDeploy"),
