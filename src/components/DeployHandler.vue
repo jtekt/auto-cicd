@@ -1181,7 +1181,8 @@ const confirmDeploy = async () => {
   const envSuccess = result.env?.success ?? !hasEnvAttempt; // Success if no env update needed
 
   if (commitSuccess && envSuccess) {
-    if (hasCommitAttempt || hasEnvAttempt) {
+    if (hasCommitAttempt) {
+      console.log(hasCommitAttempt);
       deploymentInfo.value.messages.push(
         t("components.deployHandler.script.success.deployMessages.deploying"),
         t("components.deployHandler.script.success.deployMessages.firstDeploy"),
