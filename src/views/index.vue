@@ -152,6 +152,8 @@
       </v-col>
     </v-row>
   </v-container>
+
+  <DeployHandler />
 </template>
 
 <script lang="ts" setup>
@@ -160,7 +162,7 @@ import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
 import { ref, computed, onMounted, watch } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
-import DeployBtn from "@/components/deploy/DeployHandler.vue";
+import DeployBtn from "@/components/deploy/DeployButton.vue";
 import { useLocale } from "vuetify";
 import {
   AccessLevel,
@@ -169,6 +171,7 @@ import {
 } from "@/types/project";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
+import DeployHandler from "@/components/deploy/DeployHandler.vue";
 
 const { t } = useLocale();
 

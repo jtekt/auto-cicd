@@ -3,6 +3,7 @@
     v-if="deployStore.project"
     v-model="deployStore.deployDialog"
     fullscreen
+    persistent
     transition="dialog-bottom-transition"
   >
     <v-card :loading="deployStore.isLoading" style="height: 100%">
@@ -63,7 +64,12 @@
         >
           {{ deployStore.error }}
         </v-alert>
-        <template v-else-if="!deployStore.isLoading">
+        <template
+          v-else-if="
+            !deployStore.isLoading ||
+            deployStore.projectConfig.framework !== 'unknown'
+          "
+        >
           <!-- Missing Files Warning -->
           <v-alert
             variant="tonal"

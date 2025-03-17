@@ -40,16 +40,16 @@
               t("components.deployHandler.nextStepsDialog.filesCommitted.title")
             }}
           </h3>
-          <v-list density="compact" class="bg-transparent">
-            <v-list-item
+          <div class="pl-4">
+            <p
               v-for="file in deployStore.deploymentInfo.filesCommitted"
               :key="file"
+              class="text-body-2 d-flex align-center ga-3 mb-1"
             >
-              <v-list-item-title class="text-body-2">{{
-                file
-              }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
+              <v-icon style="font-size: 6px">mdi-circle</v-icon>
+              {{ file }}
+            </p>
+          </div>
         </div>
 
         <!-- Environment Variables Updated -->
@@ -57,16 +57,16 @@
           <h3 class="text-h6 font-weight-medium mb-2">
             {{ t("components.deployHandler.nextStepsDialog.envAdded.title") }}
           </h3>
-          <v-list density="compact" class="bg-transparent">
-            <v-list-item
+          <div class="pl-4">
+            <p
               v-for="env in deployStore.deploymentInfo.envs"
               :key="env"
+              class="text-body-2 d-flex align-center ga-3 mb-1"
             >
-              <v-list-item-title class="text-body-2">{{
-                env
-              }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
+              <v-icon style="font-size: 6px">mdi-circle</v-icon>
+              {{ env }}
+            </p>
+          </div>
         </div>
 
         <!-- Success Messages / Next Steps -->
@@ -74,16 +74,16 @@
           <h3 class="text-h6 font-weight-medium mb-2">
             {{ t("components.deployHandler.nextStepsDialog.nextSteps.title") }}
           </h3>
-          <v-list density="compact" class="bg-transparent">
-            <v-list-item
+          <div class="pl-4">
+            <p
               v-for="message in deployStore.deploymentInfo.messages"
               :key="message"
+              class="text-body-2 d-flex align-center ga-3 mb-1"
             >
-              <v-list-item-title class="text-body-2">{{
-                message
-              }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
+              <v-icon style="font-size: 6px">mdi-circle</v-icon>
+              {{ message }}
+            </p>
+          </div>
         </div>
 
         <!-- Errors -->
@@ -91,16 +91,16 @@
           <h3 class="text-h6 font-weight-medium mb-2 text-error">
             {{ t("components.deployHandler.nextStepsDialog.errors.title") }}
           </h3>
-          <v-list density="compact" class="bg-transparent">
-            <v-list-item
+          <div class="pl-4">
+            <p
               v-for="error in deployStore.deploymentInfo.errors"
               :key="error"
+              class="text-body-2 d-flex align-center ga-3 mb-1"
             >
-              <v-list-item-title class="text-body-2 text-error"
-                >● {{ error }}</v-list-item-title
-              >
-            </v-list-item>
-          </v-list>
+              <v-icon style="font-size: 6px">mdi-circle</v-icon>
+              {{ error }}
+            </p>
+          </div>
         </div>
       </v-card-text>
 
@@ -124,7 +124,6 @@
     </v-card>
   </v-dialog>
 </template>
-
 <script setup lang="ts">
 import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
