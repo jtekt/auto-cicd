@@ -3,6 +3,8 @@ import axios from "axios";
 import type { Session } from "./auth";
 import { z } from "zod";
 import type { Group } from "@/types/group";
+import type { ProjectConfig } from "@/types/app-config";
+import type { ProjectNode } from "@/types/project";
 
 export const TokenSchema = z.object({
   access_token: z.string(),
@@ -141,5 +143,55 @@ export const getGitlabProfile = async (
   } catch (error) {
     console.error(error);
     return null;
+  }
+};
+
+export const getGitLabFiles = async ({
+  access_token,
+  paths,
+  project,
+}: {
+  access_token: string;
+  paths: string[];
+  project: ProjectNode;
+}) => {
+  try {
+    const res = await axios.post<{
+      data: {
+        project: {
+          repository: {
+            blobs: {
+              edges: Array<{ node: { name: string; rawBlob: string } }>;
+            };
+          };
+        };
+        correlationId: string;
+      };
+    }>(
+      `${env.GITLAB_URL}/api/graphql`,
+      {
+        query: `{
+          project(fullPath: "${project.fullPath}") {
+            repository {
+              blobs(ref: "${
+                project.repository.rootRef
+              }", paths: ${JSON.stringify(paths)}) {
+                edges { node { name rawBlob } }
+              }
+            }
+          }
+        }`,
+      },
+      { headers: { Authorization: `Bearer ${access_token}` } }
+    );
+    return {
+      success: true,
+      data: res.data.data.project.repository.blobs.edges.map((e) => ({
+        fileName: e.node.name,
+        content: e.node.rawBlob,
+      })),
+    };
+  } catch (err) {
+    return { success: false, data: [], error: (err as Error).message };
   }
 };

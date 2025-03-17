@@ -1,49 +1,71 @@
-import type { ProjectConfig } from "@/config/frameworks-config";
+import type { ProjectConfig } from "@/types/app-config";
 
 const PUBLIC_BASE = (globalThis as any).BASE_PUBLIC_URL || "";
 
+type GenerateDockerfileResult =
+  | {
+      success: true;
+      content: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
 export const generateDockerfile = async (
   config: ProjectConfig
-): Promise<string> => {
+): Promise<GenerateDockerfileResult> => {
   try {
     const response = await fetch(
       `${PUBLIC_BASE}/templates/${config.framework}/dockerfile.template`
     );
+
     if (!response.ok) {
-      return `# Error: Template not found for ${config.framework}`;
+      return {
+        success: false,
+        error: `Template not found for ${config.framework}`,
+      };
     }
 
-    config = replaceFrameworkSpecifics(config);
-
+    const updatedConfig = replaceFrameworkSpecifics(config);
     let dockerfile = await response.text();
 
-    // Replace placeholders with the appropriate values, skipping empty ones
+    // Replace placeholders with appropriate values
     dockerfile = dockerfile
-      .replace(/{ROOT_DIR}/g, config.rootDir)
-      .replace(/{INSTALL_COMMAND}/g, config.installCommand)
+      .replace(/{ROOT_DIR}/g, updatedConfig.rootDir)
+      .replace(/{INSTALL_COMMAND}/g, updatedConfig.installCommand)
       .replace(
         /{BUILD_COMMAND}/g,
-        config.buildCommand
-          ? `\n# Build the project\nRUN ${config.buildCommand}\n`
+        updatedConfig.buildCommand
+          ? `\n# Build the project\nRUN ${updatedConfig.buildCommand}\n`
           : ""
       )
-      .replace(/{OUTPUT_DIR}/g, config.outputDir)
-      .replace(/{OUTPUT_FILENAME}/g, config.outputFileName || "")
-      .replace(/{PORT}/g, config.port.toString());
+      .replace(/{OUTPUT_DIR}/g, updatedConfig.outputDir)
+      .replace(/{OUTPUT_FILENAME}/g, updatedConfig.outputFileName || "")
+      .replace(/{PORT}/g, updatedConfig.port.toString());
 
-    return dockerfile;
+    return {
+      success: true,
+      content: dockerfile,
+    };
   } catch (error) {
     console.error("Error loading Dockerfile template:", error);
-    return "# Error loading Dockerfile template";
+    return {
+      success: false,
+      error: "Error loading Dockerfile template",
+    };
   }
 };
 
 const replaceFrameworkSpecifics = (config: ProjectConfig): ProjectConfig => {
-  if (config.framework === "fastapi") {
-    if (config.outputFileName) {
-      config.outputFileName = config.outputFileName.replace(/\.py$/, "");
-    }
+  const updatedConfig = { ...config };
+
+  if (updatedConfig.framework === "fastapi" && updatedConfig.outputFileName) {
+    updatedConfig.outputFileName = updatedConfig.outputFileName.replace(
+      /\.py$/,
+      ""
+    );
   }
 
-  return config;
+  return updatedConfig;
 };

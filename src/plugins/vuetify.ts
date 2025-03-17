@@ -33,6 +33,8 @@ const messages = {
           deployingFromGitlab: "Deploying from GitLab",
           selectFramework: "Select Framework",
           selectPackageManager: "Select Package Manager",
+          missingFiles:
+            "The following files are required in the repository for auto-deployment",
           buildSettings: {
             title: "Build and Output Settings",
             description:
@@ -56,39 +58,51 @@ const messages = {
         confirmDialog: {
           title: "Confirm Deployment",
           message:
-            "Are you sure you want to continue? The following changes will be made:",
-          filesSection: "Files to be Deployed",
+            "Please review the changes below before proceeding with deployment.",
+          noChangesTitle: "No Changes to Deploy",
+          noChangesMessage: "There are no changes to deploy at this time.",
+          missingFiles:
+            "The following files are required in the repository for auto-deployment",
+          filesSection: "Files",
+          noFileChanges: "No file changes detected",
+          envSection: "Environment Variables",
+          envDescription:
+            "The following environment variable changes will be applied:",
+          addedVars: "Added Variables",
+          modifiedVars: "Modified Variables",
+          removedVars: "Removed Variables",
+          noEnvChanges: "No environment variable changes detected",
           update: "Update",
           create: "Create",
-          envSection: "Included Environment Variables",
-          envDescription:
-            "These variables will be available in your deployment:",
-          noChanges: "Your repository is up to date, no file change needed",
           continue: "Continue",
+          cancelBtn: "Cancel",
         },
         nextStepsDialog: {
-          successTitle: "Deployment Completed",
-          warningTitle: "Deployment Failed",
-          updateTitle: "Deployment Update",
+          successTitle: "Deployment Successful",
+          successMessage:
+            "Your changes have been successfully deployed. Here’s what happened and what to do next:",
+          partialSuccessTitle: "Deployment Partially Successful",
+          partialSuccessMessage:
+            "Some parts of your deployment succeeded, but there were issues. Review the details below:",
+          errorTitle: "Deployment Failed",
+          errorMessage:
+            "There were issues during deployment. Please review the errors below:",
+          noChangesTitle: "No Changes Deployed",
+          noChangesMessage: "No changes were detected or deployed this time.",
           filesCommitted: {
             title: "Files Committed",
-            success:
-              "These changes have been pushed to your GitLab repository. Please pull the latest updates.",
-            empty: "No file was changed in your GitLab repository",
           },
           envAdded: {
-            title: "Environment Variables added",
+            title: "Environment Variables Updated",
           },
-          notes: {
-            title: "Important Notes",
+          nextSteps: {
+            title: "Next Steps",
           },
           errors: {
             title: "Errors Encountered",
-            message:
-              "Please review the following issues and try again or contact support.",
           },
-          closeReview: "Close and Review",
           close: "Close",
+          closeReview: "Close and Review",
         },
         script: {
           errors: {
@@ -190,6 +204,8 @@ const messages = {
           deployingFromGitlab: "GitLabからデプロイ中",
           selectFramework: "フレームワークを選択",
           selectPackageManager: "パッケージマネージャーを選択",
+          missingFiles:
+            "自動デプロイに必要な以下のファイルがリポジトリに必要です",
           buildSettings: {
             title: "ビルドと出力設定",
             description:
@@ -212,38 +228,51 @@ const messages = {
         },
         confirmDialog: {
           title: "デプロイの確認",
-          message: "続行しますか？以下の変更が行われます：",
-          filesSection: "デプロイされるファイル",
+          message: "デプロイを進める前に、以下の変更を確認してください。",
+          noChangesTitle: "デプロイする変更なし",
+          noChangesMessage: "現在、デプロイする変更はありません。",
+          missingFiles:
+            "自動デプロイに必要な以下のファイルがリポジトリに必要です",
+          filesSection: "ファイル",
+          noFileChanges: "ファイルの変更が検出されませんでした",
+          envSection: "環境変数",
+          envDescription: "以下の環境変数の変更が適用されます：",
+          addedVars: "追加された変数",
+          modifiedVars: "変更された変数",
+          removedVars: "削除された変数",
+          noEnvChanges: "環境変数の変更が検出されませんでした",
           update: "更新",
           create: "作成",
-          envSection: "含まれる環境変数",
-          envDescription: "これらの変数がデプロイで利用可能になります：",
-          noChanges: "リポジトリは最新であり、ファイルの変更は必要ありません",
           continue: "続行",
+          cancelBtn: "キャンセル",
         },
         nextStepsDialog: {
-          successTitle: "デプロイが完了しました",
-          warningTitle: "デプロイに失敗しました",
-          updateTitle: "デプロイの更新",
+          successTitle: "デプロイ成功",
+          successMessage:
+            "変更が正常にデプロイされました。以下に何が起こったか、次に何をすべきかを示します：",
+          partialSuccessTitle: "デプロイ部分成功",
+          partialSuccessMessage:
+            "デプロイの一部は成功しましたが、いくつかの問題が発生しました。詳細を確認してください：",
+          errorTitle: "デプロイ失敗",
+          errorMessage:
+            "デプロイ中に問題が発生しました。以下のエラーを確認してください：",
+          noChangesTitle: "変更なし",
+          noChangesMessage:
+            "今回は変更が検出されず、デプロイされませんでした。",
           filesCommitted: {
             title: "コミットされたファイル",
-            success:
-              "これらの変更がGitLabリポジトリにプッシュされました。最新の更新をプルしてください。",
-            empty: "GitLabリポジトリでファイルが変更されませんでした",
           },
           envAdded: {
-            title: "追加された環境変数",
+            title: "更新された環境変数",
           },
-          notes: {
-            title: "重要な注意事項",
+          nextSteps: {
+            title: "次のステップ",
           },
           errors: {
             title: "発生したエラー",
-            message:
-              "以下の問題を確認し、再試行するかサポートに連絡してください。",
           },
-          closeReview: "閉じて確認",
           close: "閉じる",
+          closeReview: "閉じて確認",
         },
         script: {
           errors: {

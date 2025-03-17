@@ -157,11 +157,10 @@
 <script lang="ts" setup>
 import { env } from "@/config/env";
 import { useAuthStore } from "@/stores/auth";
-import { useSnackbarStore } from "@/stores/snackbar";
 import axios from "axios";
 import { ref, computed, onMounted, watch } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
-import DeployBtn from "@/components/DeployHandler.vue";
+import DeployBtn from "@/components/deploy/DeployHandler.vue";
 import { useLocale } from "vuetify";
 import {
   AccessLevel,
@@ -169,6 +168,7 @@ import {
   type ProjectsResponse,
 } from "@/types/project";
 import { useRoute, useRouter } from "vue-router";
+import { useToast } from "@/stores/toast";
 
 const { t } = useLocale();
 
@@ -176,7 +176,7 @@ const router = useRouter();
 const route = useRoute();
 
 const authStore = useAuthStore();
-const snackbarStore = useSnackbarStore();
+const toast = useToast();
 
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -390,10 +390,7 @@ const fetchProjects = async (clear?: boolean) => {
       hasNextPage.value = pageInfo.hasNextPage;
     }
   } catch (error) {
-    snackbarStore.showSnackbar(
-      t("views.index.projects.errors.fetchProjects"),
-      "error"
-    );
+    toast.error(t("views.index.projects.errors.fetchProjects"));
     console.error("Error fetching projects:", error);
   } finally {
     isLoading.value = false;

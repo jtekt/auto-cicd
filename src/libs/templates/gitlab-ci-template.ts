@@ -1,27 +1,42 @@
 import { env } from "@/config/env";
-import type { ProjectConfig } from "@/config/frameworks-config";
+import type { ProjectConfig } from "@/types/app-config";
 import type { ProjectNode } from "@/types/project";
 
 const PUBLIC_BASE = (globalThis as any).BASE_PUBLIC_URL || "";
+
+type GenerateGitLabCIResult =
+  | {
+      success: true;
+      content: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 export const generateGitLabCI = async (
   config: ProjectConfig,
   project: Pick<ProjectNode, "namespace" | "repository" | "fullPath">,
   username: string
-): Promise<string> => {
+): Promise<GenerateGitLabCIResult> => {
   try {
     const response = await fetch(
       `${PUBLIC_BASE}/templates/.gitlab-ci-template.yml`
     );
 
     if (!response.ok) {
-      console.error("Error gitlab ci template not found");
-      return "# Error: Template not found";
+      console.error("Error: GitLab CI template not found");
+      return {
+        success: false,
+        error: "Template not found",
+      };
     }
 
     let gitlabCI = await response.text();
 
-    if (!project.namespace) throw new Error("Project without namespace");
+    if (!project.namespace) {
+      throw new Error("Project without namespace");
+    }
 
     const appPaths = project.fullPath.split("/");
     const appName = `${username}-${appPaths[appPaths.length - 1]}`;
@@ -34,9 +49,20 @@ export const generateGitLabCI = async (
       .replace(/{ DEPLOYED_NAMESPACE }/g, env.DEPLOYED_NAMESPACE) // Set kubernetes context
       .replace(/{ USERNAME }/g, username); // Set Username
 
-    return gitlabCI;
+    return {
+      success: true,
+      content: gitlabCI,
+    };
   } catch (error) {
     console.error("Error loading GitLab CI template:", error);
-    return "# Error loading GitLab CI template";
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message === "Project without namespace"
+            ? "Project namespace is required"
+            : "Error loading GitLab CI template"
+          : "Unknown error occurred",
+    };
   }
 };

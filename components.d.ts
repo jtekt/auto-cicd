@@ -10,8 +10,16 @@ declare module 'vue' {
     AppLoader: typeof import('./src/components/AppLoader.vue')['default']
     CodeEditor: typeof import('./src/components/CodeEditor.vue')['default']
     DefaultLayout: typeof import('./src/components/DefaultLayout.vue')['default']
-    DeployHandler: typeof import('./src/components/DeployHandler.vue')['default']
+    DeployBuildSettings: typeof import('./src/components/deploy/DeployBuildSettings.vue')['default']
+    DeployButton: typeof import('./src/components/deploy/DeployButton.vue')['default']
+    DeployConfirmDialog: typeof import('./src/components/deploy/DeployConfirmDialog.vue')['default']
+    DeployDialog: typeof import('./src/components/deploy/DeployDialog.vue')['default']
+    DeployEnvironmentSettings: typeof import('./src/components/deploy/DeployEnvironmentSettings.vue')['default']
+    DeployFrameworkSelector: typeof import('./src/components/deploy/DeployFrameworkSelector.vue')['default']
+    DeployHandler: typeof import('./src/components/deploy/DeployHandler.vue')['default']
+    DeployNextStepsDialog: typeof import('./src/components/deploy/DeployNextStepsDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Toaster: typeof import('./src/components/Toaster.vue')['default']
   }
 }

@@ -49,7 +49,7 @@ import {
   getGitlabProfile,
 } from "@/libs/gitlab";
 import { useAuthStore } from "@/stores/auth";
-import { useSnackbarStore } from "@/stores/snackbar";
+import { useToast } from "@/stores/toast";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale } from "vuetify";
@@ -63,7 +63,7 @@ const isLoading = ref(true);
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
-const snackbarStore = useSnackbarStore();
+const toast = useToast();
 
 onMounted(async () => {
   if (
@@ -79,7 +79,7 @@ onMounted(async () => {
 
   if (!accessToken) {
     isLoading.value = false;
-    return snackbarStore.showSnackbar(t("views.auth.errors.token"), "error");
+    return toast.error(t("views.auth.errors.token"));
   }
 
   // Get user info
@@ -87,7 +87,7 @@ onMounted(async () => {
 
   if (!profile?.user) {
     isLoading.value = false;
-    return snackbarStore.showSnackbar(t("views.auth.errors.profile"), "error");
+    return toast.error(t("views.auth.errors.profile"));
   } else if (!profile.hasGroup) {
     // Redirect to no-group page instead of showing snackbar
     return router.push("/no-group");
