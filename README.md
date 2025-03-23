@@ -1,6 +1,9 @@
-# JTEKT Project Deployment Dashboard
+# JTEKT Auto CI/CD
 
 This project provides a frontend interface built with **Vue 3**, **Vuetify**, and **TypeScript** to enable **JTEKT employees** to deploy their projects to **JTEKT's Kubernetes cluster**. It integrates with **GitLab OAuth** for authentication and utilizes **GitLab CI/CD** functionalities for automated deployments.
+
+# Available at
+http://172.16.98.151:30174
 
 ## Features
 
