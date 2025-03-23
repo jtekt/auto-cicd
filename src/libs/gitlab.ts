@@ -27,7 +27,13 @@ export interface CommitActionObject {
 
 export const UserSchema = z.object({
   sub: z.string(),
-  nickname: z.string(),
+  nickname: z.string().transform((val) =>
+    val
+      .replace(/_/g, "-") // Replace underscores with hyphens
+      .replace(/\./g, "-") // Replace periods with hyphens (GitLab allows periods)
+      .toLowerCase() // Ensure lowercase
+      .replace(/[^a-z0-9-]/g, "")
+  ),
   groups: z.array(z.string()),
   name: z.string(),
   picture: z.string().nullable(),
