@@ -15,7 +15,7 @@ describe("generateGitLabCI", () => {
       repository: {
         rootRef: "main",
       },
-      fullPath: "auto-cicd/fabel/auto-cicd-frontend",
+      projectName: "fabel-auto-cicd-frontend",
     };
 
     const result = await generateGitLabCI(config, project, "username");
