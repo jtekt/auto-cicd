@@ -34,6 +34,7 @@ export interface ProjectNode {
   id: string;
   description: string | null;
   name: string;
+  projectName: string;
   webUrl: string;
   fullPath: string;
   languages: Language[];

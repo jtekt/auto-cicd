@@ -16,7 +16,7 @@ type GenerateGitLabCIResult =
 
 export const generateGitLabCI = async (
   config: ProjectConfig,
-  project: Pick<ProjectNode, "namespace" | "repository" | "fullPath">,
+  project: Pick<ProjectNode, "namespace" | "repository" | "projectName">,
   username: string
 ): Promise<GenerateGitLabCIResult> => {
   try {
@@ -38,12 +38,9 @@ export const generateGitLabCI = async (
       throw new Error("Project without namespace");
     }
 
-    const appPaths = project.fullPath.split("/");
-    const appName = `${username}-${appPaths[appPaths.length - 1]}`;
-
     // Replace placeholders with the actual values
     gitlabCI = gitlabCI
-      .replace(/{ APPLICATION_NAME }/g, appName) // Set application name
+      .replace(/{ APPLICATION_NAME }/g, project.projectName) // Set application name
       .replace(/{ PORT }/g, config.port?.toString() || "80") // Set application port from config
       .replace(/{ ROOT_REF }/g, project.repository.rootRef) // Set application main branch
       .replace(/{ DEPLOYED_NAMESPACE }/g, env.DEPLOYED_NAMESPACE) // Set kubernetes context

@@ -3,7 +3,6 @@ import axios from "axios";
 import type { Session } from "./auth";
 import { z } from "zod";
 import type { Group } from "@/types/group";
-import type { ProjectConfig } from "@/types/app-config";
 import type { ProjectNode } from "@/types/project";
 
 export const TokenSchema = z.object({
@@ -30,7 +29,7 @@ export const UserSchema = z.object({
   nickname: z.string().transform((val) =>
     val
       .replace(/_/g, "-") // Replace underscores with hyphens
-      .replace(/\./g, "-") // Replace periods with hyphens (GitLab allows periods)
+      .replace(/\./g, "-") // Replace periods with hyphens
       .toLowerCase() // Ensure lowercase
       .replace(/[^a-z0-9-]/g, "")
   ),
