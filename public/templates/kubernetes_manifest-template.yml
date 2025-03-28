@@ -18,6 +18,13 @@ spec:
           envFrom:
             - secretRef:
                 name: ${K8S_ENV_SECRET_NAME}
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "125m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
       imagePullSecrets:
         - name: ${K8S_ECR_SECRET_NAME}
 ---
