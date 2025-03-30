@@ -570,6 +570,7 @@ export const useDeployStore = defineStore("deploy", () => {
     filesMightHaveMissed,
     frameworkSelector,
     managerSelector,
+    originalFiles,
     openDeployment,
     handleDeploy,
     confirmDeploy,

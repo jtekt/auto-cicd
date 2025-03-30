@@ -101,6 +101,31 @@
             </template>
             ]
           </v-alert>
+          <!-- Default output filename Warning -->
+          <v-alert
+            variant="tonal"
+            color="warning"
+            class="mb-5"
+            v-if="
+              frameworksConfig[deployStore.projectConfig.framework]
+                .outputFileName &&
+              !deployStore.originalFiles.find(
+                (f) =>
+                  f.fileName ===
+                  frameworksConfig[deployStore.projectConfig.framework]
+                    .outputFileName
+              )
+            "
+          >
+            {{
+              t("components.deployHandler.confirmDialog.missingOutputFile", {
+                framework: deployStore.projectConfig.framework,
+                defaultFilename:
+                  frameworksConfig[deployStore.projectConfig.framework]
+                    .outputFileName,
+              })
+            }}
+          </v-alert>
           <DeployFrameworkSelector />
           <v-expansion-panels>
             <DeployBuildSettings
@@ -138,13 +163,13 @@
 </template>
 
 <script setup lang="ts">
-import { useLocale } from "vuetify";
 import DeployFrameworkSelector from "./DeployFrameworkSelector.vue";
 import DeployEnvironmentSettings from "./DeployEnvironmentSettings.vue";
 import { useDeployStore } from "@/stores/deploy";
 import DeployBuildSettings from "./DeployBuildSettings.vue";
 import { frameworksConfig } from "@/config/frameworks-config";
+import { useI18n } from "vue-i18n";
 
-const { t } = useLocale();
+const { t } = useI18n();
 const deployStore = useDeployStore();
 </script>

@@ -33,8 +33,6 @@ const messages = {
           deployingFromGitlab: "Deploying from GitLab",
           selectFramework: "Select Framework",
           selectPackageManager: "Select Package Manager",
-          missingFiles:
-            "The following files are required in the repository for auto-deployment",
           buildSettings: {
             title: "Build and Output Settings",
             description:
@@ -63,6 +61,8 @@ const messages = {
           noChangesMessage: "There are no changes to deploy at this time.",
           missingFiles:
             "The following files are required in the repository for auto-deployment",
+          missingOutputFile:
+            "The default filename {defaultFilename} for a {framework} deployment was not found. If your project uses a different file, please update it in the Build and Output Settings below.",
           filesSection: "Files",
           noFileChanges: "No file changes detected",
           envSection: "Environment Variables",
@@ -204,8 +204,7 @@ const messages = {
           deployingFromGitlab: "GitLabからデプロイ中",
           selectFramework: "フレームワークを選択",
           selectPackageManager: "パッケージマネージャーを選択",
-          missingFiles:
-            "自動デプロイに必要な以下のファイルがリポジトリに必要です",
+
           buildSettings: {
             title: "ビルドと出力設定",
             description:
@@ -233,6 +232,8 @@ const messages = {
           noChangesMessage: "現在、デプロイする変更はありません。",
           missingFiles:
             "自動デプロイに必要な以下のファイルがリポジトリに必要です",
+          missingOutputFile:
+            "{framework} のデプロイに必要なデフォルトファイル {defaultFilename} が見つかりませんでした。プロジェクトで異なるファイルを使用している場合は、下のビルドおよび出力設定で変更してください。",
           filesSection: "ファイル",
           noFileChanges: "ファイルの変更が検出されませんでした",
           envSection: "環境変数",
@@ -366,7 +367,7 @@ const messages = {
 const savedLanguage = localStorage.getItem("preferred_language") || "ja";
 const defaultTheme = localStorage.getItem("theme") || "light";
 
-const i18n = createI18n({
+export const i18n = createI18n({
   legacy: false, // Vuetify does not support the legacy mode of vue-i18n
   locale: savedLanguage,
   fallbackLocale: "en",
