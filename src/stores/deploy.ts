@@ -13,11 +13,11 @@ import {
   frameworksConfig,
   packageManagers,
   envKey,
+  getConfigFiles,
 } from "@/config/frameworks-config";
 import type {
   AcceptedFramework,
   AcceptedPackageManager,
-  FrameworkConfig,
   ProjectConfig,
 } from "@/types/app-config";
 import { getDefaultProjectConfig } from "@/libs/deploy/config";
@@ -57,8 +57,7 @@ export const useDeployStore = defineStore("deploy", () => {
       isChecked: boolean;
     }[]
   >([]);
-  const identificationFiles = ref<{ fileName: string; content: string }[]>([]);
-  const originalFiles = ref<{ fileName: string; content: string }[]>([]);
+  const repositoryFiles = ref<{ fileName: string; content: string }[]>([]);
   const deploymentInfo = ref<{
     filesCommitted: string[];
     envs: string[];
@@ -91,7 +90,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     return requiredFilesForConfig.filter(
       (f) =>
-        !identificationFiles.value.find((id) => {
+        !repositoryFiles.value.find((id) => {
           if (typeof f === "string") return id.fileName === f;
           return f.find((fc) => id.fileName === fc);
         })
@@ -133,6 +132,7 @@ export const useDeployStore = defineStore("deploy", () => {
         const supportedManagers = frameworksConfig[
           newFramework
         ].supportedManagers.map((m) => m.manager);
+
         if (!supportedManagers.includes(managerSelector.value)) {
           managerSelector.value = frameworksConfig[newFramework].defaultManager;
           projectConfig.value.manager = managerSelector.value;
@@ -195,28 +195,6 @@ export const useDeployStore = defineStore("deploy", () => {
     isLoading.value = true;
     injectFiles.value = [];
 
-    const files = await getGitLabFiles({
-      access_token: authStore.session.auth_token.access_token,
-      paths: [
-        "Dockerfile",
-        ".gitlab-ci.yml",
-        "kubernetes_manifest.yml",
-        ...projectConfig.value.files,
-      ],
-      project: project.value,
-    });
-
-    if (!files.success) {
-      isLoading.value = false;
-      toast.error(
-        t("components.deployHandler.script.errors.fetchFilesFailed", {
-          error: files.error,
-        })
-      );
-      return;
-    }
-
-    originalFiles.value = files.data;
     const generatedFiles = await generateFiles(
       projectConfig.value,
       project.value,
@@ -224,7 +202,7 @@ export const useDeployStore = defineStore("deploy", () => {
     );
 
     injectFiles.value = generatedFiles.reduce((fs, file) => {
-      const originalFile = originalFiles.value.find(
+      const originalFile = repositoryFiles.value.find(
         (original) => original.fileName === file.fileName
       );
       if (!originalFile) {
@@ -464,49 +442,21 @@ export const useDeployStore = defineStore("deploy", () => {
       return getDefaultProjectConfig("unknown");
 
     const mainLang = project.value.languages[0].name;
-    const allConfigFiles = new Set<string>();
-    const frameworkFileMap = new Map<string, FrameworkConfig>();
 
-    for (const framework of Object.values(frameworksConfig)) {
-      if (!framework.configFiles || !framework.langs?.includes(mainLang))
-        continue;
+    // Get all files that we might need
+    const allConfigFiles = getConfigFiles();
 
-      framework.configFiles.forEach((config) => {
-        frameworkFileMap.set(framework.id, framework);
-        if (typeof config.file === "string") {
-          allConfigFiles.add(config.file);
-        } else {
-          config.file.forEach((cf) => allConfigFiles.add(cf));
-        }
-      });
-    }
-
-    if (allConfigFiles.size === 0) return getDefaultProjectConfig("unknown");
-
-    for (const framework of Object.values(frameworksConfig)) {
-      if (!framework.langs?.includes(mainLang)) continue;
-
-      framework.supportedManagers.forEach((manager) => {
-        packageManagers[manager.manager].detectionFiles.forEach((df) =>
-          allConfigFiles.add(df.file)
-        );
-      });
-
-      framework.requiredFiles?.forEach((f) => {
-        if (typeof f === "string") allConfigFiles.add(f);
-        else f.forEach((cf) => allConfigFiles.add(cf));
-      });
-    }
+    if (!allConfigFiles.length) return getDefaultProjectConfig("unknown");
 
     const files = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: Array.from(allConfigFiles),
+      paths: allConfigFiles,
       project: project.value,
     });
 
     if (!files.success) return getDefaultProjectConfig("unknown");
 
-    identificationFiles.value = files.data;
+    repositoryFiles.value = files.data;
 
     for (const framework of Object.values(frameworksConfig)) {
       if (!framework.configFiles || !framework.langs?.includes(mainLang))
@@ -552,6 +502,34 @@ export const useDeployStore = defineStore("deploy", () => {
     return getDefaultProjectConfig("unknown");
   }
 
+  async function searchFile(file: string) {
+    if (!authStore.session || !project.value) return;
+
+    const filesData = await getGitLabFiles({
+      access_token: authStore.session.auth_token.access_token,
+      paths: [file],
+      project: project.value,
+    });
+
+    if (filesData.success && filesData.data.length === 1) {
+      const fileData = filesData.data[0];
+      const existingFileIndex = repositoryFiles.value.findIndex(
+        (f) => f.fileName === file
+      );
+
+      if (existingFileIndex !== -1) {
+        // Update existing file
+        repositoryFiles.value[existingFileIndex] = {
+          ...repositoryFiles.value[existingFileIndex],
+          ...fileData,
+        };
+      } else {
+        // Insert new file
+        repositoryFiles.value.push(fileData);
+      }
+    }
+  }
+
   return {
     project,
     deployDialog,
@@ -570,10 +548,11 @@ export const useDeployStore = defineStore("deploy", () => {
     filesMightHaveMissed,
     frameworkSelector,
     managerSelector,
-    originalFiles,
+    repositoryFiles,
     openDeployment,
     handleDeploy,
     confirmDeploy,
     cancelDeploy,
+    searchFile,
   };
 });

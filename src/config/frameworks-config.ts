@@ -7,6 +7,12 @@ import type {
 
 export const envKey = "ENV"; // Name of the file saved in gitlab with the envs
 
+const defaultInjectedFiles = [
+  "Dockerfile",
+  ".gitlab-ci.yml",
+  "kubernetes_manifest.yml",
+];
+
 export const packageManagers: Record<
   AcceptedPackageManager,
   PackageManagerConfig
@@ -275,4 +281,55 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     supportedManagers: [],
     defaultManager: "npm",
   },
+};
+
+export const getConfigFiles = (lang?: string) => {
+  // Using Set to ensure unique file paths
+  const uniqueFiles = new Set<string>(defaultInjectedFiles);
+
+  // Process all framework configurations
+  Object.values(frameworksConfig).forEach((frameworkConfig) => {
+    if (lang && !frameworkConfig.langs?.includes(lang)) return;
+
+    // Handle framework config files
+    if (frameworkConfig.configFiles) {
+      frameworkConfig.configFiles.forEach((configFileEntry) => {
+        configFileEntry.file.forEach((filePath) => {
+          uniqueFiles.add(filePath);
+        });
+      });
+    }
+
+    // Add output file name if it exists
+    if (frameworkConfig.outputFileName) {
+      uniqueFiles.add(frameworkConfig.outputFileName);
+    }
+
+    // Handle required files (can be strings or arrays of strings)
+    if (frameworkConfig.requiredFiles) {
+      frameworkConfig.requiredFiles.forEach((requiredFile) => {
+        if (typeof requiredFile === "string") {
+          uniqueFiles.add(requiredFile);
+        } else {
+          // Handle array of strings
+          requiredFile.forEach((filePath) => uniqueFiles.add(filePath));
+        }
+      });
+    }
+
+    // Add complementary files
+    if (frameworkConfig.files) {
+      frameworkConfig.files.forEach((f) => uniqueFiles.add(f));
+    }
+
+    // Process all package manager configurations
+    frameworkConfig.supportedManagers.forEach((manager) => {
+      packageManagers[manager.manager].detectionFiles.forEach((df) =>
+        uniqueFiles.add(df.file)
+      );
+    });
+  });
+
+  // Convert Set back to array for return
+  return Array.from(uniqueFiles);
 };

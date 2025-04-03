@@ -159,7 +159,13 @@ export const getGitLabFiles = async ({
   access_token: string;
   paths: string[];
   project: ProjectNode;
-}) => {
+}): Promise<
+  | {
+      success: true;
+      data: { fileName: string; content: string }[];
+    }
+  | { success: false; error: string }
+> => {
   try {
     const res = await axios.post<{
       data: {
@@ -197,6 +203,6 @@ export const getGitLabFiles = async ({
       })),
     };
   } catch (err) {
-    return { success: false, data: [], error: (err as Error).message };
+    return { success: false, error: (err as Error).message };
   }
 };

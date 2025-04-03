@@ -79,11 +79,13 @@
         "
         variant="outlined"
         :class="
-          deployStore.projectConfig.outputFileName ===
-          selectedFramework.outputFileName
+          deployStore.repositoryFiles.find(
+            (f) => f.fileName === deployStore.projectConfig.outputFileName
+          )
             ? ''
             : 'text-warning'
         "
+        :loading="isSearching"
       />
     </v-expansion-panel-text>
   </v-expansion-panel>
@@ -93,12 +95,50 @@
 import { useLocale } from "vuetify";
 import { frameworksConfig, packageManagers } from "@/config/frameworks-config";
 import { useDeployStore } from "@/stores/deploy";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 const { t } = useLocale();
 const deployStore = useDeployStore();
 
 const selectedFramework = computed(
   () => frameworksConfig[deployStore.projectConfig.framework]
+);
+
+// Debounce implementation
+const debounce = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+};
+
+// Track if search is pending
+const isSearching = ref(false);
+
+// Debounced search function
+const searchFileDebounced = debounce((fileName: string) => {
+  if (fileName && fileName.trim() !== "") {
+    isSearching.value = true;
+    deployStore.searchFile(fileName).finally(() => {
+      isSearching.value = false;
+    });
+  }
+}, 800); // 800ms debounce delay
+
+// Watch outputFileName
+watch(
+  () => deployStore.projectConfig.outputFileName,
+  (newValue, oldValue) => {
+    if (
+      selectedFramework.value.userConfigurable?.outputFileName &&
+      newValue !== oldValue &&
+      newValue !== selectedFramework.value.outputFileName &&
+      newValue
+    ) {
+      searchFileDebounced(newValue);
+    }
+  },
+  { immediate: false } // Don't trigger on initial load
 );
 </script>
