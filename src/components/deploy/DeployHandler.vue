@@ -1,4 +1,3 @@
-<!-- Main Deploy Component -->
 <template>
   <ConfirmDialog />
   <NextStepsDialog />

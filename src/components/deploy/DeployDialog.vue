@@ -108,12 +108,9 @@
             class="mb-5"
             v-if="
               frameworksConfig[deployStore.projectConfig.framework]
-                .outputFileName &&
-              !deployStore.originalFiles.find(
-                (f) =>
-                  f.fileName ===
-                  frameworksConfig[deployStore.projectConfig.framework]
-                    .outputFileName
+                .userConfigurable?.outputFileName &&
+              !deployStore.repositoryFiles.find(
+                (f) => f.fileName === deployStore.projectConfig.outputFileName
               )
             "
           >
