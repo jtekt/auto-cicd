@@ -24,6 +24,8 @@
             contain
           />
         </RouterLink>
+        <v-divider class="mx-4" vertical></v-divider>
+        <h1 class="text-h5 font-weight-bold">Auto CI&DC</h1>
         <v-spacer />
         <v-btn
           :icon="
