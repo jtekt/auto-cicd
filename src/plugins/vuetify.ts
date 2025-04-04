@@ -103,6 +103,17 @@ const messages = {
           },
           close: "Close",
           closeReview: "Close and Review",
+
+          debugSection: "Next Steps and Debugging",
+          debugIntro: "If you encounter issues during deployment:",
+          buildLogs: "Build Logs",
+          buildLogsDescription:
+            "In case of an error, review the logs in GitLab under the build jobs for detailed error messages:",
+          appStatus: "App Status",
+          appStatusDescription:
+            "If no error messages appear and the app is not working, verify its status in:",
+          appStatusPattern:
+            "Search for your project, the names follow the pattern:",
         },
         script: {
           errors: {
@@ -274,6 +285,17 @@ const messages = {
           },
           close: "閉じる",
           closeReview: "閉じて確認",
+
+          debugSection: "次のステップとデバッグ",
+          debugIntro: "デプロイ中に問題が発生した場合：",
+          buildLogs: "ビルドログ",
+          buildLogsDescription:
+            "エラーが発生した場合、GitLabのビルドジョブの下にあるログを確認して、詳細なエラーメッセージを参照してください：",
+          appStatus: "アプリの状態",
+          appStatusDescription:
+            "エラーメッセージが表示されず、アプリが動作しない場合、次の場所でその状態を確認してください：",
+          appStatusPattern:
+            "プロジェクトを検索してください。名前は以下の形式に従います：",
         },
         script: {
           errors: {
