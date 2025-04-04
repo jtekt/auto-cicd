@@ -1,0 +1,168 @@
+{
+    "components": {
+        "deployHandler": {
+            "actionBtn": "デプロイ",
+            "cancelBtn": "キャンセル",
+            "actionsNeededDialog": {
+                "title": "アプリをデプロイするために必要なアクション",
+                "faqLink": "プロジェクトを別のグループに移動する方法"
+            },
+            "deployDialog": {
+                "deployingFromGitlab": "GitLabからデプロイ中",
+                "selectFramework": "フレームワークを選択",
+                "selectPackageManager": "パッケージマネージャーを選択",
+                "buildSettings": {
+                    "title": "ビルドと出力設定",
+                    "description": "{framework} プロジェクトのデフォルト設定です。プロジェクトに異なる設定が必要な場合、必要に応じて変更できます。",
+                    "rootDir": "ルートディレクトリ",
+                    "outputDir": "出力ディレクトリ",
+                    "installCommand": "インストールコマンド",
+                    "buildCommand": "ビルドコマンド",
+                    "outputFileName": "Output File Name"
+                },
+                "envSettings": {
+                    "title": "環境変数",
+                    "description": "プロジェクトの環境変数を追加してください。",
+                    "key": "キー",
+                    "value": "値",
+                    "pasteHint": "有効な .env ファイルの内容をキー入力フィールドに直接貼り付けると、対応する値が自動的に入力されます。",
+                    "addMore": "さらに追加"
+                }
+            },
+            "confirmDialog": {
+                "title": "デプロイの確認",
+                "message": "デプロイを進める前に、以下の変更を確認してください。",
+                "noChangesTitle": "デプロイする変更なし",
+                "noChangesMessage": "現在、デプロイする変更はありません。",
+                "missingFiles": "自動デプロイに必要な以下のファイルがリポジトリに必要です",
+                "missingOutputFile": "{framework} のデプロイに必要なデフォルトファイル {defaultFilename} が見つかりませんでした。プロジェクトで異なるファイルを使用している場合は、下のビルドおよび出力設定で変更してください。",
+                "filesSection": "ファイル",
+                "noFileChanges": "ファイルの変更が検出されませんでした",
+                "envSection": "環境変数",
+                "envDescription": "以下の環境変数の変更が適用されます：",
+                "addedVars": "追加された変数",
+                "modifiedVars": "変更された変数",
+                "removedVars": "削除された変数",
+                "noEnvChanges": "環境変数の変更が検出されませんでした",
+                "update": "更新",
+                "create": "作成",
+                "continue": "続行",
+                "cancelBtn": "キャンセル"
+            },
+            "nextStepsDialog": {
+                "successTitle": "デプロイ成功",
+                "successMessage": "変更が正常にデプロイされました。以下に何が起こったか、次に何をすべきかを示します：",
+                "partialSuccessTitle": "デプロイ部分成功",
+                "partialSuccessMessage": "デプロイの一部は成功しましたが、いくつかの問題が発生しました。詳細を確認してください：",
+                "errorTitle": "デプロイ失敗",
+                "errorMessage": "デプロイ中に問題が発生しました。以下のエラーを確認してください：",
+                "noChangesTitle": "変更なし",
+                "noChangesMessage": "今回は変更が検出されず、デプロイされませんでした。",
+                "filesCommitted": {
+                    "title": "コミットされたファイル"
+                },
+                "envAdded": {
+                    "title": "更新された環境変数"
+                },
+                "nextSteps": {
+                    "title": "次のステップ"
+                },
+                "errors": {
+                    "title": "発生したエラー"
+                },
+                "close": "閉じる",
+                "closeReview": "閉じて確認",
+                "debugSection": "次のステップとデバッグ",
+                "debugIntro": "デプロイ中に問題が発生した場合：",
+                "buildLogs": "ビルドログ",
+                "buildLogsDescription": "エラーが発生した場合、GitLabのビルドジョブの下にあるログを確認して、詳細なエラーメッセージを参照してください：",
+                "appStatus": "アプリの状態",
+                "appStatusDescription": "エラーメッセージが表示されず、アプリが動作しない場合、次の場所でその状態を確認してください：",
+                "appStatusPattern": "プロジェクトを検索してください。名前は以下の形式に従います："
+            },
+            "script": {
+                "errors": {
+                    "unauthorized": "エラー：権限がありません",
+                    "namespaceNotAllowed": "プロジェクトが許可されたグループにありません。プロジェクトを承認されたグループに移動してください：",
+                    "invalidEnvs": "環境変数 {keys} が無効です",
+                    "fetchFilesFailed": "リポジトリファイルの取得エラー：{error}",
+                    "commitFailed": "エラー：デプロイファイルのコミットに失敗しました",
+                    "envUpdateFailed": "エラー：環境変数の更新に失敗しました",
+                    "deployFailed": "デプロイに失敗しました。詳細はログを確認してください"
+                },
+                "success": {
+                    "commitSuccess": "デプロイファイルが正常にコミットされました！",
+                    "envUpdateSuccess": "環境変数が正常に更新されました！",
+                    "deployMessages": {
+                        "deploying": "プロジェクトは数分以内にデプロイされます。",
+                        "firstDeploy": "これが最初の自動デプロイの場合、アプリケーションのURLが記載されたメールが届きます。",
+                        "trackProgress": "GitLabプロジェクトの「ビルド > パイプライン」でビルドの進捗を確認できます。"
+                    }
+                },
+                "actions": {
+                    "allowedGroup": "許可されたグループ",
+                    "moveInstruction": "、その後プロジェクトを新しいグループに移動してください"
+                }
+            }
+        },
+        "usefulLinks": {
+            "buttonText": "役立つリンク",
+            "dialogTitle": "自動デプロイのための役立つリンク",
+            "dialogDescription": "デプロイ中に役立つリソースを以下に示します：",
+            "closeButton": "閉じる",
+            "links": {
+                "podViewerDescription": "デプロイの状態を確認し、'username-projectname-deploymentId' のパターンを使用してアプリケーションログを確認できます。"
+            }
+        }
+    },
+    "views": {
+        "auth": {
+            "signInMessage": "アカウントにサインインして、プロジェクトにアクセスし、デプロイしてください。",
+            "errors": {
+                "token": "GitLabアクセストークンの作成エラー。",
+                "profile": "GitLabからユーザープロフィールの取得エラー。"
+            }
+        },
+        "index": {
+            "searchLabel": "名前または名前空間で検索",
+            "sortLabel": "並べ替え",
+            "projects": {
+                "noFound": "プロジェクトが見つかりません",
+                "lastActivity": "最終アクティビティ：",
+                "noDescription": "説明なし",
+                "sort": {
+                    "nameAscText": "名前 (A-Z)",
+                    "nameDscText": "名前 (Z-A)",
+                    "editedAscText": "最終編集 (最新)",
+                    "editedDscText": "最終編集 (最古)"
+                },
+                "errors": {
+                    "fetchProjects": "プロジェクトの取得に失敗しました。再試行してください。"
+                }
+            },
+            "footerMessage": "プロジェクトがここに表示されない場合、GitLabのauto-cicdグループまたはそのサブグループにあることを確認してください。",
+            "transferProject": "プロジェクトの移動方法を学ぶ"
+        },
+        "faq": {
+            "moveProject": "GitLabでリポジトリを別の名前空間に移動する方法",
+            "steps": {
+                "1": "GitLabにログイン：GitLabインスタンスを開き、アカウントにログインします。",
+                "2": "プロジェクトに移動：移動したいプロジェクトにアクセスします。",
+                "3": "プロジェクト設定に移動：プロジェクトの左サイドバーで「設定」をクリックし、「一般」を選択して一般設定を開きます。",
+                "4": "「詳細」セクションを展開：下にスクロールして「詳細」セクションを見つけ、クリックしてオプションを展開します。",
+                "5": "名前空間を変更：「詳細」セクションに「プロジェクトの転送」というフィールドがあります。「プロジェクトの転送」ボタンをクリックします。",
+                "6": "新しい名前空間を選択：ダイアログが表示され、移動先の名前空間を選択するように求められます。グループまたは別のユーザーの名前空間を選択できます。適切な名前空間（auto-cicdまたはサブグループ）を選択し、「プロジェクトの転送」をクリックします。",
+                "7": "確認：GitLabは移動の確認を求めます。確認すると、リポジトリが新しい名前空間に転送されます。"
+            }
+        },
+        "noGroup": {
+            "title": "グループメンバーシップが必要です",
+            "alert": "このアプリケーションを使用するには、Auto CI/CD サブグループのメンバーである必要があります。",
+            "instructions": "アクセスするには、以下の手順に従ってください：",
+            "step1": "グループ管理アプリにアクセスしてサブグループを作成します",
+            "step2": "サブグループ作成後、ここに戻って再度ログインしてください",
+            "createButton": "GitLabでサブグループを作成",
+            "backButton": "ログインに戻る"
+        }
+    }
+}

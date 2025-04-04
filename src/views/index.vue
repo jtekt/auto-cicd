@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12" sm="6" md="4">
+      <v-col cols="4">
         <v-text-field
           v-model="searchQuery"
           :label="t('views.index.searchLabel')"
@@ -10,7 +10,7 @@
           @input="updateDebouncedUrlParams"
         />
       </v-col>
-      <v-col cols="12" sm="6" md="4">
+      <v-col cols="4">
         <v-select
           v-model="sortBy"
           :items="sortOptions"
@@ -29,6 +29,9 @@
             </v-list-item>
           </template>
         </v-select>
+      </v-col>
+      <v-col cols="4" class="text-right">
+        <UsefulLinks />
       </v-col>
     </v-row>
 
@@ -172,6 +175,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
+import UsefulLinks from "@/components/UsefulLinks.vue";
 
 const { t } = useLocale();
 

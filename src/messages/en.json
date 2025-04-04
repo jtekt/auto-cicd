@@ -1,0 +1,168 @@
+{
+    "components": {
+        "deployHandler": {
+            "actionBtn": "Deploy",
+            "cancelBtn": "Cancel",
+            "actionsNeededDialog": {
+                "title": "Actions needed to deploy the app",
+                "faqLink": "How to move a project to another group"
+            },
+            "deployDialog": {
+                "deployingFromGitlab": "Deploying from GitLab",
+                "selectFramework": "Select Framework",
+                "selectPackageManager": "Select Package Manager",
+                "buildSettings": {
+                    "title": "Build and Output Settings",
+                    "description": "These are the default configurations for a {framework} project. If your project requires different settings, you can modify them as needed.",
+                    "rootDir": "Root Directory",
+                    "outputDir": "Output Directory",
+                    "installCommand": "Install Command",
+                    "buildCommand": "Build Command",
+                    "outputFileName": "Output File Name"
+                },
+                "envSettings": {
+                    "title": "Environment Variables",
+                    "description": "Add environment variables for your project.",
+                    "key": "Key",
+                    "value": "Value",
+                    "pasteHint": "You can paste the contents of a valid .env file directly into one of the key input fields, and it will automatically populate the corresponding values for you.",
+                    "addMore": "Add More"
+                }
+            },
+            "confirmDialog": {
+                "title": "Confirm Deployment",
+                "message": "Please review the changes below before proceeding with deployment.",
+                "noChangesTitle": "No Changes to Deploy",
+                "noChangesMessage": "There are no changes to deploy at this time.",
+                "missingFiles": "The following files are required in the repository for auto-deployment",
+                "missingOutputFile": "The default filename {defaultFilename} for a {framework} deployment was not found. If your project uses a different file, please update it in the Build and Output Settings below.",
+                "filesSection": "Files",
+                "noFileChanges": "No file changes detected",
+                "envSection": "Environment Variables",
+                "envDescription": "The following environment variable changes will be applied:",
+                "addedVars": "Added Variables",
+                "modifiedVars": "Modified Variables",
+                "removedVars": "Removed Variables",
+                "noEnvChanges": "No environment variable changes detected",
+                "update": "Update",
+                "create": "Create",
+                "continue": "Continue",
+                "cancelBtn": "Cancel"
+            },
+            "nextStepsDialog": {
+                "successTitle": "Deployment Successful",
+                "successMessage": "Your changes have been successfully deployed. Here’s what happened and what to do next:",
+                "partialSuccessTitle": "Deployment Partially Successful",
+                "partialSuccessMessage": "Some parts of your deployment succeeded, but there were issues. Review the details below:",
+                "errorTitle": "Deployment Failed",
+                "errorMessage": "There were issues during deployment. Please review the errors below:",
+                "noChangesTitle": "No Changes Deployed",
+                "noChangesMessage": "No changes were detected or deployed this time.",
+                "filesCommitted": {
+                    "title": "Files Committed"
+                },
+                "envAdded": {
+                    "title": "Environment Variables Updated"
+                },
+                "nextSteps": {
+                    "title": "Next Steps"
+                },
+                "errors": {
+                    "title": "Errors Encountered"
+                },
+                "close": "Close",
+                "closeReview": "Close and Review",
+                "debugSection": "Next Steps and Debugging",
+                "debugIntro": "If you encounter issues during deployment:",
+                "buildLogs": "Build Logs",
+                "buildLogsDescription": "In case of an error, review the logs in GitLab under the build jobs for detailed error messages:",
+                "appStatus": "App Status",
+                "appStatusDescription": "If no error messages appear and the app is not working, verify its status in:",
+                "appStatusPattern": "Search for your project, the names follow the pattern:"
+            },
+            "script": {
+                "errors": {
+                    "unauthorized": "Error: Unauthorized",
+                    "namespaceNotAllowed": "The project is not in an allowed group. Please transfer the project to an approved group:",
+                    "invalidEnvs": "The environment variables {keys} are invalid",
+                    "fetchFilesFailed": "Error fetching repository files: {error}",
+                    "commitFailed": "Error: Failed to commit deployment files",
+                    "envUpdateFailed": "Error: Failed to update environment variables",
+                    "deployFailed": "Deployment failed. Please check the logs for more details"
+                },
+                "success": {
+                    "commitSuccess": "Deployment files committed successfully!",
+                    "envUpdateSuccess": "Environment variables updated successfully!",
+                    "deployMessages": {
+                        "deploying": "Your project will be deployed within a few minutes.",
+                        "firstDeploy": "If this is your first auto deployment, you will receive an email with the URL of your application.",
+                        "trackProgress": "You can track the progress of your build by accessing the GitLab project under Build > Pipelines."
+                    }
+                },
+                "actions": {
+                    "allowedGroup": "Allowed Group",
+                    "moveInstruction": ", then move your project to the new group"
+                }
+            }
+        },
+        "usefulLinks": {
+            "buttonText": "Useful Links",
+            "dialogTitle": "Useful Links for Auto Deployment",
+            "dialogDescription": "Here are some resources to assist you during deployment:",
+            "closeButton": "Close",
+            "links": {
+                "podViewerDescription": "Check the status of your deployment and review application logs using the pattern 'username-projectname-deploymentId'."
+            }
+        }
+    },
+    "views": {
+        "auth": {
+            "signInMessage": "Sign in to your account to access your projects and deploy them.",
+            "errors": {
+                "token": "Error creating GitLab access token.",
+                "profile": "Error retrieving user profile from GitLab."
+            }
+        },
+        "index": {
+            "searchLabel": "Search by name or namespace",
+            "sortLabel": "Sort by",
+            "projects": {
+                "noFound": "No projects found",
+                "lastActivity": "Last Activity:",
+                "noDescription": "No description",
+                "sort": {
+                    "nameAscText": "Name (A-Z)",
+                    "nameDscText": "Name (Z-A)",
+                    "editedAscText": "Last Edited (Most Recent)",
+                    "editedDscText": "Last Edited (Least Recent)"
+                },
+                "errors": {
+                    "fetchProjects": "Failed to fetch projects. Please try again."
+                }
+            },
+            "footerMessage": "If your project is not listed here, please ensure it in the auto-cicd group or one of it`s subgroup in GitLab.",
+            "transferProject": "Learn how to transfer your project"
+        },
+        "faq": {
+            "moveProject": "How to Move a Repository to Another Namespace in GitLab",
+            "steps": {
+                "1": "Log in to GitLab: Open your GitLab instance and log in to your account.",
+                "2": "Navigate to the Project: Go to the project you want to move.",
+                "3": "Go to Project Settings: In the left sidebar of your project, click on Settings, then General to open the general settings of the project.",
+                "4": "Expand the 'Advanced' Section: Scroll down to find the Advanced section, and click on it to expand the options.",
+                "5": "Change Namespace: In the Advanced section, you should see a field called 'Transfer project'. Click on the 'Transfer project' button.",
+                "6": "Choose the New Namespace: A dialog will pop up asking you to select the target namespace. You can select either a Group or another user namespace. Select the appropriate namespace (auto-cicd or a subgroup) and click Transfer project.",
+                "7": "Confirmation: GitLab will ask you to confirm the move. Once confirmed, the repository will be transferred to the new namespace."
+            }
+        },
+        "noGroup": {
+            "title": "Group Membership Required",
+            "alert": "You need to be a member of an Auto CI/CD subgroup to use this application.",
+            "instructions": "To gain access, please follow these steps:",
+            "step1": "Visit our group management app to create your subgroup",
+            "step2": "Return here and log in again after creating your subgroup",
+            "createButton": "Create Subgroup in GitLab",
+            "backButton": "Back to Login"
+        }
+    }
+}
