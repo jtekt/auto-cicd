@@ -17,7 +17,8 @@
                     "installCommand": "Install Command",
                     "buildCommand": "Build Command",
                     "outputFile": "Output File",
-                    "port": "Port"
+                    "port": "Port",
+                    "outputFileDescription": "The path to the app’s starting file. For built projects, it’s the file created after building (e.g., 'dist/main.js'). For non-built projects, it’s the file used to run the app."
                 },
                 "envSettings": {
                     "title": "Environment Variables",
@@ -88,7 +89,7 @@
                     "commitFailed": "Error: Failed to commit deployment files",
                     "envUpdateFailed": "Error: Failed to update environment variables",
                     "deployFailed": "Deployment failed. Please check the logs for more details",
-                    "fileGenerationFailed": "Error: Failed to generate deployment files"
+                    "fileGenerationFailed": "Failed to generate deployment files: {error}"
                 },
                 "success": {
                     "commitSuccess": "Deployment files committed successfully!",

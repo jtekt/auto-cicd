@@ -23,7 +23,7 @@ import type {
 import { getDefaultProjectConfig } from "@/libs/deploy/config";
 import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@/stores/toast";
-import { useLocale } from "vuetify";
+import { useI18n } from "vue-i18n";
 
 type Env = {
   key: string;
@@ -35,7 +35,7 @@ type Env = {
 export const useDeployStore = defineStore("deploy", () => {
   const authStore = useAuthStore();
   const toast = useToast();
-  const { t } = useLocale();
+  const { t } = useI18n();
 
   // State
   const project = ref<ProjectNode | null>(null);
@@ -202,6 +202,7 @@ export const useDeployStore = defineStore("deploy", () => {
     );
 
     if (!generatedFiles.success) {
+      console.error("File generation error:", generatedFiles.error);
       toast.error(
         t("components.deployHandler.script.errors.fileGenerationFailed", {
           error: generatedFiles.error,

@@ -17,7 +17,8 @@
                     "installCommand": "インストールコマンド",
                     "buildCommand": "ビルドコマンド",
                     "outputFile": "Output File",
-                    "port": "ポート"
+                    "port": "ポート",
+                    "outputFileDescription": "アプリの開始ファイルへのパス。ビルドが必要な場合、ビルド後に作成されたファイル（例: 'dist/main.js'）。ビルドが不要な場合、アプリの実行に使うファイル。"
                 },
                 "envSettings": {
                     "title": "環境変数",

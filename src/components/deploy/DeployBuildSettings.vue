@@ -58,7 +58,18 @@
             : 'text-warning'
         "
         :loading="isSearching"
-      />
+        append-inner-icon="mdi-help-circle-outline"
+      >
+        <template v-slot:append-inner>
+          <v-tooltip activator="parent">
+            <span>{{
+              t(
+                "components.deployHandler.deployDialog.buildSettings.outputFileDescription"
+              )
+            }}</span>
+          </v-tooltip>
+        </template>
+      </v-text-field>
       <v-text-field
         v-if="selectedFramework.userConfigurable?.port"
         v-model="deployStore.projectConfig.port"
