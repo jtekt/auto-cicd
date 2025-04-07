@@ -14,10 +14,21 @@ import App from "./App.vue";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 
-const pinia = createPinia();
+declare global {
+  interface Window {
+    __APP_CONFIG__?: Record<string, string>;
+  }
+}
+
 const app = createApp(App);
 
+const config = window.__APP_CONFIG__ || {};
+
+app.provide("appConfig", config);
+
 registerPlugins(app);
+
+const pinia = createPinia();
 
 app.use(pinia);
 app.mount("#app");
