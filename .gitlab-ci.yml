@@ -59,7 +59,7 @@ deploy-job:
       | kubectl apply -f -
   script:
     # Apply the ConfigMap
-    - envsubst < app-config-map.yml | kubectl apply -f -
+    - kubectl apply -f app-config-map.yml
     # Apply the Deployment
     - envsubst < kubernetes_manifest.yml | kubectl apply -f -
 
