@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { generateDockerfile } from "./dockerfile-template";
+import { generateDockerfile } from "./";
 import type { ProjectConfig } from "@/types/app-config";
-import { getDefaultProjectConfig } from "../deploy/config";
+import { getDefaultProjectConfig } from "@/libs/deploy/config";
 
 describe("generateDockerfile", () => {
   it("generates a Dockerfile for Vite with custom install and build commands", async () => {

@@ -1,18 +1,9 @@
 import type { ProjectConfig } from "@/types/app-config";
-
-type GenerateKubernetesResult =
-  | {
-      success: true;
-      content: string;
-    }
-  | {
-      success: false;
-      error: string;
-    };
+import type { Result } from "@/types/result";
 
 export const generateKubernetesManifest = async (
   config: ProjectConfig
-): Promise<GenerateKubernetesResult> => {
+): Promise<Result<string>> => {
   try {
     // Fetch the Kubernetes template
     const templatePath = `/templates/kubernetes_manifest-template.yml`;

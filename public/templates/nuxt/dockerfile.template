@@ -21,4 +21,4 @@ ENV HOST=0.0.0.0
 EXPOSE {PORT}
 
 # Start the application
-CMD ["node", "{OUTPUT_DIR}/server/index.mjs"]
+CMD ["node", "{OUTPUT_FILENAME}"]

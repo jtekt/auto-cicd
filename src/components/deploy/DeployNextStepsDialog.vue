@@ -102,85 +102,85 @@
             </p>
           </div>
         </div>
-      </v-card-text>
 
-      <!-- Debugging Information Section -->
-      <div class="mb-6">
-        <h3 class="text-subtitle-s font-weight-medium mb-2">
-          {{ t("components.deployHandler.nextStepsDialog.debugSection") }}
-        </h3>
-        <v-alert type="info" variant="tonal" density="compact" class="mt-2">
-          <p class="text-body-2 mb-2">
-            {{ t("components.deployHandler.nextStepsDialog.debugIntro") }}
-          </p>
-          <ul class="text-body-2">
-            <li>
-              <strong
-                >{{
-                  t("components.deployHandler.nextStepsDialog.buildLogs")
-                }}:</strong
-              >
-              {{
-                t(
-                  "components.deployHandler.nextStepsDialog.buildLogsDescription"
-                )
-              }}
-              <div class="my-4">
-                <a
-                  :href="`${deployStore.project?.webUrl}/-/jobs`"
-                  target="_blank"
+        <!-- Debugging Information Section -->
+        <div class="mb-6">
+          <h3 class="text-subtitle-s font-weight-medium mb-2">
+            {{ t("components.deployHandler.nextStepsDialog.debugSection") }}
+          </h3>
+          <v-alert type="info" variant="tonal" density="compact" class="mt-2">
+            <p class="text-body-2 mb-2">
+              {{ t("components.deployHandler.nextStepsDialog.debugIntro") }}
+            </p>
+            <ul class="text-body-2">
+              <li>
+                <strong
+                  >{{
+                    t("components.deployHandler.nextStepsDialog.buildLogs")
+                  }}:</strong
                 >
-                  <img
-                    src="/icons/GitLab.svg"
-                    alt="gitLab"
-                    style="
-                      width: 30px;
-                      height: 30px;
-                      margin-right: 10px;
-                      vertical-align: middle;
-                    "
-                  />
-                  <span>Gitlab</span>
-                </a>
-              </div>
-            </li>
-            <li class="mt-2">
-              <strong
-                >{{
-                  t("components.deployHandler.nextStepsDialog.appStatus")
-                }}:</strong
-              >
-              {{
-                t(
-                  "components.deployHandler.nextStepsDialog.appStatusDescription"
-                )
-              }}
-              <div class="my-4">
-                <a
-                  href="http://172.16.98.151:31030/namespaces/auto-cicd/pods"
-                  target="_blank"
+                {{
+                  t(
+                    "components.deployHandler.nextStepsDialog.buildLogsDescription"
+                  )
+                }}
+                <div class="my-4">
+                  <a
+                    :href="`${deployStore.project?.webUrl}/-/jobs`"
+                    target="_blank"
+                  >
+                    <img
+                      src="/icons/GitLab.svg"
+                      alt="gitLab"
+                      style="
+                        width: 30px;
+                        height: 30px;
+                        margin-right: 10px;
+                        vertical-align: middle;
+                      "
+                    />
+                    <span>Gitlab</span>
+                  </a>
+                </div>
+              </li>
+              <li class="mt-2">
+                <strong
+                  >{{
+                    t("components.deployHandler.nextStepsDialog.appStatus")
+                  }}:</strong
                 >
-                  <img
-                    src="/icons/podviewer.png"
-                    alt="podViewer"
-                    style="
-                      width: 30px;
-                      height: 30px;
-                      margin-right: 10px;
-                      vertical-align: middle;
-                    "
-                  />
-                  <span>PodViewer</span>
-                </a>
-              </div>
-              {{
-                t("components.deployHandler.nextStepsDialog.appStatusPattern")
-              }}
-              <strong>username-projectname-deploymentId</strong>.
-            </li>
-          </ul>
-        </v-alert>
-      </div>
+                {{
+                  t(
+                    "components.deployHandler.nextStepsDialog.appStatusDescription"
+                  )
+                }}
+                <div class="my-4">
+                  <a
+                    href="http://172.16.98.151:31030/namespaces/auto-cicd/pods"
+                    target="_blank"
+                  >
+                    <img
+                      src="/icons/podviewer.png"
+                      alt="podViewer"
+                      style="
+                        width: 30px;
+                        height: 30px;
+                        margin-right: 10px;
+                        vertical-align: middle;
+                      "
+                    />
+                    <span>PodViewer</span>
+                  </a>
+                </div>
+                {{
+                  t("components.deployHandler.nextStepsDialog.appStatusPattern")
+                }}
+                <strong>username-projectname-deploymentId</strong>.
+              </li>
+            </ul>
+          </v-alert>
+        </div>
+      </v-card-text>
 
       <v-card-actions class="pa-4">
         <v-spacer />

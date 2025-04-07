@@ -46,13 +46,13 @@ export const packageManagers: Record<
     commands: { install: "pip install --no-cache-dir -r requirements.txt" },
     detectionFiles: [{ file: "requirements.txt" }],
   },
-  poetry: {
-    name: "poetry",
-    commands: {
-      install: "poetry install --no-root",
-    },
-    detectionFiles: [{ file: "pyproject.toml" }],
-  },
+  // poetry: {
+  //   name: "poetry",
+  //   commands: {
+  //     install: "poetry install --no-root",
+  //   },
+  //   detectionFiles: [{ file: "pyproject.toml" }],
+  // },
 };
 
 export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
@@ -65,11 +65,10 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     userConfigurable: {
       buildCommand: { defaultEmpty: false },
       installCommand: true,
-      outputDir: true,
-      rootDir: true,
+      outputFile: true,
+      port: true,
     },
-    outputDir: "dist",
-    rootDir: "./",
+    outputFile: "dist/index.html",
     port: 5173,
     files: ["nginx.conf"],
     configFiles: [
@@ -108,11 +107,9 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     userConfigurable: {
       buildCommand: { defaultEmpty: false },
       installCommand: true,
-      outputDir: true,
-      rootDir: true,
+      outputFile: true,
     },
-    outputDir: ".output",
-    rootDir: "./",
+    outputFile: "/app/server/index.mjs",
     port: 3000,
     files: [],
     configFiles: [
@@ -151,11 +148,10 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     userConfigurable: {
       buildCommand: { defaultEmpty: false },
       installCommand: true,
-      outputDir: true,
-      rootDir: true,
+      outputFile: true,
+      port: true,
     },
-    outputDir: ".next",
-    rootDir: "./",
+    outputFile: ".next/server.js",
     port: 3000,
     files: [],
     configFiles: [
@@ -202,13 +198,10 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
         defaultEmpty: true,
       },
       installCommand: true,
-      outputDir: true,
-      rootDir: true,
-      outputFileName: true,
+      outputFile: true,
+      port: true,
     },
-    outputDir: "./",
-    rootDir: "./",
-    outputFileName: "app.js",
+    outputFile: "app.js",
     port: 3000,
     files: [],
     configFiles: [{ file: ["package.json"], checkFor: ["express"] }],
@@ -227,12 +220,11 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     image: { type: "img", value: "/icons/FastAPI.svg" },
     langs: ["python"],
     userConfigurable: {
-      rootDir: true,
       installCommand: true,
-      outputFileName: true,
+      outputFile: true,
+      port: true,
     },
-    rootDir: "./",
-    outputFileName: "main.py",
+    outputFile: "main.py",
     port: 8000,
     files: [],
     configFiles: [
@@ -241,7 +233,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     ],
     supportedManagers: [
       { manager: "pip", requiredFiles: ["requirements.txt"] },
-      { manager: "poetry", requiredFiles: ["pyproject.toml"] },
+      // { manager: "poetry", requiredFiles: ["pyproject.toml"] },
     ],
     defaultManager: "pip",
   },
@@ -252,12 +244,11 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     image: { type: "img", value: "/icons/Streamlit.svg" },
     langs: ["python"],
     userConfigurable: {
-      rootDir: true,
       installCommand: true,
-      outputFileName: true,
+      outputFile: true,
+      port: true,
     },
-    rootDir: "./",
-    outputFileName: "app.py",
+    outputFile: "app.py",
     port: 8501,
     files: [],
     configFiles: [
@@ -266,7 +257,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     ],
     supportedManagers: [
       { manager: "pip", requiredFiles: ["requirements.txt"] },
-      { manager: "poetry", requiredFiles: ["pyproject.toml"] },
+      // { manager: "poetry", requiredFiles: ["pyproject.toml"] },
     ],
     defaultManager: "pip",
   },
@@ -275,8 +266,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     name: "Unknown Framework",
     language: "javascript",
     image: { type: "icon", value: "mdi-help-circle-outline" },
-    outputDir: "dist",
-    rootDir: "./",
+    outputFile: "index.js",
     port: 3000,
     supportedManagers: [],
     defaultManager: "npm",
@@ -301,8 +291,8 @@ export const getConfigFiles = (lang?: string) => {
     }
 
     // Add output file name if it exists
-    if (frameworkConfig.outputFileName) {
-      uniqueFiles.add(frameworkConfig.outputFileName);
+    if (frameworkConfig.outputFile) {
+      uniqueFiles.add(frameworkConfig.outputFile);
     }
 
     // Handle required files (can be strings or arrays of strings)

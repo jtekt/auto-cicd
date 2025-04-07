@@ -12,32 +12,6 @@
         }}
       </p>
       <v-text-field
-        v-if="selectedFramework.userConfigurable?.rootDir"
-        v-model="deployStore.projectConfig.rootDir"
-        :label="
-          t('components.deployHandler.deployDialog.buildSettings.rootDir')
-        "
-        variant="outlined"
-        :class="
-          deployStore.projectConfig.rootDir === selectedFramework.rootDir
-            ? ''
-            : 'text-warning'
-        "
-      />
-      <v-text-field
-        v-if="selectedFramework.userConfigurable?.outputDir"
-        v-model="deployStore.projectConfig.outputDir"
-        :label="
-          t('components.deployHandler.deployDialog.buildSettings.outputDir')
-        "
-        variant="outlined"
-        :class="
-          deployStore.projectConfig.outputDir === selectedFramework.outputDir
-            ? ''
-            : 'text-warning'
-        "
-      />
-      <v-text-field
         v-if="selectedFramework.userConfigurable?.installCommand"
         v-model="deployStore.projectConfig.installCommand"
         :label="
@@ -70,22 +44,31 @@
         "
       />
       <v-text-field
-        v-if="selectedFramework.userConfigurable?.outputFileName"
-        v-model="deployStore.projectConfig.outputFileName"
+        v-if="selectedFramework.userConfigurable?.outputFile"
+        v-model="deployStore.projectConfig.outputFile"
         :label="
-          t(
-            'components.deployHandler.deployDialog.buildSettings.outputFileName'
-          )
+          t('components.deployHandler.deployDialog.buildSettings.outputFile')
         "
         variant="outlined"
         :class="
           deployStore.repositoryFiles.find(
-            (f) => f.fileName === deployStore.projectConfig.outputFileName
+            (f) => f.fileName === deployStore.projectConfig.outputFile
           )
             ? ''
             : 'text-warning'
         "
         :loading="isSearching"
+      />
+      <v-text-field
+        v-if="selectedFramework.userConfigurable?.port"
+        v-model="deployStore.projectConfig.port"
+        :label="t('components.deployHandler.deployDialog.buildSettings.port')"
+        variant="outlined"
+        :class="
+          deployStore.projectConfig.port === selectedFramework.port
+            ? ''
+            : 'text-warning'
+        "
       />
     </v-expansion-panel-text>
   </v-expansion-panel>
@@ -126,15 +109,17 @@ const searchFileDebounced = debounce((fileName: string) => {
   }
 }, 800); // 800ms debounce delay
 
-// Watch outputFileName
+// Watch outputFile
 watch(
-  () => deployStore.projectConfig.outputFileName,
+  () => deployStore.projectConfig.outputFile,
   (newValue, oldValue) => {
     if (
-      selectedFramework.value.userConfigurable?.outputFileName &&
+      selectedFramework.value.userConfigurable?.outputFile &&
+      newValue &&
       newValue !== oldValue &&
-      newValue !== selectedFramework.value.outputFileName &&
-      newValue
+      newValue !== selectedFramework.value.outputFile &&
+      deployStore.repositoryFiles.find((f) => f.fileName === newValue) ===
+        undefined
     ) {
       searchFileDebounced(newValue);
     }

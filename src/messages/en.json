@@ -14,11 +14,10 @@
                 "buildSettings": {
                     "title": "Build and Output Settings",
                     "description": "These are the default configurations for a {framework} project. If your project requires different settings, you can modify them as needed.",
-                    "rootDir": "Root Directory",
-                    "outputDir": "Output Directory",
                     "installCommand": "Install Command",
                     "buildCommand": "Build Command",
-                    "outputFileName": "Output File Name"
+                    "outputFile": "Output File",
+                    "port": "Port"
                 },
                 "envSettings": {
                     "title": "Environment Variables",
@@ -88,7 +87,8 @@
                     "fetchFilesFailed": "Error fetching repository files: {error}",
                     "commitFailed": "Error: Failed to commit deployment files",
                     "envUpdateFailed": "Error: Failed to update environment variables",
-                    "deployFailed": "Deployment failed. Please check the logs for more details"
+                    "deployFailed": "Deployment failed. Please check the logs for more details",
+                    "fileGenerationFailed": "Error: Failed to generate deployment files"
                 },
                 "success": {
                     "commitSuccess": "Deployment files committed successfully!",

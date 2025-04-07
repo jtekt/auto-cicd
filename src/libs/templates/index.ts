@@ -1,15 +1,17 @@
 import type { ManagedFile, ProjectConfig } from "@/types/app-config";
-import { generateDockerfile } from "./dockerfile-template";
+import { generateDockerfile } from "./dockerfile";
 import { generateGitLabCI } from "./gitlab-ci-template";
 import { generateKubernetesManifest } from "./kubernetes-manifest-template";
 import { generateNginxConf } from "./nginx-template";
 import type { ProjectNode } from "@/types/project";
+import type { Result } from "@/types/result";
 
 export const generateFiles = async (
   config: ProjectConfig,
   project: ProjectNode,
   username: string
-): Promise<{ fileName: ManagedFile; content: string }[]> => {
+): Promise<Result<{ fileName: ManagedFile; content: string }[]>> => {
+  const errors: string[] = [];
   const files: { fileName: ManagedFile; content: string }[] = [];
 
   // Mandatory files
@@ -19,6 +21,8 @@ export const generateFiles = async (
       fileName: "Dockerfile",
       content: dockerFile.content,
     });
+  } else {
+    errors.push(dockerFile.error);
   }
 
   const gitlabCI = await generateGitLabCI(config, project, username);
@@ -27,6 +31,8 @@ export const generateFiles = async (
       fileName: ".gitlab-ci.yml",
       content: gitlabCI.content,
     });
+  } else {
+    errors.push(gitlabCI.error);
   }
 
   const kubernetesFile = await generateKubernetesManifest(config);
@@ -35,6 +41,8 @@ export const generateFiles = async (
       fileName: "kubernetes_manifest.yml",
       content: kubernetesFile.content,
     });
+  } else {
+    errors.push(kubernetesFile.error);
   }
 
   // Optional files
@@ -46,9 +54,18 @@ export const generateFiles = async (
           fileName: "nginx.conf",
           content: nginxFile.content,
         });
+      } else {
+        errors.push(nginxFile.error);
       }
     }
   }
 
-  return files;
+  if (errors.length > 0) {
+    return {
+      success: false,
+      error: errors.join("; "),
+    };
+  }
+
+  return { success: true, content: files };
 };

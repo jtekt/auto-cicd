@@ -5,7 +5,9 @@ FROM node:22-slim as base
 WORKDIR /app
 
 # Install dependencies
-COPY package.json {ROOT_DIR}
+COPY package.json ./
+
+# Install dependencies
 RUN {INSTALL_COMMAND}
 
 # Copy all source code
@@ -19,4 +21,4 @@ ENV PORT={PORT}
 EXPOSE {PORT}
 
 # Start the application
-CMD ["node", "{OUTPUT_DIR}{OUTPUT_FILENAME}"]
+CMD ["node", "{OUTPUT_DIRECTORY}{OUTPUT_FILENAME}"]

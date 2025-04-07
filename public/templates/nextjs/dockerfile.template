@@ -8,7 +8,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* {ROOT_DIR}
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* /
 RUN {INSTALL_COMMAND}
 
 # Rebuild the source code only when needed
@@ -30,18 +30,21 @@ ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app/public {ROOT_DIR}public
+COPY --from=builder /app/public /public
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder /app/.next/standalone {ROOT_DIR}
-COPY --from=builder /app/.next/static {ROOT_DIR}.next/static
+COPY --from=builder /app/.next/standalone /
+COPY --from=builder /app/.next/static /.next/static
 
-EXPOSE {PORT}
-
+# Define environment variables
+ENV NODE_ENV=production
 ENV PORT={PORT}
+
+# Expose the port the application will run on
+EXPOSE {PORT}
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
 ENV HOSTNAME="0.0.0.0"
-CMD ["node", "server.js"]
+CMD ["node", {OUTPUT_FILENAME}]

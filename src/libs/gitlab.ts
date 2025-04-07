@@ -172,7 +172,9 @@ export const getGitLabFiles = async ({
         project: {
           repository: {
             blobs: {
-              edges: Array<{ node: { name: string; rawBlob: string } }>;
+              edges: Array<{
+                node: { name: string; rawBlob: string; path: string };
+              }>;
             };
           };
         };
@@ -187,7 +189,7 @@ export const getGitLabFiles = async ({
               blobs(ref: "${
                 project.repository.rootRef
               }", paths: ${JSON.stringify(paths)}) {
-                edges { node { name rawBlob } }
+                edges { node { name rawBlob path } }
               }
             }
           }
@@ -195,10 +197,11 @@ export const getGitLabFiles = async ({
       },
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
+
     return {
       success: true,
       data: res.data.data.project.repository.blobs.edges.map((e) => ({
-        fileName: e.node.name,
+        fileName: e.node.path,
         content: e.node.rawBlob,
       })),
     };

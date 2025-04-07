@@ -108,9 +108,9 @@
             class="mb-5"
             v-if="
               frameworksConfig[deployStore.projectConfig.framework]
-                .userConfigurable?.outputFileName &&
+                .userConfigurable?.outputFile &&
               !deployStore.repositoryFiles.find(
-                (f) => f.fileName === deployStore.projectConfig.outputFileName
+                (f) => f.fileName === deployStore.projectConfig.outputFile
               )
             "
           >
@@ -119,7 +119,7 @@
                 framework: deployStore.projectConfig.framework,
                 defaultFilename:
                   frameworksConfig[deployStore.projectConfig.framework]
-                    .outputFileName,
+                    .outputFile,
               })
             }}
           </v-alert>

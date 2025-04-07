@@ -14,11 +14,10 @@
                 "buildSettings": {
                     "title": "ビルドと出力設定",
                     "description": "{framework} プロジェクトのデフォルト設定です。プロジェクトに異なる設定が必要な場合、必要に応じて変更できます。",
-                    "rootDir": "ルートディレクトリ",
-                    "outputDir": "出力ディレクトリ",
                     "installCommand": "インストールコマンド",
                     "buildCommand": "ビルドコマンド",
-                    "outputFileName": "Output File Name"
+                    "outputFile": "Output File",
+                    "port": "ポート"
                 },
                 "envSettings": {
                     "title": "環境変数",
@@ -88,7 +87,8 @@
                     "fetchFilesFailed": "リポジトリファイルの取得エラー：{error}",
                     "commitFailed": "エラー：デプロイファイルのコミットに失敗しました",
                     "envUpdateFailed": "エラー：環境変数の更新に失敗しました",
-                    "deployFailed": "デプロイに失敗しました。詳細はログを確認してください"
+                    "deployFailed": "デプロイに失敗しました。詳細はログを確認してください",
+                    "fileGenerationFailed": "エラー：デプロイファイルの生成に失敗しました"
                 },
                 "success": {
                     "commitSuccess": "デプロイファイルが正常にコミットされました！",

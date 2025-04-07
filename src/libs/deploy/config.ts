@@ -26,9 +26,7 @@ export const getDefaultProjectConfig = (
     buildCommand: !framework.userConfigurable?.buildCommand?.defaultEmpty
       ? managerConfig.commands.build
       : undefined,
-    outputFileName: framework.outputFileName,
-    outputDir: framework.outputDir || "",
-    rootDir: framework.rootDir || "./",
+    outputFile: framework.outputFile,
     port: framework.port || 3000,
     files: framework.files || [],
   };

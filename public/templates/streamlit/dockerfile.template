@@ -13,7 +13,10 @@ RUN {INSTALL_COMMAND}
 # Copy the rest of the application code into the container
 COPY . .
 
-# Expose the port that Streamlit will run on
+# Define environment variables
+ENV PORT={PORT}
+
+# Expose the port the application will run on
 EXPOSE {PORT}
 
 # Set the entry point for Streamlit

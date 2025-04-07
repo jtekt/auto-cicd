@@ -1,18 +1,9 @@
 import type { ProjectConfig } from "@/types/app-config";
-
-type GenerateNginxResult =
-  | {
-      success: true;
-      content: string;
-    }
-  | {
-      success: false;
-      error: string;
-    };
+import type { Result } from "@/types/result";
 
 export const generateNginxConf = async (
   config: ProjectConfig
-): Promise<GenerateNginxResult> => {
+): Promise<Result<string>> => {
   try {
     // Fetch the nginx.conf template
     const templatePath = `/templates/${config.framework}/nginx.conf.template`;

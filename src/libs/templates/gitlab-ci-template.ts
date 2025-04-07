@@ -1,24 +1,15 @@
 import { env } from "@/config/env";
 import type { ProjectConfig } from "@/types/app-config";
 import type { ProjectNode } from "@/types/project";
+import type { Result } from "@/types/result";
 
 const PUBLIC_BASE = (globalThis as any).BASE_PUBLIC_URL || "";
-
-type GenerateGitLabCIResult =
-  | {
-      success: true;
-      content: string;
-    }
-  | {
-      success: false;
-      error: string;
-    };
 
 export const generateGitLabCI = async (
   config: ProjectConfig,
   project: Pick<ProjectNode, "namespace" | "repository" | "projectName">,
   username: string
-): Promise<GenerateGitLabCIResult> => {
+): Promise<Result<string>> => {
   try {
     const response = await fetch(
       `${PUBLIC_BASE}/templates/.gitlab-ci-template.yml`

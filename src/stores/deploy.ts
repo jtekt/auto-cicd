@@ -201,7 +201,17 @@ export const useDeployStore = defineStore("deploy", () => {
       authStore.session.user.nickname
     );
 
-    injectFiles.value = generatedFiles.reduce((fs, file) => {
+    if (!generatedFiles.success) {
+      toast.error(
+        t("components.deployHandler.script.errors.fileGenerationFailed", {
+          error: generatedFiles.error,
+        })
+      );
+      isLoading.value = false;
+      return;
+    }
+
+    injectFiles.value = generatedFiles.content.reduce((fs, file) => {
       const originalFile = repositoryFiles.value.find(
         (original) => original.fileName === file.fileName
       );

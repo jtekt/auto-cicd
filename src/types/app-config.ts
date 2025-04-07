@@ -6,7 +6,7 @@ export type AcceptedFramework =
   | "streamlit"
   | "fastapi"
   | "unknown";
-export type AcceptedPackageManager = "npm" | "yarn" | "pnpm" | "pip" | "poetry";
+export type AcceptedPackageManager = "npm" | "yarn" | "pnpm" | "pip";
 export type Language = "javascript" | "python";
 export type OptionalFiles = "nginx.conf"; // Optional files exclusive to some frameworks
 export type ManagedFile =
@@ -35,14 +35,14 @@ export type ProjectConfig = {
   language: Language;
   framework: AcceptedFramework;
   manager: AcceptedPackageManager;
-  installCommand: string; // Explicitly set based on manager/framework
-  buildCommand?: string; // Optional, based on framework
-  outputFileName?: string; // Optional, based on framework
-  outputDir: string;
-  rootDir: string;
-  port: number;
   files: OptionalFiles[]; // Optional files to generate
   runtimeDependencies?: string[]; // For Python frameworks
+
+  // User configurable commands
+  installCommand: string; // Explicitly set based on manager/framework
+  buildCommand?: string; // Optional, based on framework
+  outputFile: string; // Optional, based on framework
+  port: number;
 };
 
 export type FrameworkConfig = {
@@ -56,13 +56,10 @@ export type FrameworkConfig = {
     buildCommand?: {
       defaultEmpty: boolean;
     };
-    outputDir?: true;
-    outputFileName?: true;
-    rootDir?: true;
+    outputFile?: true;
+    port?: true;
   };
-  outputDir?: string;
-  outputFileName?: string;
-  rootDir?: string;
+  outputFile: string;
   port?: number;
   files?: OptionalFiles[];
   configFiles?: { file: string[]; checkFor: string[] }[]; // What files and variations to check and what key words to look for
