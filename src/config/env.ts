@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { inject } from "vue";
 
 const config = inject("appConfig") as Record<string, string>;
 
-import { inject } from "vue";
+console.log("App config envs", config);
 
 const envSchema = z.object({
   GITLAB_OAUTH_ID: z.string().trim(),

@@ -24,6 +24,8 @@ const app = createApp(App);
 
 const config = window.__APP_CONFIG__ || {};
 
+console.log("App config - main", config);
+
 app.provide("appConfig", config);
 
 registerPlugins(app);
