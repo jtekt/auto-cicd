@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { inject } from "vue";
 
-const config = inject("appConfig") as Record<string, string>;
+const config = window.__APP_CONFIG__ || {};
 
 console.log("App config envs", config);
 

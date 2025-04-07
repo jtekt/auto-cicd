@@ -17,7 +17,7 @@ spec:
           image: ${CONTAINER_IMAGE_TAGGED}
           volumeMounts:
             - name: app-config-volume
-              mountPath: /app/dist/config.js
+              mountPath: /usr/share/nginx/html/config.js
               subPath: config.js
       volumes:
         - name: app-config-volume
