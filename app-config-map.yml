@@ -8,6 +8,6 @@ data:
       GITLAB_URL: "http://10.115.1.14",
       GITLAB_OAUTH_ID: "cc0f76a696f2d509832145636d714d66095b82b47981975b25501e7739d4e255",
       GITLAB_OAUTH_REDIRECT_URI_PATH: "auth",
-      GITLAB_OAUTH_STATE_VALIDATOR: "auth-cicd",
-      DEPLOYED_NAMESPACE: "auth-cicd"
+      GITLAB_OAUTH_STATE_VALIDATOR: "auto-cicd-state",
+      DEPLOYED_NAMESPACE: "auto-cicd"
     };
