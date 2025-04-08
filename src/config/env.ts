@@ -2,6 +2,19 @@ import { z } from "zod";
 
 const config = window.__APP_CONFIG__ || {};
 
+console.log("Config", config, {
+  GITLAB_OAUTH_ID: config.GITLAB_OAUTH_ID || import.meta.env.GITLAB_OAUTH_ID,
+  GITLAB_URL: config.GITLAB_URL || import.meta.env.GITLAB_URL,
+  OAUTH_REDIRECT_URI_PATH:
+    config.OAUTH_REDIRECT_URI_PATH ||
+    import.meta.env.GITLAB_OAUTH_REDIRECT_URI_PATH,
+  OAUTH_STATE_VALIDATOR:
+    config.OAUTH_STATE_VALIDATOR ||
+    import.meta.env.GITLAB_OAUTH_STATE_VALIDATOR,
+  DEPLOYED_NAMESPACE:
+    config.DEPLOYED_NAMESPACE || import.meta.env.DEPLOYED_NAMESPACE,
+});
+
 const envSchema = z.object({
   GITLAB_OAUTH_ID: z.string().trim(),
   GITLAB_URL: z
