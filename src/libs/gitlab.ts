@@ -162,7 +162,7 @@ export const getGitlabProfile = async (
 
       if (hasGroup) return { user, hasGroup };
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
 
     return { user, hasGroup: false };
@@ -187,7 +187,6 @@ export const getGitLabFiles = async ({
     }
   | { success: false; error: string }
 > => {
-  console.log(import.meta.env.VITE_APP_GITLAB_URL);
   try {
     const res = await axios.post<{
       data: {
