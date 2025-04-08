@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="usefulLinks.length > 0">
     <v-btn
       variant="elevated"
       color="primary"
@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { useLocale } from "vuetify";
 import { ref } from "vue";
+import { env } from "@/config/env";
 
 const { t } = useLocale();
 
@@ -77,11 +78,15 @@ const dialog = ref(false);
 
 // List of useful links with icons, URLs, and description keys
 const usefulLinks = [
-  {
-    name: "PodViewer",
-    icon: "/icons/podviewer.png",
-    url: "http://172.16.98.151:31030/namespaces/auto-cicd/pods",
-    descriptionKey: "components.usefulLinks.links.podViewerDescription",
-  },
+  ...(env.POD_VIEWER_URL
+    ? [
+        {
+          name: "PodViewer",
+          icon: "/icons/podviewer.png",
+          url: env.POD_VIEWER_URL,
+          descriptionKey: "components.usefulLinks.links.podViewerDescription",
+        },
+      ]
+    : []),
 ];
 </script>

@@ -143,7 +143,7 @@
                   </a>
                 </div>
               </li>
-              <li class="mt-2">
+              <li v-if="env.POD_VIEWER_URL" class="mt-2">
                 <strong
                   >{{
                     t("components.deployHandler.nextStepsDialog.appStatus")
@@ -155,10 +155,7 @@
                   )
                 }}
                 <div class="my-4">
-                  <a
-                    href="http://172.16.98.151:31030/namespaces/auto-cicd/pods"
-                    target="_blank"
-                  >
+                  <a :href="env.POD_VIEWER_URL" target="_blank">
                     <img
                       src="/icons/podviewer.png"
                       alt="podViewer"
@@ -206,6 +203,7 @@
 import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
 import { computed } from "vue";
+import { env } from "@/config/env";
 
 const { t } = useLocale();
 const deployStore = useDeployStore();
