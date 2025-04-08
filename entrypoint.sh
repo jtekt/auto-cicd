@@ -16,8 +16,6 @@ do
 
   sed -i 's|VITE_APP_POD_VIEWER_URL_PLACEHOLDER|'${VITE_APP_POD_VIEWER_URL}'|g' $file
 
-
-
 done
 
 echo "Starting Nginx"
