@@ -14,17 +14,7 @@ import App from "./App.vue";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 
-declare global {
-  interface Window {
-    __APP_CONFIG__?: Record<string, string>;
-  }
-}
-
-const config = window.__APP_CONFIG__ || {};
-
 const app = createApp(App);
-
-app.provide("appConfig", config);
 
 registerPlugins(app);
 

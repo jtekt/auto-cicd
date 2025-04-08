@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import axios, { AxiosError } from "axios";
 import type { ProjectNode } from "@/types/project";
-import { env } from "@/config/env";
 import { generateFiles } from "@/libs/templates";
 import {
   getGitLabFiles,
@@ -267,7 +266,9 @@ export const useDeployStore = defineStore("deploy", () => {
 
     if (actions.commit.length) {
       try {
-        const commitUrl = `${env.GITLAB_URL}/api/v4/projects/${project.value.id}/repository/commits`;
+        const commitUrl = `${
+          import.meta.env.VITE_APP_GITLAB_URL
+        }/api/v4/projects/${project.value.id}/repository/commits`;
         await axios.post(
           commitUrl,
           {
@@ -370,7 +371,9 @@ export const useDeployStore = defineStore("deploy", () => {
     if (!authStore.session || !project.value) return;
 
     const existingEnvs = await getEnvs();
-    const url = `${env.GITLAB_URL}/api/v4/projects/${project.value.id}/variables`;
+    const url = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
+      project.value.id
+    }/variables`;
     const config = {
       headers: {
         Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
@@ -400,7 +403,9 @@ export const useDeployStore = defineStore("deploy", () => {
   async function getEnvs() {
     if (!authStore.session || !project.value) return [];
 
-    const apiUrl = `${env.GITLAB_URL}/api/v4/projects/${project.value.id}/variables/${envKey}`;
+    const apiUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
+      project.value.id
+    }/variables/${envKey}`;
     try {
       const response = await axios.get<{
         description: string | null;

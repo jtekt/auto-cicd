@@ -17,15 +17,13 @@ RUN npm run build
 # Deploy the app
 FROM nginx:stable as production-stage
 
-# Set working directory for nginx
-WORKDIR /usr/share/nginx/
-
-# Clean the default html folder and create a new one
-RUN rm -rf html && mkdir html
+RUN mkdir /app
 
 # Copy nginx configuration and built application files
 COPY ./nginx.conf /etc/nginx/
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY --from=build-stage /app/dist /app
 
-# Run the server in the foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Loading environment variables atg runtime
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

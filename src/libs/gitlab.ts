@@ -1,4 +1,3 @@
-import { env } from "@/config/env";
 import axios from "axios";
 import type { Session } from "./auth";
 import { z } from "zod";
@@ -45,15 +44,23 @@ export type User = z.infer<typeof UserSchema>;
 export const createGitlabAuthUrl = () => {
   const scopes = "api profile openid email read_api read_user write_repository";
 
-  const url = new URL(env.GITLAB_URL + "/oauth/authorize");
-  url.searchParams.append("client_id", env.GITLAB_OAUTH_ID);
+  const url = new URL(import.meta.env.VITE_APP_GITLAB_URL + "/oauth/authorize");
+  url.searchParams.append(
+    "client_id",
+    import.meta.env.VITE_APP_GITLAB_OAUTH_ID
+  );
   url.searchParams.append(
     "redirect_uri",
-    window.location.origin + "/" + env.OAUTH_REDIRECT_URI_PATH
+    window.location.origin +
+      "/" +
+      import.meta.env.VITE_APP_OAUTH_REDIRECT_URI_PATH
   );
   url.searchParams.append("response_type", "code");
   url.searchParams.append("scope", scopes);
-  url.searchParams.append("state", env.OAUTH_STATE_VALIDATOR);
+  url.searchParams.append(
+    "state",
+    import.meta.env.VITE_APP_OAUTH_STATE_VALIDATOR
+  );
 
   return url.toString();
 };
@@ -63,16 +70,18 @@ export const createAccessToken = async (
 ): Promise<AccessTokenResponse | null> => {
   try {
     const params = new URLSearchParams();
-    params.append("client_id", env.GITLAB_OAUTH_ID);
+    params.append("client_id", import.meta.env.VITE_APP_GITLAB_OAUTH_ID);
     params.append("grant_type", "authorization_code");
     params.append("code", code);
     params.append(
       "redirect_uri",
-      window.location.origin + "/" + env.OAUTH_REDIRECT_URI_PATH
+      window.location.origin +
+        "/" +
+        import.meta.env.VITE_APP_OAUTH_REDIRECT_URI_PATH
     );
 
     const token = await axios.post<AccessTokenResponse>(
-      env.GITLAB_URL + "/oauth/token",
+      import.meta.env.VITE_APP_GITLAB_URL + "/oauth/token",
       params
     );
 
@@ -88,13 +97,18 @@ export const createAccessToken = async (
 
 export const refreshAccessToken = async (session: Session) => {
   try {
-    const url = new URL(env.GITLAB_URL + "/oauth/token");
-    url.searchParams.append("client_id", env.GITLAB_OAUTH_ID);
+    const url = new URL(import.meta.env.VITE_APP_GITLAB_URL + "/oauth/token");
+    url.searchParams.append(
+      "client_id",
+      import.meta.env.VITE_APP_GITLAB_OAUTH_ID
+    );
     url.searchParams.append("refresh_token", session.auth_token.refresh_token);
     url.searchParams.append("grant_type", "refresh_token");
     url.searchParams.append(
       "redirect_uri",
-      window.location.origin + "/" + env.OAUTH_REDIRECT_URI_PATH
+      window.location.origin +
+        "/" +
+        import.meta.env.VITE_APP_OAUTH_REDIRECT_URI_PATH
     );
     url.searchParams.append("code_verifier", session.auth_token.code);
 
@@ -114,11 +128,14 @@ export const getGitlabProfile = async (
   access_token: string
 ): Promise<{ user?: User; hasGroup: boolean } | null> => {
   try {
-    const res = await axios.get<User>(env.GITLAB_URL + "/oauth/userinfo", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
+    const res = await axios.get<User>(
+      import.meta.env.VITE_APP_GITLAB_URL + "/oauth/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      }
+    );
 
     if (res.status !== 200) return null;
 
@@ -128,15 +145,19 @@ export const getGitlabProfile = async (
     // Verify if user has auto-cicd group already
     try {
       const autoCICDGroup = await axios.get<Group[]>(
-        `${env.GITLAB_URL}/api/v4/groups?search=${encodeURIComponent(
-          `${env.DEPLOYED_NAMESPACE}/${user.nickname}`
+        `${
+          import.meta.env.VITE_APP_GITLAB_URL
+        }/api/v4/groups?search=${encodeURIComponent(
+          `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${user.nickname}`
         )}`
       );
 
       const hasGroup =
         autoCICDGroup.data.length &&
         !!autoCICDGroup.data.find(
-          (g) => g.full_path === `${env.DEPLOYED_NAMESPACE}/${user.nickname}`
+          (g) =>
+            g.full_path ===
+            `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${user.nickname}`
         );
 
       if (hasGroup) return { user, hasGroup };
@@ -166,6 +187,7 @@ export const getGitLabFiles = async ({
     }
   | { success: false; error: string }
 > => {
+  console.log(import.meta.env.VITE_APP_GITLAB_URL);
   try {
     const res = await axios.post<{
       data: {
@@ -181,7 +203,7 @@ export const getGitLabFiles = async ({
         correlationId: string;
       };
     }>(
-      `${env.GITLAB_URL}/api/graphql`,
+      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
       {
         query: `{
           project(fullPath: "${project.fullPath}") {

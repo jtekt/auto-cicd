@@ -143,7 +143,7 @@
                   </a>
                 </div>
               </li>
-              <li v-if="env.POD_VIEWER_URL" class="mt-2">
+              <li v-if="podViewerUrl" class="mt-2">
                 <strong
                   >{{
                     t("components.deployHandler.nextStepsDialog.appStatus")
@@ -155,7 +155,7 @@
                   )
                 }}
                 <div class="my-4">
-                  <a :href="env.POD_VIEWER_URL" target="_blank">
+                  <a :href="podViewerUrl" target="_blank">
                     <img
                       src="/icons/podviewer.png"
                       alt="podViewer"
@@ -172,7 +172,7 @@
                 {{
                   t("components.deployHandler.nextStepsDialog.appStatusPattern")
                 }}
-                <strong>username-projectname-deploymentId</strong>.
+                <strong>username-projectName-deploymentId</strong>.
               </li>
             </ul>
           </v-alert>
@@ -203,7 +203,8 @@
 import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
 import { computed } from "vue";
-import { env } from "@/config/env";
+
+const podViewerUrl = import.meta.env.VITE_APP_POD_VIEWER_URL;
 
 const { t } = useLocale();
 const deployStore = useDeployStore();

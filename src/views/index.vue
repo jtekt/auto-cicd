@@ -160,7 +160,6 @@
 </template>
 
 <script lang="ts" setup>
-import { env } from "@/config/env";
 import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
 import { ref, computed, onMounted, watch } from "vue";
@@ -299,7 +298,9 @@ const fetchProjects = async (clear?: boolean) => {
 
     const pageSize = 16;
 
-    const search = `${env.DEPLOYED_NAMESPACE}/${authStore.session.user.nickname}/${searchQuery.value}`;
+    const search = `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${
+      authStore.session.user.nickname
+    }/${searchQuery.value}`;
 
     const query = `
       {
@@ -354,7 +355,7 @@ const fetchProjects = async (clear?: boolean) => {
     `;
 
     const res = await axios.post<ProjectsResponse>(
-      `${env.GITLAB_URL}/api/graphql`,
+      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
       {
         query,
       },

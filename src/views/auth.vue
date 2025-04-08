@@ -42,7 +42,6 @@
 </template>
 
 <script setup lang="ts">
-import { env } from "@/config/env";
 import {
   createAccessToken,
   createGitlabAuthUrl,
@@ -68,7 +67,7 @@ const toast = useToast();
 onMounted(async () => {
   if (
     typeof route.query.code !== "string" ||
-    route.query.state !== env.OAUTH_STATE_VALIDATOR
+    route.query.state !== import.meta.env.VITE_APP_OAUTH_STATE_VALIDATOR
   ) {
     isLoading.value = false;
     return;
