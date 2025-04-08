@@ -15,6 +15,8 @@ spec:
       containers:
         - name: ${APPLICATION_NAME}
           image: ${CONTAINER_IMAGE_TAGGED}
+          ports:
+            - containerPort: 80
           env:
             - name: VITE_APP_GITLAB_URL
               value: http://10.115.1.14
