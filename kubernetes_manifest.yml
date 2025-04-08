@@ -15,14 +15,6 @@ spec:
       containers:
         - name: ${APPLICATION_NAME}
           image: ${CONTAINER_IMAGE_TAGGED}
-          volumeMounts:
-            - name: app-config-volume
-              mountPath: /usr/share/nginx/html/config.js
-              subPath: config.js
-      volumes:
-        - name: app-config-volume
-          configMap:
-            name: app-config
       imagePullSecrets:
         - name: ${K8S_ECR_SECRET_NAME}
 ---
