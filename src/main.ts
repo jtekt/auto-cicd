@@ -22,8 +22,6 @@ declare global {
 
 const config = window.__APP_CONFIG__ || {};
 
-console.log("App config - main", config);
-
 const app = createApp(App);
 
 app.provide("appConfig", config);
