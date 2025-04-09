@@ -67,7 +67,7 @@ const toast = useToast();
 onMounted(async () => {
   if (
     typeof route.query.code !== "string" ||
-    route.query.state !== import.meta.env.VITE_APP_OAUTH_STATE_VALIDATOR
+    route.query.state !== import.meta.env.VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR
   ) {
     isLoading.value = false;
     return;
