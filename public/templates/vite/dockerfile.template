@@ -21,7 +21,7 @@ RUN rm -rf html && mkdir html
 
 # Copy nginx configuration and built application files
 COPY ./nginx.conf /etc/nginx/
-COPY --from=base /app/{OUTPUT_DIRECTORY}{OUTPUT_FILENAME} /usr/share/nginx/html
+COPY --from=base /app/{OUTPUT_DIRECTORY} /usr/share/nginx/html
 
 # Run the server in the foreground
 CMD ["nginx", "-g", "daemon off;"]
