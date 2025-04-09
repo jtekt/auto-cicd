@@ -15,6 +15,7 @@ declare module 'vue' {
     DeployConfirmDialog: typeof import('./src/components/deploy/DeployConfirmDialog.vue')['default']
     DeployDialog: typeof import('./src/components/deploy/DeployDialog.vue')['default']
     DeployEnvironmentSettings: typeof import('./src/components/deploy/DeployEnvironmentSettings.vue')['default']
+    DeployEnvStatus: typeof import('./src/components/deploy/DeployEnvStatus.vue')['default']
     DeployFrameworkSelector: typeof import('./src/components/deploy/DeployFrameworkSelector.vue')['default']
     DeployHandler: typeof import('./src/components/deploy/DeployHandler.vue')['default']
     DeployNextStepsDialog: typeof import('./src/components/deploy/DeployNextStepsDialog.vue')['default']

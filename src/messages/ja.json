@@ -38,12 +38,6 @@
                 "missingOutputFile": "{framework} のデプロイに必要なデフォルトファイル {defaultFilename} が見つかりませんでした。プロジェクトで異なるファイルを使用している場合は、下のビルドおよび出力設定で変更してください。",
                 "filesSection": "ファイル",
                 "noFileChanges": "ファイルの変更が検出されませんでした",
-                "envSection": "環境変数",
-                "envDescription": "以下の環境変数の変更が適用されます：",
-                "addedVars": "追加された変数",
-                "modifiedVars": "変更された変数",
-                "removedVars": "削除された変数",
-                "noEnvChanges": "環境変数の変更が検出されませんでした",
                 "update": "更新",
                 "create": "作成",
                 "continue": "続行",
@@ -51,7 +45,7 @@
             },
             "nextStepsDialog": {
                 "successTitle": "デプロイ成功",
-                "successMessage": "変更が正常にデプロイされました。以下に何が起こったか、次に何をすべきかを示します：",
+                "successMessage": "変更は正常にデプロイされました。内容は以下の通りです。",
                 "partialSuccessTitle": "デプロイ部分成功",
                 "partialSuccessMessage": "デプロイの一部は成功しましたが、いくつかの問題が発生しました。詳細を確認してください：",
                 "errorTitle": "デプロイ失敗",
@@ -60,9 +54,6 @@
                 "noChangesMessage": "今回は変更が検出されず、デプロイされませんでした。",
                 "filesCommitted": {
                     "title": "コミットされたファイル"
-                },
-                "envAdded": {
-                    "title": "更新された環境変数"
                 },
                 "nextSteps": {
                     "title": "次のステップ"
@@ -79,6 +70,12 @@
                 "appStatus": "アプリの状態",
                 "appStatusDescription": "エラーメッセージが表示されず、アプリが動作しない場合、次の場所でその状態を確認してください：",
                 "appStatusPattern": "プロジェクトを検索してください。名前は以下の形式に従います："
+            },
+            "envStatus": {
+                "title": "環境変数",
+                "added": "追加",
+                "modified": "変更",
+                "removed": "削除"
             },
             "script": {
                 "errors": {

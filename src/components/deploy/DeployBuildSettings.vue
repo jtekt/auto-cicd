@@ -35,8 +35,7 @@
         "
         variant="outlined"
         :class="
-          (selectedFramework.userConfigurable?.buildCommand.defaultEmpty &&
-            !deployStore.projectConfig.buildCommand) ||
+          selectedFramework.userConfigurable?.buildCommand.defaultEmpty ||
           deployStore.projectConfig.buildCommand ===
             packageManagers[deployStore.projectConfig.manager].commands.build
             ? ''
@@ -50,13 +49,7 @@
           t('components.deployHandler.deployDialog.buildSettings.outputFile')
         "
         variant="outlined"
-        :class="
-          deployStore.repositoryFiles.find(
-            (f) => f.fileName === deployStore.projectConfig.outputFile
-          )
-            ? ''
-            : 'text-warning'
-        "
+        :class="deployStore.isOutputFileInvalid ? 'text-warning' : ''"
         :loading="isSearching"
         append-inner-icon="mdi-help-circle-outline"
       >
@@ -127,6 +120,7 @@ watch(
     if (
       selectedFramework.value.userConfigurable?.outputFile &&
       newValue &&
+      deployStore.isOutputFileInvalid &&
       newValue !== oldValue &&
       newValue !== selectedFramework.value.outputFile &&
       deployStore.repositoryFiles.find((f) => f.fileName === newValue) ===

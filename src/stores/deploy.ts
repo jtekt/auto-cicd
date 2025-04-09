@@ -4,7 +4,9 @@ import axios, { AxiosError } from "axios";
 import type { ProjectNode } from "@/types/project";
 import { generateFiles } from "@/libs/templates";
 import {
+  getEnvs,
   getGitLabFiles,
+  updateEnvs,
   type CommitAction,
   type CommitActionObject,
 } from "@/libs/gitlab";
@@ -36,18 +38,28 @@ export const useDeployStore = defineStore("deploy", () => {
   const toast = useToast();
   const { t } = useI18n();
 
-  // State
   const project = ref<ProjectNode | null>(null);
+
+  // Select models
   const frameworkSelector = ref<AcceptedFramework>("unknown");
   const managerSelector = ref<AcceptedPackageManager>("npm");
+
+  // Dialogs models
   const deployDialog = ref(false);
   const confirmDeployDialog = ref(false);
   const nextStepsDialog = ref(false);
+
+  // State
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+
   const projectConfig = ref<ProjectConfig>(getDefaultProjectConfig("unknown"));
+
+  // Environment variables
   const environmentVariables = ref<Env[]>([]);
   const originalEnvironmentVariables = ref<Env[]>([]);
+
+  // Files to be committed
   const injectFiles = ref<
     {
       fileName: string;
@@ -56,16 +68,21 @@ export const useDeployStore = defineStore("deploy", () => {
       isChecked: boolean;
     }[]
   >([]);
+
+  // Files in the repository
   const repositoryFiles = ref<{ fileName: string; content: string }[]>([]);
+
+  // Error messages and deployment info
   const deploymentInfo = ref<{
     filesCommitted: string[];
-    envs: string[];
+    envs: boolean;
     messages: string[];
     errors: string[];
   } | null>(null);
 
   // Computed properties
   const frameworks = computed(() => Object.values(frameworksConfig));
+
   const packageManagersOptions = computed(() => {
     return frameworksConfig[
       projectConfig.value.framework
@@ -74,6 +91,7 @@ export const useDeployStore = defineStore("deploy", () => {
       value: m.manager,
     }));
   });
+
   const filesMightHaveMissed = computed<(string | string[])[]>(() => {
     if (!project.value) return [];
 
@@ -95,6 +113,16 @@ export const useDeployStore = defineStore("deploy", () => {
         })
     );
   });
+
+  const isOutputFileInvalid = computed(() => {
+    // If has buildCommand, outputFile is not required
+    if (projectConfig.value.buildCommand) return false;
+
+    return !repositoryFiles.value.find(
+      (f) => f.fileName === projectConfig.value.outputFile
+    );
+  });
+
   const envChanges = computed(() => {
     let e: { added: Env[]; modified: Env[]; removed: Env[] } = {
       added: [],
@@ -123,11 +151,13 @@ export const useDeployStore = defineStore("deploy", () => {
     () => frameworkSelector.value,
     (newFramework) => {
       if (newFramework !== projectConfig.value.framework) {
+        // Update projectConfig with the new framework
         projectConfig.value = getDefaultProjectConfig(
           newFramework,
           managerSelector.value
         );
 
+        // Check if the selected manager is supported by the new framework
         const supportedManagers = frameworksConfig[
           newFramework
         ].supportedManagers.map((m) => m.manager);
@@ -161,7 +191,13 @@ export const useDeployStore = defineStore("deploy", () => {
 
     deployDialog.value = true;
 
-    const envs = await getEnvs();
+    const envs = await getEnvs({
+      access_token: authStore.session.auth_token.access_token,
+      project: project.value,
+    }).then((res) => {
+      if (res.success) return res.data;
+      return [];
+    });
     originalEnvironmentVariables.value = JSON.parse(JSON.stringify(envs));
     environmentVariables.value = JSON.parse(JSON.stringify(envs));
 
@@ -297,7 +333,11 @@ export const useDeployStore = defineStore("deploy", () => {
 
     try {
       if (actions.env) {
-        await updateEnvs();
+        await updateEnvs({
+          access_token: authStore.session.auth_token.access_token,
+          project: project.value,
+          envsUpdate: environmentVariables.value,
+        });
         result.env = { success: true };
         toast.success(
           t("components.deployHandler.script.success.envUpdateSuccess")
@@ -314,9 +354,7 @@ export const useDeployStore = defineStore("deploy", () => {
       filesCommitted: result.commit?.success
         ? actions.commit.map((c) => c.file_path)
         : [],
-      envs: result.env?.success
-        ? environmentVariables.value.map((env) => env.key)
-        : [],
+      envs: result.env?.success ?? false,
       messages: [],
       errors: [],
     };
@@ -336,11 +374,6 @@ export const useDeployStore = defineStore("deploy", () => {
           t(
             "components.deployHandler.script.success.deployMessages.trackProgress"
           )
-        );
-      } else {
-        deploymentInfo.value.messages.push(
-          t("components.deployHandler.confirmDialog.noChanges") ||
-            "No changes to deploy"
         );
       }
     } else {
@@ -365,92 +398,6 @@ export const useDeployStore = defineStore("deploy", () => {
 
   function cancelDeploy() {
     confirmDeployDialog.value = false;
-  }
-
-  async function updateEnvs() {
-    if (!authStore.session || !project.value) return;
-
-    const existingEnvs = await getEnvs();
-    const url = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
-      project.value.id
-    }/variables`;
-    const config = {
-      headers: {
-        Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-      },
-    };
-
-    if (environmentVariables.value.length === 0) {
-      if (existingEnvs.length === 0) return;
-      return await axios.delete(`${url}/${envKey}`, config);
-    }
-
-    const body = {
-      key: envKey,
-      value: environmentVariables.value
-        .map((e) => `${e.key}=${e.value}`)
-        .join("\n"),
-      description: "Generated in the Auto CI/CD App",
-      variable_type: "file",
-    };
-
-    if (existingEnvs.length) {
-      return await axios.put(`${url}/${envKey}`, body, config);
-    }
-    return await axios.post(url, body, config);
-  }
-
-  async function getEnvs() {
-    if (!authStore.session || !project.value) return [];
-
-    const apiUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
-      project.value.id
-    }/variables/${envKey}`;
-    try {
-      const response = await axios.get<{
-        description: string | null;
-        environment_scope: string;
-        hidden: boolean;
-        key: string;
-        masked: boolean;
-        protected: boolean;
-        raw: boolean;
-        value: string;
-        variable_type: "file" | "env_var";
-      }>(apiUrl, {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-        },
-      });
-
-      if (response.data.variable_type === "file") {
-        return response.data.value.split("\n").map((e) => {
-          const [key, value] = e.split("=");
-          return {
-            key,
-            value,
-            protected: response.data.protected,
-            visible: false,
-          };
-        });
-      } else if (response.data.variable_type === "env_var") {
-        return [
-          {
-            key: response.data.key,
-            value: response.data.value,
-            protected: response.data.protected,
-            visible: false,
-          },
-        ];
-      }
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status !== 404) {
-        console.error("Unknown Error", error);
-        toast.error(error.message);
-        throw error;
-      }
-    }
-    return [];
   }
 
   async function identifyProject(): Promise<ProjectConfig> {
@@ -554,9 +501,6 @@ export const useDeployStore = defineStore("deploy", () => {
     isLoading,
     error,
     projectConfig,
-    environmentVariables,
-    originalEnvironmentVariables,
-    envChanges,
     injectFiles,
     deploymentInfo,
     frameworks,
@@ -565,6 +509,10 @@ export const useDeployStore = defineStore("deploy", () => {
     frameworkSelector,
     managerSelector,
     repositoryFiles,
+    isOutputFileInvalid,
+    envChanges,
+    environmentVariables,
+    originalEnvironmentVariables,
     openDeployment,
     handleDeploy,
     confirmDeploy,

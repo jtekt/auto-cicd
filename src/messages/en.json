@@ -38,12 +38,6 @@
                 "missingOutputFile": "The default filename {defaultFilename} for a {framework} deployment was not found. If your project uses a different file, please update it in the Build and Output Settings below.",
                 "filesSection": "Files",
                 "noFileChanges": "No file changes detected",
-                "envSection": "Environment Variables",
-                "envDescription": "The following environment variable changes will be applied:",
-                "addedVars": "Added Variables",
-                "modifiedVars": "Modified Variables",
-                "removedVars": "Removed Variables",
-                "noEnvChanges": "No environment variable changes detected",
                 "update": "Update",
                 "create": "Create",
                 "continue": "Continue",
@@ -51,7 +45,7 @@
             },
             "nextStepsDialog": {
                 "successTitle": "Deployment Successful",
-                "successMessage": "Your changes have been successfully deployed. Here’s what happened and what to do next:",
+                "successMessage": "Your changes have been successfully deployed. Here’s what happened:",
                 "partialSuccessTitle": "Deployment Partially Successful",
                 "partialSuccessMessage": "Some parts of your deployment succeeded, but there were issues. Review the details below:",
                 "errorTitle": "Deployment Failed",
@@ -60,9 +54,6 @@
                 "noChangesMessage": "No changes were detected or deployed this time.",
                 "filesCommitted": {
                     "title": "Files Committed"
-                },
-                "envAdded": {
-                    "title": "Environment Variables Updated"
                 },
                 "nextSteps": {
                     "title": "Next Steps"
@@ -79,6 +70,12 @@
                 "appStatus": "App Status",
                 "appStatusDescription": "If no error messages appear and the app is not working, verify its status in:",
                 "appStatusPattern": "Search for your project, the names follow the pattern:"
+            },
+            "envStatus": {
+                "title": "Environment Variables",
+                "added": "Added",
+                "modified": "Modified",
+                "removed": "Removed"
             },
             "script": {
                 "errors": {

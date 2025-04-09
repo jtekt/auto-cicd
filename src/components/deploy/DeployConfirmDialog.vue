@@ -124,82 +124,13 @@
         <!-- Environment Variables Section -->
         <div
           v-if="
-            deployStore.environmentVariables.length ||
-            deployStore.originalEnvironmentVariables.length
+            deployStore.envChanges.added.length ||
+            deployStore.envChanges.modified.length ||
+            deployStore.envChanges.removed.length
           "
           class="mb-6"
         >
-          <h3 class="text-subtitle-s font-weight-medium mb-2">
-            {{ t("components.deployHandler.confirmDialog.envSection") }}
-          </h3>
-          <p v-if="hasChanges" class="text-body-2 text-grey-darken-1 mb-2">
-            {{ t("components.deployHandler.confirmDialog.envDescription") }}
-          </p>
-
-          <!-- Added Variables -->
-          <div v-if="deployStore.envChanges.added.length" class="mb-2">
-            <p class="text-body-2 font-weight-medium">
-              {{ t("components.deployHandler.confirmDialog.addedVars") }}
-            </p>
-            <v-alert
-              v-for="(env, index) in deployStore.envChanges.added"
-              :key="`added-${index}`"
-              type="success"
-              variant="tonal"
-              density="compact"
-              class="mb-1"
-            >
-              <span class="font-weight-medium">{{ env.key }}</span>
-            </v-alert>
-          </div>
-
-          <!-- Modified Variables -->
-          <div v-if="deployStore.envChanges.modified.length" class="mb-2">
-            <p class="text-body-2 font-weight-medium">
-              {{ t("components.deployHandler.confirmDialog.modifiedVars") }}
-            </p>
-            <v-alert
-              v-for="(env, index) in deployStore.envChanges.modified"
-              :key="`modified-${index}`"
-              type="info"
-              variant="tonal"
-              density="compact"
-              class="mb-1"
-            >
-              <span class="font-weight-medium">{{ env.key }}</span>
-            </v-alert>
-          </div>
-
-          <!-- Removed Variables -->
-          <div v-if="deployStore.envChanges.removed.length" class="mb-2">
-            <p class="text-body-2 font-weight-medium">
-              {{ t("components.deployHandler.confirmDialog.removedVars") }}
-            </p>
-            <v-alert
-              v-for="(env, index) in deployStore.envChanges.removed"
-              :key="`removed-${index}`"
-              type="warning"
-              variant="tonal"
-              density="compact"
-              class="mb-1"
-            >
-              <span class="font-weight-medium">{{ env.key }}</span>
-            </v-alert>
-          </div>
-
-          <!-- No changes message -->
-          <v-alert
-            v-if="
-              !deployStore.envChanges.added.length &&
-              !deployStore.envChanges.modified.length &&
-              !deployStore.envChanges.removed.length
-            "
-            type="info"
-            variant="tonal"
-            density="compact"
-          >
-            {{ t("components.deployHandler.confirmDialog.noEnvChanges") }}
-          </v-alert>
+          <DeployEnvStatus />
         </div>
       </v-card-text>
 
@@ -226,6 +157,7 @@
 import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
 import { computed } from "vue";
+import DeployEnvStatus from "./DeployEnvStatus.vue";
 
 const { t } = useLocale();
 const deployStore = useDeployStore();

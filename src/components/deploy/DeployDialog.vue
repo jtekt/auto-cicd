@@ -106,13 +106,7 @@
             variant="tonal"
             color="warning"
             class="mb-5"
-            v-if="
-              frameworksConfig[deployStore.projectConfig.framework]
-                .userConfigurable?.outputFile &&
-              !deployStore.repositoryFiles.find(
-                (f) => f.fileName === deployStore.projectConfig.outputFile
-              )
-            "
+            v-if="deployStore.isOutputFileInvalid"
           >
             {{
               t("components.deployHandler.confirmDialog.missingOutputFile", {

@@ -1,8 +1,10 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import type { Session } from "./auth";
 import { z } from "zod";
 import type { Group } from "@/types/group";
 import type { ProjectNode } from "@/types/project";
+import { envKey } from "@/config/frameworks-config";
+import type { Env } from "@/types/env";
 
 export const TokenSchema = z.object({
   access_token: z.string(),
@@ -229,4 +231,127 @@ export const getGitLabFiles = async ({
   } catch (err) {
     return { success: false, error: (err as Error).message };
   }
+};
+
+export const getEnvs = async ({
+  access_token,
+  project,
+}: {
+  access_token: string;
+  project: ProjectNode;
+}): Promise<
+  | {
+      success: true;
+      data: Env[];
+    }
+  | { success: false; error: string }
+> => {
+  const apiUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
+    project.id
+  }/variables/${envKey}`;
+  try {
+    const response = await axios.get<{
+      description: string | null;
+      environment_scope: string;
+      hidden: boolean;
+      key: string;
+      masked: boolean;
+      protected: boolean;
+      raw: boolean;
+      value: string;
+      variable_type: "file" | "env_var";
+    }>(apiUrl, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+
+    let envs: Env[] = [];
+    if (response.data.variable_type === "file") {
+      envs = response.data.value.split("\n").map((e) => {
+        const [key, value] = e.split("=");
+        return {
+          key,
+          value,
+          protected: response.data.protected,
+          visible: false,
+        };
+      });
+    } else if (response.data.variable_type === "env_var") {
+      envs = [
+        {
+          key: response.data.key,
+          value: response.data.value,
+          protected: response.data.protected,
+          visible: false,
+        },
+      ];
+    }
+    return { success: true, data: envs };
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status !== 404) {
+      return {
+        success: false,
+        error: `Error fetching environment variables: ${error.message}`,
+      };
+    }
+  }
+  return {
+    success: true,
+    data: [],
+  };
+};
+
+export const updateEnvs = async ({
+  access_token,
+  project,
+  envsUpdate,
+}: {
+  access_token: string;
+  project: ProjectNode;
+  envsUpdate: Env[];
+}): Promise<
+  | {
+      success: true;
+      data: Env[];
+    }
+  | { success: false; error: string }
+> => {
+  const existingEnvs = await getEnvs({
+    access_token,
+    project,
+  }).then((res) => {
+    if (res.success) return res.data;
+    return [];
+  });
+
+  const url = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
+    project.id
+  }/variables`;
+  const config = {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  };
+
+  if (envsUpdate.length === 0) {
+    if (existingEnvs.length === 0)
+      return {
+        success: true,
+        data: [],
+      };
+    return await axios.delete(`${url}/${envKey}`, config);
+  }
+
+  const body = {
+    key: envKey,
+    value: envsUpdate.map((e) => `${e.key}=${e.value}`).join("\n"),
+    description: "Generated in the Auto CI/CD App",
+    variable_type: "file",
+  };
+
+  if (existingEnvs.length) {
+    return await axios.put(`${url}/${envKey}`, body, config);
+  }
+  return await axios.post(url, body, config);
 };

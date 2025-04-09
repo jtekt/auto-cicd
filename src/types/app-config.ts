@@ -52,12 +52,18 @@ export type FrameworkConfig = {
   image: { type: "img" | "icon"; value: string };
   langs?: string[];
   userConfigurable?: {
-    installCommand?: true;
+    installCommand?: {
+      defaultEmpty: boolean;
+    };
     buildCommand?: {
       defaultEmpty: boolean;
     };
-    outputFile?: true;
-    port?: true;
+    outputFile?: {
+      defaultEmpty: boolean; // If true, the user must provide a command
+    };
+    port?: {
+      defaultEmpty: boolean; // If true, the user must provide a command
+    };
   };
   outputFile: string;
   port?: number;

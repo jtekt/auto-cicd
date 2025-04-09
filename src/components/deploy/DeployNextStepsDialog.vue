@@ -53,20 +53,8 @@
         </div>
 
         <!-- Environment Variables Updated -->
-        <div v-if="deployStore.deploymentInfo.envs.length" class="mb-6">
-          <h3 class="text-h6 font-weight-medium mb-2">
-            {{ t("components.deployHandler.nextStepsDialog.envAdded.title") }}
-          </h3>
-          <div class="pl-4">
-            <p
-              v-for="env in deployStore.deploymentInfo.envs"
-              :key="env"
-              class="text-body-2 d-flex align-center ga-3 mb-1"
-            >
-              <v-icon style="font-size: 6px">mdi-circle</v-icon>
-              {{ env }}
-            </p>
-          </div>
+        <div v-if="deploymentStatus.hasEnvs" class="mb-6">
+          <DeployEnvStatus />
         </div>
 
         <!-- Success Messages / Next Steps -->
@@ -86,25 +74,11 @@
           </div>
         </div>
 
-        <!-- Errors -->
-        <div v-if="deployStore.deploymentInfo.errors?.length" class="mb-6">
-          <h3 class="text-h6 font-weight-medium mb-2 text-error">
-            {{ t("components.deployHandler.nextStepsDialog.errors.title") }}
-          </h3>
-          <div class="pl-4">
-            <p
-              v-for="error in deployStore.deploymentInfo.errors"
-              :key="error"
-              class="text-body-2 d-flex align-center ga-3 mb-1"
-            >
-              <v-icon style="font-size: 6px">mdi-circle</v-icon>
-              {{ error }}
-            </p>
-          </div>
-        </div>
-
         <!-- Debugging Information Section -->
-        <div class="mb-6">
+        <div
+          v-if="deployStore.deploymentInfo.filesCommitted.length"
+          class="mb-6"
+        >
           <h3 class="text-subtitle-s font-weight-medium mb-2">
             {{ t("components.deployHandler.nextStepsDialog.debugSection") }}
           </h3>
@@ -177,6 +151,23 @@
             </ul>
           </v-alert>
         </div>
+
+        <!-- Errors -->
+        <div v-if="deployStore.deploymentInfo.errors?.length" class="mb-6">
+          <h3 class="text-h6 font-weight-medium mb-2 text-error">
+            {{ t("components.deployHandler.nextStepsDialog.errors.title") }}
+          </h3>
+          <div class="pl-4">
+            <p
+              v-for="error in deployStore.deploymentInfo.errors"
+              :key="error"
+              class="text-body-2 d-flex align-center ga-3 mb-1"
+            >
+              <v-icon style="font-size: 6px">mdi-circle</v-icon>
+              {{ error }}
+            </p>
+          </div>
+        </div>
       </v-card-text>
 
       <v-card-actions class="pa-4">
@@ -203,6 +194,7 @@
 import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
 import { computed } from "vue";
+import DeployEnvStatus from "./DeployEnvStatus.vue";
 
 const podViewerUrl = import.meta.env.VITE_APP_POD_VIEWER_URL;
 
@@ -215,7 +207,7 @@ const deploymentStatus = computed(() => {
     ? deployStore.deploymentInfo?.filesCommitted.length > 0
     : false;
   const envs = deployStore.deploymentInfo
-    ? deployStore.deploymentInfo?.envs.length > 0
+    ? deployStore.deploymentInfo?.envs
     : false;
   const messages = deployStore.deploymentInfo
     ? deployStore.deploymentInfo?.messages.length > 0
