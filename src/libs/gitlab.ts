@@ -55,13 +55,13 @@ export const createGitlabAuthUrl = () => {
     "redirect_uri",
     window.location.origin +
       "/" +
-      import.meta.env.VITE_APP_OAUTH_REDIRECT_URI_PATH
+      import.meta.env.VITE_APP_GITLAB_OAUTH_REDIRECT_URI_PATH
   );
   url.searchParams.append("response_type", "code");
   url.searchParams.append("scope", scopes);
   url.searchParams.append(
     "state",
-    import.meta.env.VITE_APP_OAUTH_STATE_VALIDATOR
+    import.meta.env.VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR
   );
 
   return url.toString();
@@ -79,9 +79,8 @@ export const createAccessToken = async (
       "redirect_uri",
       window.location.origin +
         "/" +
-        import.meta.env.VITE_APP_OAUTH_REDIRECT_URI_PATH
+        import.meta.env.VITE_APP_GITLAB_OAUTH_REDIRECT_URI_PATH
     );
-
     const token = await axios.post<AccessTokenResponse>(
       import.meta.env.VITE_APP_GITLAB_URL + "/oauth/token",
       params
@@ -110,7 +109,7 @@ export const refreshAccessToken = async (session: Session) => {
       "redirect_uri",
       window.location.origin +
         "/" +
-        import.meta.env.VITE_APP_OAUTH_REDIRECT_URI_PATH
+        import.meta.env.VITE_APP_GITLAB_OAUTH_REDIRECT_URI_PATH
     );
     url.searchParams.append("code_verifier", session.auth_token.code);
 
