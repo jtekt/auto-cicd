@@ -1,5 +1,5 @@
 # Start from an appropriate base image
-FROM node:22-slim as base
+FROM node:22-alpine as base
 
 # Set the working directory for building
 WORKDIR /app

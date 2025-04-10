@@ -1,24 +1,28 @@
 # Start from an appropriate base image
-FROM node:22-slim as base
+FROM node:22-alpine AS build
 
 # Set the working directory for building
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* {ROOT_DIR}
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
 RUN {INSTALL_COMMAND}
 
 # Copy all source code
 COPY . .
 {BUILD_COMMAND}
+# Build Stage 2
 
-# Define environment variables
-ENV NODE_ENV=production
-ENV NITRO_PORT={PORT}
-ENV HOST=0.0.0.0
+FROM build AS production-stage
+WORKDIR /app
 
-# Expose the port the application will run on
+# Only `.output` folder is needed from the build stage
+COPY --from=build /app/.output/ ./
+
+# Change the port and host
+ENV PORT {PORT}
+ENV HOST 0.0.0.0
+
 EXPOSE {PORT}
 
-# Start the application
-CMD ["node", "{OUTPUT_FILENAME}"]
+CMD ["node", "{OUTPUT_DIRECTORY}{OUTPUT_FILENAME}"]

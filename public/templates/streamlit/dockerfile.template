@@ -5,7 +5,7 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy the requirements file to the container
-COPY requirements.txt {ROOT_DIR}
+COPY requirements.txt ./
 
 # Install the Python dependencies
 RUN {INSTALL_COMMAND}
@@ -20,4 +20,4 @@ ENV PORT={PORT}
 EXPOSE {PORT}
 
 # Set the entry point for Streamlit
-CMD ["streamlit", "run", "{OUTPUT_DIR}{OUTPUT_FILENAME}", "--server.port={PORT}", "--server.headless=true"]
+CMD ["streamlit", "run", "{OUTPUT_DIRECTORY}{OUTPUT_FILENAME}", "--server.port={PORT}", "--server.address=0.0.0.0", "--server.headless=true"]

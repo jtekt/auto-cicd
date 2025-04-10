@@ -65,7 +65,6 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     userConfigurable: {
       buildCommand: { defaultEmpty: false },
       installCommand: { defaultEmpty: false },
-      outputFile: { defaultEmpty: false },
     },
     outputFile: "dist/index.html",
     port: 5173,
@@ -106,7 +105,6 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     userConfigurable: {
       buildCommand: { defaultEmpty: false },
       installCommand: { defaultEmpty: false },
-      outputFile: { defaultEmpty: false },
     },
     outputFile: "/app/server/index.mjs",
     port: 3000,
@@ -147,7 +145,6 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     userConfigurable: {
       buildCommand: { defaultEmpty: false },
       installCommand: { defaultEmpty: false },
-      outputFile: { defaultEmpty: false },
     },
     outputFile: ".next/server.js",
     port: 3000,
