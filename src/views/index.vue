@@ -129,13 +129,13 @@
                 GitLab
               </v-btn>
               <DeployBtn :project="project" />
-              <v-btn
+              <!-- <v-btn
                 v-if="isDeployed(project)"
                 color="primary"
                 variant="tonal"
                 @click="handleUndeploy(project)"
                 >Undeploy</v-btn
-              >
+              > -->
             </v-card-actions>
           </v-card>
         </v-col>
