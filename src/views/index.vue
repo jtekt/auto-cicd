@@ -58,10 +58,11 @@
           :key="project.id"
           cols="12"
           sm="6"
-          md="4"
-          lg="3"
+          lg="4"
+          xl="3"
+          class="pa-2"
         >
-          <v-card class="project-card" elevation="2">
+          <v-card class="project-card" elevation="4" rounded="lg">
             <v-card-item>
               <template #prepend>
                 <v-avatar
@@ -128,6 +129,13 @@
                 GitLab
               </v-btn>
               <DeployBtn :project="project" />
+              <v-btn
+                v-if="isDeployed(project)"
+                color="primary"
+                variant="tonal"
+                @click="handleUndeploy(project)"
+                >Undeploy</v-btn
+              >
             </v-card-actions>
           </v-card>
         </v-col>
@@ -175,6 +183,9 @@ import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
+import { removeDeploymentFiles } from "@/libs/gitlab";
+import { defaultInjectedFiles, managedFiles } from "@/config/frameworks-config";
+import type { DefaultInjectedFiles } from "@/types/app-config";
 
 const { t } = useLocale();
 
@@ -347,6 +358,12 @@ const fetchProjects = async (clear?: boolean) => {
               }
               repository {
                 rootRef
+                blobs(paths: ["${managedFiles.join('", "')}"]) {
+                  nodes {
+                    name
+                    rawTextBlob
+                  }
+                }
               }
             }
           }
@@ -366,6 +383,10 @@ const fetchProjects = async (clear?: boolean) => {
         },
       }
     );
+
+    if (res.status !== 200) {
+      throw new Error("Failed to fetch projects");
+    }
 
     const filteredLangs = ["dockerfile", "html", "css", "scss"]; // TODO: Add more languages to filter
 
@@ -400,7 +421,10 @@ const fetchProjects = async (clear?: boolean) => {
             id: id ? id[1] : "",
             projectName,
             languages,
-            deploying: false, // Add any other properties you need
+            deploymentFiles: project.node.repository.blobs.nodes.filter(
+              (blob) =>
+                defaultInjectedFiles.includes(blob.name as DefaultInjectedFiles)
+            ),
           };
         })
       ); // Append new projects
@@ -413,6 +437,48 @@ const fetchProjects = async (clear?: boolean) => {
   } finally {
     isLoading.value = false;
   }
+};
+
+const handleUndeploy = async (project: ProjectNode) => {
+  try {
+    if (!authStore.session) return;
+
+    const res = await removeDeploymentFiles({
+      project,
+      session: authStore.session,
+    });
+
+    if (res.success) {
+      projects.value = projects.value.map((p) => {
+        if (p.id === project.id) {
+          return { ...p, deploymentFiles: undefined }; // Remove deployment files from the project
+        }
+        return p;
+      });
+
+      toast.success(t("views.index.projects.success.undeploy"));
+      return;
+    }
+
+    toast.error(t("views.index.projects.errors.undeploy"));
+  } catch (error) {
+    toast.error(t("views.index.projects.errors.undeploy"));
+    console.error("Error undeploying project:", error);
+  }
+};
+
+const isDeployed = (project: ProjectNode): boolean => {
+  const gitLabCi = project.deploymentFiles?.find((file) =>
+    defaultInjectedFiles.includes(file.name as DefaultInjectedFiles)
+  );
+
+  if (!gitLabCi) return false;
+
+  if (gitLabCi.rawTextBlob.indexOf("cleanup") !== -1) {
+    return false;
+  }
+
+  return true;
 };
 
 const updateUrlParams = () => {

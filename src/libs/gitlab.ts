@@ -354,3 +354,100 @@ export const updateEnvs = async ({
   }
   return await axios.post(url, body, config);
 };
+
+export async function removeDeploymentFiles({
+  project,
+  session,
+}: {
+  project: ProjectNode;
+  session: Session;
+}): Promise<{
+  success: boolean;
+}> {
+  const gitlabCiPath = ".gitlab-ci.yml";
+  const kubernetesManifestPath = "kubernetes_manifest.yml";
+
+  const K8S_NAMESPACE = import.meta.env.VITE_APP_DEPLOYED_NAMESPACE;
+  const APPLICATION_NAME = project.projectName;
+  const CONTAINER_IMAGE_NAME = `${K8S_NAMESPACE}/${session.user.nickname}/${APPLICATION_NAME}`;
+
+  const filesToDelete = project.deploymentFiles
+    ? (project.deploymentFiles
+        .filter(
+          (f) => f.name !== gitlabCiPath && f.name !== kubernetesManifestPath
+        )
+        .map((file) => ({
+          action: "delete",
+          file_path: file.name,
+        })) as CommitActionObject[])
+    : [];
+
+  // Updated CI content with cleanup stage calling your API
+  const updatedCi = `# Define the pipeline stages
+stages:
+  - cleanup
+
+variables:
+  APPLICATION_NAME: ${APPLICATION_NAME}
+  K8S_NAMESPACE: ${K8S_NAMESPACE}
+  K8S_ECR_SECRET_NAME: ecr-credentials
+  K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}-env
+
+cleanup-job:
+  stage: cleanup
+  before_script:
+    - kubectl config use-context ${K8S_NAMESPACE}/gitlab-agent-for-kubernetes:${K8S_NAMESPACE}
+    - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
+  script:
+    # Delete the kubernetes deployment and service
+    - envsubst < kubernetes_manifest.yml | kubectl delete -f -
+
+    # Delete the Docker image
+    - aws ecr delete-repository --repository-name ${CONTAINER_IMAGE_NAME} --force
+
+    - echo "Files (${filesToDelete
+      .map((fd) => fd.file_path)
+      .join(", ")}) removed from the repository."
+    - echo ""
+    - echo "-------------------------------------------------------------------------"
+    - echo "  CLEANUP COMPLETED SUCCESSFULLY!"
+    - echo "-------------------------------------------------------------------------"
+    - echo ""
+    - echo "  To redeploy this application, please navigate to the AUTO-CICD"
+    - echo "  application and initiate a new deployment."
+    - echo ""
+`;
+
+  const commitPayload = {
+    branch: project.repository.rootRef,
+    commit_message: "[AUTO-CICD] Update CI with cleanup stage",
+    actions: [
+      {
+        action: "update",
+        file_path: gitlabCiPath,
+        content: updatedCi,
+      },
+      ...filesToDelete,
+    ],
+  };
+
+  try {
+    const commitUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
+      project.id
+    }/repository/commits`;
+
+    const res = await axios.post(commitUrl, commitPayload, {
+      headers: {
+        Authorization: `Bearer ${session.auth_token.access_token}`,
+      },
+    });
+  } catch (error) {
+    console.error("Error pushing commit:", error);
+    return {
+      success: false,
+    };
+  }
+  return {
+    success: true,
+  };
+}

@@ -44,7 +44,17 @@ export interface ProjectNode {
   maxAccessLevel: MaxAccessLevel;
   repository: {
     rootRef: string;
+    blobs: {
+      nodes: {
+        name: string;
+        rawTextBlob: string;
+      }[];
+    };
   };
+  deploymentFiles?: {
+    name: string;
+    rawTextBlob: string;
+  }[];
 }
 
 interface PageInfo {

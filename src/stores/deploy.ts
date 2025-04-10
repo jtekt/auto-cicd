@@ -309,7 +309,7 @@ export const useDeployStore = defineStore("deploy", () => {
           commitUrl,
           {
             branch: project.value.repository.rootRef,
-            commit_message: `Auto-generated deployment files`,
+            commit_message: `[AUTO-CICD] generate deployment files`,
             actions: actions.commit,
           },
           {

@@ -1,16 +1,26 @@
 import type {
   AcceptedFramework,
   AcceptedPackageManager,
+  DefaultInjectedFiles,
   FrameworkConfig,
+  ManagedFile,
+  OptionalFiles,
   PackageManagerConfig,
 } from "@/types/app-config";
 
 export const envKey = "ENV"; // Name of the file saved in gitlab with the envs
 
-const defaultInjectedFiles = [
+export const defaultInjectedFiles: DefaultInjectedFiles[] = [
   "Dockerfile",
   ".gitlab-ci.yml",
   "kubernetes_manifest.yml",
+];
+
+export const extraInjectedFiles: OptionalFiles[] = ["nginx.conf"];
+
+export const managedFiles: ManagedFile[] = [
+  ...defaultInjectedFiles,
+  ...extraInjectedFiles,
 ];
 
 export const packageManagers: Record<

@@ -9,11 +9,11 @@ export type AcceptedFramework =
 export type AcceptedPackageManager = "npm" | "yarn" | "pnpm" | "pip";
 export type Language = "javascript" | "python";
 export type OptionalFiles = "nginx.conf"; // Optional files exclusive to some frameworks
-export type ManagedFile =
-  | OptionalFiles
+export type DefaultInjectedFiles =
   | "Dockerfile"
   | "kubernetes_manifest.yml"
   | ".gitlab-ci.yml";
+export type ManagedFile = OptionalFiles | DefaultInjectedFiles;
 
 export type PackageManagerConfig = {
   name: AcceptedPackageManager;
