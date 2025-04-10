@@ -14,6 +14,9 @@ describe("generateGitLabCI", () => {
       },
       repository: {
         rootRef: "main",
+        blobs: {
+          nodes: [],
+        },
       },
       projectName: "fabel-auto-cicd-frontend",
     };
