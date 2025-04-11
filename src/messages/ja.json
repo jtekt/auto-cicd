@@ -7,6 +7,10 @@
                 "title": "アプリをデプロイするために必要なアクション",
                 "faqLink": "プロジェクトを別のグループに移動する方法"
             },
+            "actions": {
+                "deploy": "デプロイ",
+                "redeploy": "再デプロイ"
+            },
             "deployDialog": {
                 "deployingFromGitlab": "GitLabからデプロイ中",
                 "selectFramework": "フレームワークを選択",
@@ -102,6 +106,16 @@
                     "moveInstruction": "、その後プロジェクトを新しいグループに移動してください"
                 }
             }
+        },
+        "undeployHandler": {
+            "undeploy": "アンデプロイ",
+            "confirmUndeployTitle": "アンデプロイの確認",
+            "confirmUndeployMessage": "'{projectName}' をアンデプロイしてもよろしいですか？",
+            "cancel": "キャンセル",
+            "confirm": "確認",
+            "loading": "アンデプロイ中",
+            "success": "アンデプロイ成功",
+            "error": "アンデプロイ失敗"
         },
         "usefulLinks": {
             "buttonText": "役立つリンク",

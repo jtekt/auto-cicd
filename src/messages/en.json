@@ -3,6 +3,10 @@
         "deployHandler": {
             "actionBtn": "Deploy",
             "cancelBtn": "Cancel",
+            "actions": {
+                "deploy": "Deploy",
+                "redeploy": "Redeploy"
+            },
             "actionsNeededDialog": {
                 "title": "Actions needed to deploy the app",
                 "faqLink": "How to move a project to another group"
@@ -102,6 +106,16 @@
                     "moveInstruction": ", then move your project to the new group"
                 }
             }
+        },
+        "undeployHandler": {
+            "undeploy": "Undeploy",
+            "confirmUndeployTitle": "Confirm Undeploy",
+            "confirmUndeployMessage": "Are you sure you want to undeploy '{projectName}'?",
+            "cancel": "Cancel",
+            "confirm": "Confirm",
+            "loading": "Loading...",
+            "success": "Undeployment Successful",
+            "error": "Undeployment Failed"
         },
         "usefulLinks": {
             "buttonText": "Useful Links",

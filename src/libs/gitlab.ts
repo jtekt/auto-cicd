@@ -365,22 +365,9 @@ export async function removeDeploymentFiles({
   success: boolean;
 }> {
   const gitlabCiPath = ".gitlab-ci.yml";
-  const kubernetesManifestPath = "kubernetes_manifest.yml";
 
   const K8S_NAMESPACE = import.meta.env.VITE_APP_DEPLOYED_NAMESPACE;
   const APPLICATION_NAME = project.projectName;
-  const CONTAINER_IMAGE_NAME = `${K8S_NAMESPACE}/${session.user.nickname}/${APPLICATION_NAME}`;
-
-  const filesToDelete = project.deploymentFiles
-    ? (project.deploymentFiles
-        .filter(
-          (f) => f.name !== gitlabCiPath && f.name !== kubernetesManifestPath
-        )
-        .map((file) => ({
-          action: "delete",
-          file_path: file.name,
-        })) as CommitActionObject[])
-    : [];
 
   // Updated CI content with cleanup stage calling your API
   const updatedCi = `# Define the pipeline stages
@@ -400,14 +387,8 @@ cleanup-job:
     - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
   script:
     # Delete the kubernetes deployment and service
-    - envsubst < kubernetes_manifest.yml | kubectl delete -f -
+    - envsubst < kubernetes_manifest.yml | kubectl delete --ignore-not-found=true -f -
 
-    # Delete the Docker image
-    - aws ecr delete-repository --repository-name ${CONTAINER_IMAGE_NAME} --force
-
-    - echo "Files (${filesToDelete
-      .map((fd) => fd.file_path)
-      .join(", ")}) removed from the repository."
     - echo ""
     - echo "-------------------------------------------------------------------------"
     - echo "  CLEANUP COMPLETED SUCCESSFULLY!"
@@ -427,7 +408,6 @@ cleanup-job:
         file_path: gitlabCiPath,
         content: updatedCi,
       },
-      ...filesToDelete,
     ],
   };
 
@@ -436,7 +416,7 @@ cleanup-job:
       project.id
     }/repository/commits`;
 
-    const res = await axios.post(commitUrl, commitPayload, {
+    await axios.post(commitUrl, commitPayload, {
       headers: {
         Authorization: `Bearer ${session.auth_token.access_token}`,
       },
@@ -451,3 +431,17 @@ cleanup-job:
     success: true,
   };
 }
+
+export const isDeployed = (project: ProjectNode): boolean => {
+  const gitLabCi = project.deploymentFiles?.find(
+    (file) => file.name === ".gitlab-ci.yml"
+  );
+
+  if (!gitLabCi) return false;
+
+  if (gitLabCi.rawTextBlob.indexOf("cleanup") !== -1) {
+    return false;
+  }
+
+  return true;
+};

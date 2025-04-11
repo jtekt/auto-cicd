@@ -173,9 +173,7 @@
       <v-card-actions class="pa-4">
         <v-spacer />
         <v-btn
-          :color="
-            deployStore.deploymentInfo?.errors.length ? 'error' : 'primary'
-          "
+          :color="deployStore.deploymentInfo?.errors.length ? 'error' : ''"
           variant="tonal"
           class="px-4"
           @click="deployStore.nextStepsDialog = false"

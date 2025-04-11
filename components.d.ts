@@ -22,6 +22,8 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Toaster: typeof import('./src/components/Toaster.vue')['default']
+    ToastsTest: typeof import('./src/components/ToastsTest.vue')['default']
+    UndeployHandler: typeof import('./src/components/undeploy/UndeployHandler.vue')['default']
     UsefulLinks: typeof import('./src/components/UsefulLinks.vue')['default']
   }
 }

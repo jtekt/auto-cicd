@@ -301,6 +301,7 @@ export const useDeployStore = defineStore("deploy", () => {
     };
 
     if (actions.commit.length) {
+      const commitToastId = toast.loading("Committing files...");
       try {
         const commitUrl = `${
           import.meta.env.VITE_APP_GITLAB_URL
@@ -320,19 +321,26 @@ export const useDeployStore = defineStore("deploy", () => {
         );
         result.commit = { success: true };
         toast.success(
-          t("components.deployHandler.script.success.commitSuccess")
+          t("components.deployHandler.script.success.commitSuccess"),
+          {
+            id: commitToastId,
+          }
         );
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Unknown error";
         result.commit = { success: false, error: errorMessage };
-        toast.error(t("components.deployHandler.script.errors.commitFailed"));
+        toast.error(t("components.deployHandler.script.errors.commitFailed"), {
+          id: commitToastId,
+        });
         console.error("Commit error:", err);
       }
     }
 
-    try {
-      if (actions.env) {
+    if (actions.env) {
+      const envToastId = toast.loading("Updating environment variables...");
+
+      try {
         await updateEnvs({
           access_token: authStore.session.auth_token.access_token,
           project: project.value,
@@ -340,14 +348,23 @@ export const useDeployStore = defineStore("deploy", () => {
         });
         result.env = { success: true };
         toast.success(
-          t("components.deployHandler.script.success.envUpdateSuccess")
+          t("components.deployHandler.script.success.envUpdateSuccess"),
+          {
+            id: envToastId,
+          }
         );
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
+        result.env = { success: false, error: errorMessage };
+        toast.error(
+          t("components.deployHandler.script.errors.envUpdateFailed"),
+          {
+            id: envToastId,
+          }
+        );
+        console.error("Env update error:", err);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      result.env = { success: false, error: errorMessage };
-      toast.error(t("components.deployHandler.script.errors.envUpdateFailed"));
-      console.error("Env update error:", err);
     }
 
     deploymentInfo.value = {

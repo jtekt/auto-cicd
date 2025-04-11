@@ -62,12 +62,18 @@
           xl="3"
           class="pa-2"
         >
-          <v-card class="project-card" elevation="4" rounded="lg">
+          <v-card class="project-card pa-3" elevation="4" rounded="lg">
             <v-card-item>
-              <template #prepend>
+              <v-btn
+                variant="text"
+                class="h-auto pa-0"
+                :href="project.webUrl"
+                target="_blank"
+              >
                 <v-avatar
                   :color="!project.avatarUrl ? 'primary' : undefined"
                   size="48"
+                  class="mr-2"
                 >
                   <v-img
                     v-if="project.avatarUrl"
@@ -80,22 +86,17 @@
                   </v-img>
                   <span v-else>{{ project.name.charAt(0).toUpperCase() }}</span>
                 </v-avatar>
-              </template>
-              <v-card-title style="text-transform: capitalize">
-                {{ project.name }}
-              </v-card-title>
-              <v-card-subtitle v-if="project.namespace">
-                {{ project.namespace.name }}
-              </v-card-subtitle>
-              <template #append>
-                <v-chip
-                  :color="getAccessLevelColor(project)"
-                  size="small"
-                  class="font-weight-bold"
-                >
-                  {{ project.maxAccessLevel.humanAccess }}
-                </v-chip>
-              </template>
+                <div>
+                  <v-card-title style="text-transform: capitalize">
+                    {{ project.name }}
+                  </v-card-title>
+                  <v-card-subtitle v-if="project.namespace">
+                    {{
+                      project.namespace.fullPath.split("/").slice(1).join("/")
+                    }}
+                  </v-card-subtitle>
+                </div>
+              </v-btn>
             </v-card-item>
 
             <v-card-text>
@@ -104,38 +105,20 @@
                   project.description || t("views.index.projects.noDescription")
                 }}
               </p>
-              <v-divider class="my-2" />
-              <v-row no-gutters align="center" class="mt-2">
-                <v-col cols="auto">
-                  <v-icon icon="mdi-clock-outline" size="small" class="mr-1" />
-                </v-col>
-                <v-col>
-                  <span class="text-caption"
-                    >{{ t("views.index.projects.lastActivity") }}
-                    {{ formatDate(project.updatedAt) }}</span
-                  >
-                </v-col>
-              </v-row>
             </v-card-text>
 
             <v-card-actions>
-              <v-btn
-                color="primary"
-                variant="tonal"
-                :href="project.webUrl"
-                target="_blank"
-              >
-                <v-icon start icon="mdi-gitlab" />
-                GitLab
-              </v-btn>
               <DeployBtn :project="project" />
-              <!-- <v-btn
+              <v-btn
                 v-if="isDeployed(project)"
-                color="primary"
-                variant="tonal"
+                variant="plain"
+                color="error"
+                :key="project.id"
                 @click="handleUndeploy(project)"
-                >Undeploy</v-btn
-              > -->
+                prepend-icon="mdi-delete"
+              >
+                Undeploy
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-col>
@@ -183,7 +166,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
-import { removeDeploymentFiles } from "@/libs/gitlab";
+import { isDeployed, removeDeploymentFiles } from "@/libs/gitlab";
 import { defaultInjectedFiles, managedFiles } from "@/config/frameworks-config";
 import type { DefaultInjectedFiles } from "@/types/app-config";
 
@@ -384,6 +367,8 @@ const fetchProjects = async (clear?: boolean) => {
       }
     );
 
+    console.log("GraphQL response:", res.data.data.projects);
+
     if (res.status !== 200) {
       throw new Error("Failed to fetch projects");
     }
@@ -440,6 +425,7 @@ const fetchProjects = async (clear?: boolean) => {
 };
 
 const handleUndeploy = async (project: ProjectNode) => {
+  const toastId = toast.loading(t("components.undeployHandler.loading"));
   try {
     if (!authStore.session) return;
 
@@ -456,29 +442,15 @@ const handleUndeploy = async (project: ProjectNode) => {
         return p;
       });
 
-      toast.success(t("views.index.projects.success.undeploy"));
+      toast.success(t("components.undeployHandler.success"), { id: toastId });
       return;
     }
 
-    toast.error(t("views.index.projects.errors.undeploy"));
+    toast.error(t("components.undeployHandler.errors"), { id: toastId });
   } catch (error) {
-    toast.error(t("views.index.projects.errors.undeploy"));
+    toast.error(t("components.undeployHandler.errors"), { id: toastId });
     console.error("Error undeploying project:", error);
   }
-};
-
-const isDeployed = (project: ProjectNode): boolean => {
-  const gitLabCi = project.deploymentFiles?.find((file) =>
-    defaultInjectedFiles.includes(file.name as DefaultInjectedFiles)
-  );
-
-  if (!gitLabCi) return false;
-
-  if (gitLabCi.rawTextBlob.indexOf("cleanup") !== -1) {
-    return false;
-  }
-
-  return true;
 };
 
 const updateUrlParams = () => {
