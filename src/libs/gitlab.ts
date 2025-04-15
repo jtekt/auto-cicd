@@ -363,6 +363,7 @@ export async function removeDeploymentFiles({
   session: Session;
 }): Promise<{
   success: boolean;
+  updatedCi?: string;
 }> {
   const gitlabCiPath = ".gitlab-ci.yml";
 
@@ -429,6 +430,7 @@ cleanup-job:
   }
   return {
     success: true,
+    updatedCi,
   };
 }
 

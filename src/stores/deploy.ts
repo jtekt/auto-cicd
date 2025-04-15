@@ -320,6 +320,13 @@ export const useDeployStore = defineStore("deploy", () => {
           }
         );
         result.commit = { success: true };
+
+        // Update the repository files with the new content
+        project.value.deploymentFiles = injectFiles.value.map((f) => ({
+          name: f.fileName,
+          rawTextBlob: f.content,
+        }));
+
         toast.success(
           t("components.deployHandler.script.success.commitSuccess"),
           {

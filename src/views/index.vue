@@ -437,7 +437,14 @@ const handleUndeploy = async (project: ProjectNode) => {
     if (res.success) {
       projects.value = projects.value.map((p) => {
         if (p.id === project.id) {
-          return { ...p, deploymentFiles: undefined }; // Remove deployment files from the project
+          return {
+            ...p,
+            deploymentFiles: p.deploymentFiles?.map((df) => {
+              return df.name === ".gitlab-ci.yml"
+                ? { ...df, rawTextBlob: res.updatedCi || "" }
+                : df;
+            }),
+          }; // Updates
         }
         return p;
       });
