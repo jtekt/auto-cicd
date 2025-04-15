@@ -79,7 +79,11 @@
     </v-footer>
   </v-app>
 
-  <Toaster />
+  <Toaster
+    :theme="{
+      dark: theme.current.value.dark,
+    }"
+  />
 </template>
 
 <script setup lang="ts">
