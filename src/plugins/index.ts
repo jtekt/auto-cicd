@@ -8,7 +8,7 @@
 import vuetify, { i18n } from "./vuetify";
 import router from "../router";
 import { createToast } from "@jtekt/vue3-toaster";
-import "vue3-toaster/style.css";
+import "@jtekt/vue3-toaster/style.css";
 
 // Types
 import type { App } from "vue";

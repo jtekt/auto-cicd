@@ -7,12 +7,6 @@ WORKDIR /app
 # Install dependencies
 COPY package.json .npmrc ./
 
-RUN cat .npmrc 
-
-RUN npm view vue3-toaster@0.0.20 --registry https://verdaccio.eks.jtektrnd.net/
-
-RUN npm cache clean --force
-
 RUN npm install
 
 # Copy all source code
