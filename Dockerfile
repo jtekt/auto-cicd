@@ -9,8 +9,6 @@ COPY package.json .npmrc ./
 
 RUN cat .npmrc 
 
-RUN curl -v https://verdaccio.eks.jtektrnd.net/
-
 RUN npm view vue3-toaster@0.0.20 --registry https://verdaccio.eks.jtektrnd.net/
 
 RUN npm cache clean --force
