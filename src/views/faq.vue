@@ -35,16 +35,10 @@
       </v-expansion-panel>
     </v-expansion-panels>
   </v-container>
-  <ToastsTest />
 </template>
 
 <script setup lang="ts">
-import ToastsTest from "@/components/ToastsTest.vue";
 import { useLocale } from "vuetify";
 
 const { t } = useLocale();
 </script>
-
-<style scoped>
-/* Optional: You can style your buttons or the container here */
-</style>

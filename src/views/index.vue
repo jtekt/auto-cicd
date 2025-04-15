@@ -163,7 +163,7 @@ import {
   type ProjectsResponse,
 } from "@/types/project";
 import { useRoute, useRouter } from "vue-router";
-import { useToast } from "@/stores/toast";
+import { useToast } from "vue3-toaster";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
 import { isDeployed, removeDeploymentFiles } from "@/libs/gitlab";

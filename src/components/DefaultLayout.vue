@@ -90,7 +90,7 @@ import { refreshAccessToken } from "@/libs/gitlab";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale, useTheme } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
-import Toaster from "@/components/Toaster.vue";
+import { Toaster } from "vue3-toaster";
 
 const { current } = useLocale();
 
