@@ -23,7 +23,7 @@ import type {
 } from "@/types/app-config";
 import { getDefaultProjectConfig } from "@/libs/deploy/config";
 import { useAuthStore } from "@/stores/auth";
-import { useToast } from "vue3-toaster";
+import { useToast } from "@jtekt/vue3-toaster";
 import { useI18n } from "vue-i18n";
 
 type Env = {

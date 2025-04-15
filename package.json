@@ -13,6 +13,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@jtekt/vue3-toaster": "^0.0.22",
     "@mdi/font": "7.4.47",
     "@moreillon/oidc-auth": "^2.0.1",
     "axios": "^1.7.9",
@@ -21,7 +22,6 @@
     "roboto-fontface": "*",
     "vue": "^3.4.31",
     "vue-i18n": "^10.0.5",
-    "vue3-toaster": "0.0.20",
     "vuetify": "^3.6.14",
     "zod": "^3.24.2"
   },

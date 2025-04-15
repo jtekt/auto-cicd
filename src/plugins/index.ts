@@ -7,7 +7,7 @@
 // Plugins
 import vuetify, { i18n } from "./vuetify";
 import router from "../router";
-import { createToast } from "vue3-toaster";
+import { createToast } from "@jtekt/vue3-toaster";
 import "vue3-toaster/style.css";
 
 // Types
