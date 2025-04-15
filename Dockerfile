@@ -5,7 +5,7 @@ FROM node:23-slim as build-stage
 WORKDIR /app
 
 # Install dependencies
-COPY package.json ./
+COPY package.json .npmrc ./
 RUN npm install
 
 # Copy all source code
