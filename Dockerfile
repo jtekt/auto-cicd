@@ -7,7 +7,7 @@ WORKDIR /app
 # Install dependencies
 COPY package.json .npmrc ./
 
-RUN cat /root/.npmrc
+RUN cat .npmrc 
 
 RUN curl -v https://verdaccio.eks.jtektrnd.net/
 
