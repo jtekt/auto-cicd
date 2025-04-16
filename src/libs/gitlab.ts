@@ -36,7 +36,7 @@ export const UserSchema = z.object({
 
     // Prefix with "ci-" if it starts with a number
     if (/^[0-9]/.test(transformed)) {
-      transformed = `autocicd-${transformed}`;
+      transformed = `ci-${transformed}`;
     }
 
     return transformed;
