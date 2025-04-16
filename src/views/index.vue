@@ -393,9 +393,7 @@ const fetchProjects = async (clear?: boolean) => {
             .sort((a, b) => b.share - a.share);
 
           const projectPaths = project.node.fullPath.split("/");
-          const projectName = `${authStore.session?.user.nickname}-${
-            projectPaths[projectPaths.length - 1]
-          }`
+          const projectName = projectPaths[projectPaths.length - 1]
             .replace(/_/g, "-") // Replace underscores with hyphens
             .replace(/\./g, "-") // Replace periods with hyphens
             .toLowerCase() // Ensure lowercase

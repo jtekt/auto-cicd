@@ -1,6 +1,6 @@
 # Define the pipeline stages
 stages:
-  - build  # Stage responsible for building the Docker image
+  - build # Stage responsible for building the Docker image
   - deploy # Stage responsible for deploying the application to Kubernetes
 
 # Needed to use Docker command in CICD
@@ -11,19 +11,19 @@ services:
   - name: docker:24.0.7-dind
 
 variables:
-  APPLICATION_NAME: { APPLICATION_NAME }
+  APPLICATION_NAME: autocicd-{ USERNAME }-{ APPLICATION_NAME }
   K8S_NAMESPACE: { DEPLOYED_NAMESPACE }
   CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{ USERNAME }/{ APPLICATION_NAME }
   CONTAINER_IMAGE: ${AWS_ECR_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
   K8S_ECR_SECRET_NAME: ecr-credentials
-  K8S_ENV_SECRET_NAME: { APPLICATION_NAME }-env
+  K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}-env
   PORT: { PORT }
 
 # Build the Docker container image
 build-job:
   stage: build
-  only: 
+  only:
     # Branches to run the Build stage
     - { ROOT_REF }
   before_script:
