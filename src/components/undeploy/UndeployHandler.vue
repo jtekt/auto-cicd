@@ -1,5 +1,10 @@
 <template>
-  <v-btn color="red" variant="tonal" @click="confirmUndeploy()">
+  <v-btn
+    color="error"
+    variant="tonal"
+    @click="confirmUndeploy()"
+    prepend-icon="mdi-delete"
+  >
     {{ t("components.undeployHandler.undeploy") }}
   </v-btn>
 

@@ -109,16 +109,11 @@
 
             <v-card-actions>
               <DeployBtn :project="project" />
-              <v-btn
+              <UndeployHandler
                 v-if="isDeployed(project)"
-                variant="plain"
-                color="error"
-                :key="project.id"
-                @click="handleUndeploy(project)"
-                prepend-icon="mdi-delete"
-              >
-                Undeploy
-              </v-btn>
+                :project="project"
+                @handle-undeploy="handleUndeploy(project)"
+              />
             </v-card-actions>
           </v-card>
         </v-col>
@@ -169,6 +164,7 @@ import UsefulLinks from "@/components/UsefulLinks.vue";
 import { isDeployed, removeDeploymentFiles } from "@/libs/gitlab";
 import { defaultInjectedFiles, managedFiles } from "@/config/frameworks-config";
 import type { DefaultInjectedFiles } from "@/types/app-config";
+import UndeployHandler from "@/components/undeploy/UndeployHandler.vue";
 
 const { t } = useLocale();
 
