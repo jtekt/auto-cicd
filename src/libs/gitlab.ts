@@ -27,20 +27,13 @@ export interface CommitActionObject {
 
 export const UserSchema = z.object({
   sub: z.string(),
-  nickname: z.string().transform((val) => {
-    let transformed = val
+  nickname: z.string().transform((val) =>
+    val
       .replace(/_/g, "-") // Replace underscores with hyphens
       .replace(/\./g, "-") // Replace periods with hyphens
       .toLowerCase() // Ensure lowercase
-      .replace(/[^a-z0-9-]/g, ""); // Remove invalid chars
-
-    // Prefix with "ci-" if it starts with a number
-    if (/^[0-9]/.test(transformed)) {
-      transformed = `ci-${transformed}`;
-    }
-
-    return transformed;
-  }),
+      .replace(/[^a-z0-9-]/g, "")
+  ),
   groups: z.array(z.string()),
   name: z.string(),
   picture: z.string().nullable(),
