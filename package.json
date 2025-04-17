@@ -13,7 +13,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@jtekt/vue3-toaster": "^0.0.22",
+    "@jtekt-private/vue3-toaster": "^0.0.22",
     "@mdi/font": "7.4.47",
     "@moreillon/oidc-auth": "^2.0.1",
     "axios": "^1.7.9",
