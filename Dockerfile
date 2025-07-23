@@ -1,5 +1,5 @@
 # Start from an appropriate base image
-FROM node:23-slim as build-stage
+FROM node:22-slim as build-stage
 
 # Set the working directory for building
 WORKDIR /app
