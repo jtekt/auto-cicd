@@ -20,8 +20,8 @@ spec:
                 name: ${K8S_ENV_SECRET_NAME}
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "300m"
+              memory: "128Mi"
+              cpu: "25m"
             limits:
               memory: "512Mi"
               cpu: "600m"
