@@ -3,13 +3,6 @@ stages:
   - build # Stage responsible for building the Docker image
   - deploy # Stage responsible for deploying the application to Kubernetes
 
-# Needed to use Docker command in CICD
-# Using moreillon/ci-dind:4bca50d7 as it provides a lightweight DinD (Docker-in-Docker) environment
-# with the necessary tools to build and push container images efficiently.
-image: moreillon/ci-dind:4bca50d7
-services:
-  - name: docker:24.0.7-dind
-
 variables:
   APPLICATION_NAME: autocicd-{ USERNAME }-{ APPLICATION_NAME }
   K8S_NAMESPACE: { DEPLOYED_NAMESPACE }
@@ -32,13 +25,6 @@ build-job:
     - >
       aws ecr create-repository --repository-name ${CONTAINER_IMAGE_NAME}
       || echo "Repository might have already existed"
-    # Log in to the registry (AWS credentials are stored as GitLab env variables)
-    - >
-      aws ecr get-login-password
-      | docker login
-      --username AWS
-      --password-stdin
-      ${AWS_ECR_URL}
   script:
     # Build the container image
     - docker build -t ${CONTAINER_IMAGE_TAGGED} .
