@@ -16,6 +16,9 @@ variables:
 # Build the Docker container image
 build-job:
   stage: build
+  tags:
+    # optional: Docker is the default runner
+    - docker
   only:
     # Branches to run the Build stage
     - { ROOT_REF }
@@ -34,6 +37,9 @@ build-job:
 # Deploy to Kubernetes
 deploy-job:
   stage: deploy
+  tags:
+    # optional: Docker is the default runner
+    - docker
   only:
     # Branches to run the Deploy stage
     - { ROOT_REF }
