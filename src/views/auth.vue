@@ -49,6 +49,7 @@ import {
 } from "@/libs/gitlab";
 import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@jtekt-private/vue3-toaster";
+import axios from "axios";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale } from "vuetify";
@@ -87,9 +88,27 @@ onMounted(async () => {
   if (!profile?.user) {
     isLoading.value = false;
     return toast.error(t("views.auth.errors.profile"));
-  } else if (!profile.hasGroup) {
-    // Redirect to no-group page instead of showing snackbar
-    return router.push("/no-group");
+    // } else if (!profile.hasGroup) {
+  } else {
+    // Generate group by fetching user groups
+    const url = `${import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL}/groups`;
+
+    try {
+      const res = await axios.post(url);
+
+      if (res.status !== 200) {
+        console.error("Failed to generate group, status code:", res.status);
+
+        throw new Error("Failed to generate group");
+      }
+
+      isLoading.value = false;
+    } catch (error) {
+      console.error("Error generating group:", error);
+
+      isLoading.value = false;
+      return toast.error(t("views.auth.errors.group"));
+    }
   }
 
   // Set the session state
