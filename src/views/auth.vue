@@ -89,7 +89,7 @@ onMounted(async () => {
     isLoading.value = false;
     return toast.error(t("views.auth.errors.profile"));
     // } else if (!profile.hasGroup) {
-  } else {
+  } else if (!profile.hasGroup) {
     // Generate group by fetching user groups
     const url = `${import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL}/groups`;
 
@@ -102,6 +102,7 @@ onMounted(async () => {
         throw new Error("Failed to generate group");
       }
 
+      profile.hasGroup = true;
       isLoading.value = false;
     } catch (error) {
       console.error("Error generating group:", error);
