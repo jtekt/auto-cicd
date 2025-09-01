@@ -90,28 +90,8 @@ onMounted(async () => {
     return toast.error(t("views.auth.errors.profile"));
     // } else if (!profile.hasGroup) {
   } else if (!profile.hasGroup) {
-    // Generate group by fetching user groups
-    const url = `${
-      import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL
-    }/api/gitlab/group`;
-
-    try {
-      const res = await axios.post(url);
-
-      if (res.status !== 200) {
-        console.error("Failed to generate group, status code:", res.status);
-
-        throw new Error("Failed to generate group");
-      }
-
-      profile.hasGroup = true;
-      isLoading.value = false;
-    } catch (error) {
-      console.error("Error generating group:", error);
-
-      isLoading.value = false;
-      return toast.error(t("views.auth.errors.group"));
-    }
+    isLoading.value = false;
+    return toast.error(t("views.auth.errors.group"));
   }
 
   // Set the session state
