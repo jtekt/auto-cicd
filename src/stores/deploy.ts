@@ -428,7 +428,9 @@ export const useDeployStore = defineStore("deploy", () => {
     if (!project.value?.languages.length || !authStore.session)
       return getDefaultProjectConfig("unknown");
 
-    const mainLang = project.value.languages[0].name;
+    const mainLang = project.value.languages[0];
+
+    if (!mainLang) return getDefaultProjectConfig("unknown");
 
     // Get all files that we might need
     const allConfigFiles = getConfigFiles();
@@ -446,7 +448,7 @@ export const useDeployStore = defineStore("deploy", () => {
     repositoryFiles.value = files.data;
 
     for (const framework of Object.values(frameworksConfig)) {
-      if (!framework.configFiles || !framework.langs?.includes(mainLang))
+      if (!framework.configFiles || !framework.langs?.includes(mainLang.name))
         continue;
 
       const hasFramework = framework.configFiles.some((configFile) => {
@@ -500,6 +502,9 @@ export const useDeployStore = defineStore("deploy", () => {
 
     if (filesData.success && filesData.data.length === 1) {
       const fileData = filesData.data[0];
+
+      if (!fileData) return;
+
       const existingFileIndex = repositoryFiles.value.findIndex(
         (f) => f.fileName === file
       );

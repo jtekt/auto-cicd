@@ -93,8 +93,18 @@ const handlePaste = (event: ClipboardEvent, index: number) => {
     // If starts with #
     const match = line.match(/^([^#=]+)\s*=\s*(.*)$/); // Match key=value pairs and ignore comments
     if (match) {
-      const key = match[1].trim();
-      const value = match[2].trim().replace(/^["']|["']$/g, ""); // Remove surrounding quotes
+      const key = match[1]?.trim();
+      if (!key) {
+        isValidEnv = false;
+        break;
+      }
+
+      const value = match[2]?.trim().replace(/^["']|["']$/g, ""); // Remove surrounding quotes
+      if (!value) {
+        isValidEnv = false;
+        break;
+      }
+
       newVariables.push({ key, value, visible: false });
     } else {
       // If any line is not valid .env format, we flag as invalid
@@ -105,8 +115,12 @@ const handlePaste = (event: ClipboardEvent, index: number) => {
 
   // If the paste is a valid .env format, update the environment variables
   if (isValidEnv && newVariables.length > 0) {
+    const firstPastedKey = newVariables[0];
+
+    if (!firstPastedKey) return;
+
     // If there is a focus on a particular key (index is provided), update that key
-    deployStore.environmentVariables[index] = newVariables[0]; // Only update the first line
+    deployStore.environmentVariables[index] = firstPastedKey; // Only update the first line
 
     // If there are more than one key-value pairs, add the rest as new entries
     if (newVariables.length > 1) {

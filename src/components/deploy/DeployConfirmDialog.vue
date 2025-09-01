@@ -79,7 +79,7 @@
               <template #title>
                 <div class="d-flex align-center ga-4">
                   <v-checkbox
-                    v-model="deployStore.injectFiles[index].isChecked"
+                    v-model="fileInfo.isChecked"
                     color="success"
                     hide-details
                     @click.stop

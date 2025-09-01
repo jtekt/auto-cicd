@@ -13,7 +13,7 @@ export const generateDockerfile = async (
     if (!parsed.success) {
       return {
         success: false,
-        error: parsed.error.errors.map((e) => e.message).join("; "),
+        error: parsed.error.message,
       };
     }
 
@@ -32,12 +32,18 @@ export const generateDockerfile = async (
 
     const splitOutputFile = validated.outputFile.split("/");
 
+    const fileName = splitOutputFile[splitOutputFile.length - 1];
+
+    if (!fileName) {
+      return {
+        success: false,
+        error: "Invalid output file name",
+      };
+    }
+
     const installCommand = validated.installCommand;
     const buildCommand = validated.buildCommand;
-    const outputFileName = getProjectName(
-      splitOutputFile[splitOutputFile.length - 1],
-      config.framework
-    );
+    const outputFileName = getProjectName(fileName, config.framework);
     const outputDirectory =
       splitOutputFile.length > 1
         ? [...splitOutputFile].slice(0, -1).join("/") + "/"
