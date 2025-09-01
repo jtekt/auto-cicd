@@ -33,6 +33,9 @@ spec:
             - name: VITE_APP_DEPLOYED_NAMESPACE
               value: auto-cicd
 
+            - name: VITE_APP_GITLAB_GROUP_MANAGER_URL
+              value: http://172.16.98.151:30173/
+
             - name: VITE_APP_POD_VIEWER_URL
               value: http://172.16.98.151:31030/namespaces/auto-cicd/pods
       imagePullSecrets:

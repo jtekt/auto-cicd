@@ -1,10 +1,3 @@
-/**
- * router/index.ts
- *
- * Automatic routes for `./src/pages/*.vue`
- */
-
-// Composables
 import DefaultLayout from "@/components/DefaultLayout.vue";
 import { useAuthStore } from "@/stores/auth";
 import {

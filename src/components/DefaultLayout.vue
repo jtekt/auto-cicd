@@ -135,25 +135,19 @@ onMounted(async () => {
 
 // Set up automatic token refresh
 const setupTokenRefresh = async () => {
-  if (authStore.isAuthenticated() && authStore.session) {
-    const timeUntilExpiry =
-      authStore.session.auth_token.expires_at - Math.ceil(Date.now() / 1000);
+  if (authStore.isSessionExpiringSoon() && authStore.session) {
+    const accessToken = await refreshAccessToken(authStore.session);
 
-    if (timeUntilExpiry < 2 * 60) {
-      // Refresh if less than 2 minutes until expiry
-      const accessToken = await refreshAccessToken(authStore.session);
-
-      if (!accessToken) {
-        return router.push("/auth");
-      }
-
-      // Save the new access token
-      authStore.setAuthToken({
-        access_token: accessToken.access_token,
-        refresh_token: accessToken.refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + accessToken.expires_in,
-      });
+    if (!accessToken) {
+      return router.push("/auth");
     }
+
+    // Save the new access token
+    authStore.setAuthToken({
+      access_token: accessToken.access_token,
+      refresh_token: accessToken.refresh_token,
+      expires_at: Math.floor(Date.now() / 1000) + accessToken.expires_in,
+    });
   }
 };
 </script>

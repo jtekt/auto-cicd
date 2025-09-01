@@ -1,22 +1,14 @@
 import axios, { AxiosError } from "axios";
-import type { Session } from "./auth";
-import { z } from "zod";
 import type { Group } from "@/types/group";
 import type { ProjectNode } from "@/types/project";
 import { envKey } from "@/config/frameworks-config";
 import type { Env } from "@/types/env";
+import type { User } from "@/types/user";
+import { UserSchema } from "@/schemas/user";
+import type { Session } from "@/types/session";
+import type { Token } from "@/types/token";
+import { TokenSchema } from "@/schemas/token";
 
-export const TokenSchema = z.object({
-  access_token: z.string(),
-  created_at: z.number(),
-  expires_in: z.number(),
-  id_token: z.string(),
-  refresh_token: z.string(),
-  scope: z.string(),
-  token_type: z.string(),
-});
-
-type AccessTokenResponse = z.infer<typeof TokenSchema>;
 export type CommitAction = "create" | "update" | "delete" | "move" | "chmod";
 export interface CommitActionObject {
   action: CommitAction;
@@ -24,24 +16,6 @@ export interface CommitActionObject {
   content: string;
   encoding: "base64";
 }
-
-export const UserSchema = z.object({
-  sub: z.string(),
-  nickname: z.string().transform((val) =>
-    val
-      .replace(/_/g, "-") // Replace underscores with hyphens
-      .replace(/\./g, "-") // Replace periods with hyphens
-      .toLowerCase() // Ensure lowercase
-      .replace(/[^a-z0-9-]/g, "")
-  ),
-  groups: z.array(z.string()),
-  name: z.string(),
-  picture: z.string().nullable(),
-  email: z.string(),
-  profile: z.string(),
-});
-
-export type User = z.infer<typeof UserSchema>;
 
 export const createGitlabAuthUrl = () => {
   const scopes = "api profile openid email read_api read_user write_repository";
@@ -69,7 +43,7 @@ export const createGitlabAuthUrl = () => {
 
 export const createAccessToken = async (
   code: string
-): Promise<AccessTokenResponse | null> => {
+): Promise<Token | null> => {
   try {
     const params = new URLSearchParams();
     params.append("client_id", import.meta.env.VITE_APP_GITLAB_OAUTH_ID);
@@ -81,7 +55,7 @@ export const createAccessToken = async (
         "/" +
         import.meta.env.VITE_APP_GITLAB_OAUTH_REDIRECT_URI_PATH
     );
-    const token = await axios.post<AccessTokenResponse>(
+    const token = await axios.post<Token>(
       import.meta.env.VITE_APP_GITLAB_URL + "/oauth/token",
       params
     );
@@ -113,7 +87,7 @@ export const refreshAccessToken = async (session: Session) => {
     );
     url.searchParams.append("code_verifier", session.auth_token.code);
 
-    const token = await axios.post<AccessTokenResponse>(url.toString());
+    const token = await axios.post<Token>(url.toString());
 
     if (token.status !== 200) return null;
 
@@ -162,6 +136,18 @@ export const getGitlabProfile = async (
         );
 
       if (hasGroup) return { user, hasGroup };
+
+      // Create the group
+      const createdGroup = await axios.post(
+        `${import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL}/api/groups`
+      );
+
+      if (createdGroup.status !== 200) {
+        console.error("Error creating group", createdGroup);
+        return { user, hasGroup: false };
+      }
+
+      return { user, hasGroup: true };
     } catch (error) {
       console.error(error);
     }
@@ -269,6 +255,11 @@ export const getEnvs = async ({
     if (response.data.variable_type === "file") {
       envs = response.data.value.split("\n").map((e) => {
         const [key, value] = e.split("=");
+
+        if (!key || !value) {
+          throw new Error("Invalid environment variable format");
+        }
+
         return {
           key,
           value,

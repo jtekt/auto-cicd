@@ -152,11 +152,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
 import DeployBtn from "@/components/deploy/DeployButton.vue";
 import { useLocale } from "vuetify";
-import {
-  AccessLevel,
-  type ProjectNode,
-  type ProjectsResponse,
-} from "@/types/project";
+import { type ProjectNode, type ProjectsResponse } from "@/types/project";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@jtekt-private/vue3-toaster";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
@@ -238,41 +234,6 @@ const sortOptions = computed(() => [
 ]);
 
 const projects = ref<ProjectNode[]>([]);
-
-const getAccessLevelColor = (project: ProjectNode): string => {
-  const accessLevel = project.maxAccessLevel.stringValue;
-
-  switch (accessLevel) {
-    case AccessLevel.OWNER:
-    case AccessLevel.ADMIN:
-      return "red";
-    case AccessLevel.MAINTAINER:
-      return "orange";
-    case AccessLevel.DEVELOPER:
-      return "green";
-    case AccessLevel.REPORTER:
-      return "blue";
-    case AccessLevel.GUEST:
-      return "grey";
-    case AccessLevel.NO_ACCESS:
-    case AccessLevel.MINIMAL_ACCESS:
-    case AccessLevel.PLANNER:
-      return "lightgrey"; // Handle additional access levels
-    default:
-      return "grey";
-  }
-};
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: false,
-  });
-};
 
 const fetchProjects = async (clear?: boolean) => {
   try {
@@ -363,8 +324,6 @@ const fetchProjects = async (clear?: boolean) => {
       }
     );
 
-    console.log("GraphQL response:", res.data.data.projects);
-
     if (res.status !== 200) {
       throw new Error("Failed to fetch projects");
     }
@@ -376,8 +335,13 @@ const fetchProjects = async (clear?: boolean) => {
     if (edges) {
       projects.value.push(
         ...edges.map((project) => {
-          const id = project.node.id.match(/\/(\d+)$/);
+          const id = project.node.id.split("/").pop();
 
+          if (!id) {
+            throw new Error("Invalid project ID");
+          }
+
+          // Process languages
           const languages = project.node.languages
             .reduce<{ name: string; share: number }[]>((acc, l) => {
               const lowercasedName = l.name.toLowerCase();
@@ -388,8 +352,13 @@ const fetchProjects = async (clear?: boolean) => {
             }, [])
             .sort((a, b) => b.share - a.share);
 
-          const projectPaths = project.node.fullPath.split("/");
-          const projectName = projectPaths[projectPaths.length - 1]
+          const projectPath = project.node.fullPath.split("/").pop();
+
+          if (!projectPath) {
+            throw new Error("Invalid project path");
+          }
+
+          const projectName = projectPath
             .replace(/_/g, "-") // Replace underscores with hyphens
             .replace(/\./g, "-") // Replace periods with hyphens
             .toLowerCase() // Ensure lowercase
@@ -397,7 +366,7 @@ const fetchProjects = async (clear?: boolean) => {
 
           return {
             ...project.node,
-            id: id ? id[1] : "",
+            id: id,
             projectName,
             languages,
             deploymentFiles: project.node.repository.blobs.nodes.filter(
