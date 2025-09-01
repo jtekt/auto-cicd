@@ -93,7 +93,7 @@ onMounted(async () => {
     // Generate group by fetching user groups
     const url = `${
       import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL
-    }/api/gitlab/groups`;
+    }/api/gitlab/group`;
 
     try {
       const res = await axios.post(url);

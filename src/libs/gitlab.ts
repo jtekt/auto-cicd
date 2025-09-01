@@ -139,7 +139,7 @@ export const getGitlabProfile = async (
 
       // Create the group
       const createdGroup = await axios.post(
-        `${import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL}/api/gitlab/groups`
+        `${import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL}/api/gitlab/group`
       );
 
       if (createdGroup.status !== 200) {
