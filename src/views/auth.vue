@@ -91,7 +91,9 @@ onMounted(async () => {
     // } else if (!profile.hasGroup) {
   } else if (!profile.hasGroup) {
     // Generate group by fetching user groups
-    const url = `${import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL}/groups`;
+    const url = `${
+      import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL
+    }/api/groups`;
 
     try {
       const res = await axios.post(url);
