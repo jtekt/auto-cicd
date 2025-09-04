@@ -69,6 +69,18 @@ deploy-job:
     # Apply the Kubernetes manifest
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 
+    # Validate deployment rollout status
+    # This command waits for the deployment to complete successfully
+    # If the deployment fails or times out, the pipeline will fail with an error
+    - echo "Validating deployment rollout status for $APPLICATION_NAME..."
+    - |
+      if ! kubectl rollout status deployment/$APPLICATION_NAME --timeout=120s; then
+        echo ""
+        echo "❌ DEPLOYMENT VALIDATION FAILED!"
+        echo ""
+        exit 1
+      fi
+    - echo "✅ Deployment rollout completed successfully!"
     # Get the Kubernetes service details
     - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
 
