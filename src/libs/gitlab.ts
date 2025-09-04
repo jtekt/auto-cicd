@@ -142,8 +142,8 @@ export const getGitlabProfile = async (
         import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL
       }/api/gitlab/group`;
 
-      const createdGroup = await axios.post(url, {
-        header: {
+      const createdGroup = await axios.post(url, undefined, {
+        headers: {
           Authorization: `Bearer ${access_token}`,
         },
       });
