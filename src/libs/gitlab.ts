@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { parse } from "yaml";
 import type { Group } from "@/types/group";
 import type { ProjectNode } from "@/types/project";
 import { envKey } from "@/config/frameworks-config";
@@ -364,37 +365,78 @@ export async function removeDeploymentFiles({
 }> {
   const gitlabCiPath = ".gitlab-ci.yml";
 
-  const K8S_NAMESPACE = import.meta.env.VITE_APP_DEPLOYED_NAMESPACE;
-  const APPLICATION_NAME = project.projectName;
+  // Get previous CI content
+  const gitLabCi = project.deploymentFiles?.find(
+    (file) => file.name === gitlabCiPath
+  );
 
-  // Updated CI content with cleanup stage calling your API
+  if (!gitLabCi) {
+    return {
+      success: false,
+    };
+  }
+
+  const yamlContent = gitLabCi.rawTextBlob;
+  const parsedYaml = parse(yamlContent);
+
+  if (!parsedYaml.variables) {
+    return {
+      success: false,
+    };
+  }
+
+  if (!parsedYaml.variables.APPLICATION_NAME) {
+    parsedYaml.variables.APPLICATION_NAME = `autocicd-${session.user.nickname}-${project.projectName}`;
+  }
+
+  if (!parsedYaml.variables.K8S_NAMESPACE) {
+    parsedYaml.variables.K8S_NAMESPACE =
+      import.meta.env.VITE_APP_DEPLOYED_NAMESPACE;
+  }
+
+  // Construct new CI content
   const updatedCi = `# Define the pipeline stages
 stages:
   - cleanup
 
 variables:
-  APPLICATION_NAME: ${APPLICATION_NAME}
-  K8S_NAMESPACE: ${K8S_NAMESPACE}
-  K8S_ECR_SECRET_NAME: ecr-credentials
-  K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}-env
+  ${
+    parsedYaml.variables
+      ? Object.entries(parsedYaml.variables)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n  ")
+      : ""
+  }
 
 cleanup-job:
   stage: cleanup
   before_script:
-    - kubectl config use-context ${K8S_NAMESPACE}/gitlab-agent-for-kubernetes:${K8S_NAMESPACE}
-    - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
+    - kubectl config use-context ${
+      parsedYaml.variables.K8S_NAMESPACE
+    }/gitlab-agent-for-kubernetes:${parsedYaml.variables.K8S_NAMESPACE}
+    - kubectl config set-context --current --namespace=${
+      parsedYaml.variables.K8S_NAMESPACE
+    }
   script:
     # Delete the kubernetes deployment and service
     - envsubst < kubernetes_manifest.yml | kubectl delete --ignore-not-found=true -f -
+    
+    # Delete the env secret if it exists
+    - kubectl delete secret $K8S_ENV_SECRET_NAME --ignore-not-found=true -n $K8S_NAMESPACE
 
-    - echo ""
+    # Validate deletion
+    - |
+      echo "Validating deletion..."
+      if kubectl get deployment $APPLICATION_NAME -n $K8S_NAMESPACE; then
+        echo "Error: Deployment $APPLICATION_NAME still exists in namespace $K8S_NAMESPACE";
+        exit 1;
+      else
+        echo "Deployment $APPLICATION_NAME successfully deleted from namespace $K8S_NAMESPACE";
+      fi
+
     - echo "-------------------------------------------------------------------------"
-    - echo "  CLEANUP COMPLETED SUCCESSFULLY!"
+    - echo "CLEANUP COMPLETED SUCCESSFULLY!"
     - echo "-------------------------------------------------------------------------"
-    - echo ""
-    - echo "  To redeploy this application, please navigate to the AUTO-CICD"
-    - echo "  application and initiate a new deployment."
-    - echo ""
 `;
 
   const commitPayload = {
