@@ -7,9 +7,9 @@ variables:
   APPLICATION_NAME: autocicd-{ USERNAME }-{ APPLICATION_NAME }
   K8S_NAMESPACE: { DEPLOYED_NAMESPACE }
   CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{ USERNAME }/{ APPLICATION_NAME }
-  CONTAINER_IMAGE: ${AWS_ECR_URL}/${CONTAINER_IMAGE_NAME}
+  CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  K8S_ECR_SECRET_NAME: ecr-credentials
+  K8S_IMAGE_PULL_SECRET_NAME: { IMAGE_PULL_SECRET_NAME}
   K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}-env
   PORT: { PORT }
 
@@ -52,8 +52,8 @@ deploy-job:
 
     # Create Kubernetes secret for accessing ECR
     - >
-      kubectl create secret docker-registry ${K8S_ECR_SECRET_NAME}
-      --docker-server=${AWS_ECR_URL}
+      kubectl create secret docker-registry ${K8S_IMAGE_PULL_SECRET_NAME}
+      --docker-server=${CONTAINER_REGISTRY_URL}
       --docker-username=AWS
       --docker-password $(aws ecr get-login-password)
       --dry-run=client -o yaml
@@ -93,25 +93,31 @@ deploy-job:
 
     - PORT=$(sed "s/.*\([0-9]\+\):\([0-9]\+\)\/TCP.*/\2/" <<< "$KUBECTL_GET_SVC")
 
-    # The IP address 172.16.98.151 is the static IP of the Kubernetes cluster
-    - echo "The APP is available at http://172.16.98.151:$PORT"
+    # The IP address is the static IP of one node from the Kubernetes cluster or a load balancer
+    - |
+      if [ -n "$K8S_HOST" ]; then
+        echo "The APP is available at $K8S_HOST:$PORT"
+      fi
 
     # Send an email notification if the deployment was newly created
     - |
       if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
+        if [ -n "$K8S_HOST" ]; then
+          docker run \
+            -e SMTP_PORT=$AWS_SES_PORT \
+            -e SMTP_HOST=$AWS_SES_HOST \
+            -e SMTP_USERNAME=$AWS_SES_USERNAME \
+            -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
+            -e SMTP_TO=$GITLAB_USER_EMAIL \
+            -e SMTP_FROM=$AWS_SES_FROM \
+            -e SMTP_SUBJECT="Auto CICD" \
+            -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to $K8S_HOST:$PORT. Please note that it might take a few minutes for the application to start." \
+            moreillon/sendemail
 
-        docker run \
-          -e SMTP_PORT=$AWS_SES_PORT \
-          -e SMTP_HOST=$AWS_SES_HOST \
-          -e SMTP_USERNAME=$AWS_SES_USERNAME \
-          -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
-          -e SMTP_TO=$GITLAB_USER_EMAIL \
-          -e SMTP_FROM=$AWS_SES_FROM \
-          -e SMTP_SUBJECT="Auto CICD" \
-          -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://172.16.98.151:$PORT. Please note that it might take a few minutes for the application to start." \
-          moreillon/sendemail
-
-        echo "Email was sent to: $GITLAB_USER_EMAIL"
+          echo "Email was sent to: $GITLAB_USER_EMAIL"
+        else
+          echo "Your application $APPLICATION_NAME was deployed"
+        fi
       else
         echo "Please note that it might take a few minutes for the application to update."
       fi

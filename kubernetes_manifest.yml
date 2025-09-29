@@ -24,9 +24,6 @@ spec:
             - name: VITE_APP_GITLAB_OAUTH_ID
               value: cc0f76a696f2d509832145636d714d66095b82b47981975b25501e7739d4e255
 
-            - name: VITE_APP_GITLAB_OAUTH_REDIRECT_URI_PATH
-              value: auth
-
             - name: VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR
               value: auto-cicd-state
 
@@ -38,6 +35,9 @@ spec:
 
             - name: VITE_APP_POD_VIEWER_URL
               value: http://172.16.98.151:31030/namespaces/auto-cicd/pods
+
+            - name: VITE_APP_IMAGE_PULL_SECRET_NAME
+              value: auto-cicd-pull-secret
       imagePullSecrets:
         - name: ${K8S_ECR_SECRET_NAME}
 ---

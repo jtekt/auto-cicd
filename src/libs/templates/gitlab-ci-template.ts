@@ -37,6 +37,10 @@ export const generateGitLabCI = async (
         /{ DEPLOYED_NAMESPACE }/g,
         import.meta.env.VITE_APP_DEPLOYED_NAMESPACE
       ) // Set kubernetes context
+      .replace(
+        /{ IMAGE_PULL_SECRET_NAME }/g,
+        import.meta.env.VITE_APP_IMAGE_PULL_SECRET_NAME || "auto-cicd-pull-secret"
+      ) // Set kubernetes context
       .replace(/{ USERNAME }/g, username); // Set Username
 
     return {
