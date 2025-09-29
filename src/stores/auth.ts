@@ -64,8 +64,12 @@ export const useAuthStore = defineStore("auth", {
             return;
           }
 
+          const cookieExpiration = new Date(
+            now.getTime() + 30 * 24 * 60 * 60 * 1000
+          );
+
           const cookieOptions = {
-            expires: expirationDate,
+            expires: cookieExpiration, // In a month
             secure: location.protocol === "https:", // Auto-detect based on protocol
             sameSite: "lax" as const,
             path: "/",
@@ -75,7 +79,7 @@ export const useAuthStore = defineStore("auth", {
 
           console.log("Saved session to cookie", {
             session,
-            expiresAt: expirationDate,
+            expiresAt: cookieExpiration,
             expiresIn:
               Math.floor((expirationDate.getTime() - now.getTime()) / 1000) +
               " seconds",

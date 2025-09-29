@@ -29,11 +29,6 @@ const routes: RouteRecordRaw[] = [
         name: "FAQ",
         component: () => import("@/views/faq.vue"),
       },
-      {
-        path: "/no-group",
-        name: "NoGroup",
-        component: () => import("@/views/no-group.vue"),
-      },
     ],
   },
 ];

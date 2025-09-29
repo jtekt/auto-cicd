@@ -88,7 +88,6 @@ onMounted(async () => {
   if (!profile?.user) {
     isLoading.value = false;
     return toast.error(t("views.auth.errors.profile"));
-    // } else if (!profile.hasGroup) {
   } else if (!profile.hasGroup) {
     isLoading.value = false;
     return toast.error(t("views.auth.errors.group"));
