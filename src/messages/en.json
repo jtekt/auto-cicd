@@ -123,7 +123,8 @@
             "dialogDescription": "Here are some resources to assist you during deployment:",
             "closeButton": "Close",
             "links": {
-                "podViewerDescription": "Check the status of your deployment and review application logs using the pattern 'username-projectname-deploymentId'."
+                "podViewerDescription": "Check the status of your deployment and review application logs using the pattern 'username-projectname-deploymentId'.",
+                "gitlabGroupDescription": "Group where you can transfer your projects. Once transferred, they will appear in Auto-CICD so you can deploy them."
             }
         }
     },
@@ -152,7 +153,7 @@
                     "fetchProjects": "Failed to fetch projects. Please try again."
                 }
             },
-            "footerMessage": "If your project is not listed here, please ensure it in the auto-cicd group or one of it`s subgroup in GitLab.",
+            "footerMessage": "If your project is not listed here, please ensure it in your auto-cicd sub-group in GitLab.",
             "transferProject": "Learn how to transfer your project"
         },
         "faq": {

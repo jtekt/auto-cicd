@@ -88,7 +88,7 @@ onMounted(async () => {
   if (!profile?.user) {
     isLoading.value = false;
     return toast.error(t("views.auth.errors.profile"));
-  } else if (!profile.hasGroup) {
+  } else if (!profile.groupUrl) {
     isLoading.value = false;
     return toast.error(t("views.auth.errors.group"));
   }
@@ -108,6 +108,7 @@ onMounted(async () => {
       picture: profile.user.picture,
       name: profile.user.name,
     },
+    groupUrl: profile.groupUrl
   });
 
   router.push("/");

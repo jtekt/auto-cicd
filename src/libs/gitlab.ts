@@ -45,7 +45,7 @@ export const createAccessToken = async (
     params.append("client_id", import.meta.env.VITE_APP_GITLAB_OAUTH_ID);
     params.append("grant_type", "authorization_code");
     params.append("code", code);
-    params.append("redirect_uri", window.location.origin +  "/auth");
+    params.append("redirect_uri", window.location.origin + "/auth");
     const token = await axios.post<Token>(
       import.meta.env.VITE_APP_GITLAB_URL + "/oauth/token",
       params
@@ -87,7 +87,7 @@ export const refreshAccessToken = async (session: Session) => {
 
 export const getGitlabProfile = async (
   access_token: string
-): Promise<{ user?: User; hasGroup: boolean } | null> => {
+): Promise<{ user?: User; groupUrl?: string } | null> => {
   try {
     const res = await axios.get<User>(
       import.meta.env.VITE_APP_GITLAB_URL + "/oauth/userinfo",
@@ -113,15 +113,13 @@ export const getGitlabProfile = async (
         )}`
       );
 
-      const hasGroup =
-        autoCICDGroup.data.length &&
-        !!autoCICDGroup.data.find(
-          (g) =>
-            g.full_path ===
-            `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${user.nickname}`
-        );
+      const groupFound = autoCICDGroup.data.find(
+        (g) =>
+          g.full_path ===
+          `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${user.nickname}`
+      );
 
-      if (hasGroup) return { user, hasGroup };
+      if (groupFound) return { user, groupUrl: groupFound.web_url };
 
       // Create the group
       const url = `${
@@ -136,15 +134,15 @@ export const getGitlabProfile = async (
 
       if (createdGroup.status !== 200) {
         console.error("Error creating group", createdGroup);
-        return { user, hasGroup: false };
+        return { user };
       }
 
-      return { user, hasGroup: true };
+      return { user };
     } catch (error) {
       console.error(error);
     }
 
-    return { user, hasGroup: false };
+    return { user };
   } catch (error) {
     console.error(error);
     return null;

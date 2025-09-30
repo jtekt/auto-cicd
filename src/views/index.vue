@@ -193,6 +193,14 @@ const lastCursor = ref<string | null>(null);
 const hasNextPage = ref<boolean | null>(null);
 const loadMoreTrigger = ref<HTMLElement | null>(null);
 
+const groupUrl = computed(
+  () =>
+    authStore.session?.groupUrl ||
+    `${import.meta.env.VITE_APP_GITLAB_URL}/${
+      import.meta.env.VITE_APP_DEPLOYED_NAMESPACE
+    }/${authStore.session?.user.nickname}`
+);
+
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {

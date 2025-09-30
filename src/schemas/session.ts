@@ -17,4 +17,5 @@ export const SessionSchema = z.object({
     name: true,
     picture: true,
   }),
+  groupUrl: z.string().optional()
 });

@@ -123,7 +123,8 @@
             "dialogDescription": "デプロイ中に役立つリソースを以下に示します：",
             "closeButton": "閉じる",
             "links": {
-                "podViewerDescription": "デプロイの状態を確認し、'username-projectname-deploymentId' のパターンを使用してアプリケーションログを確認できます。"
+                "podViewerDescription": "デプロイの状態を確認し、'username-projectname-deploymentId' のパターンを使用してアプリケーションログを確認できます。",
+                "gitlabGroupDescription": "このグループにプロジェクトを移管すると、Auto-CICD に表示され、デプロイできるようになります。"
             }
         }
     },
@@ -152,7 +153,7 @@
                     "fetchProjects": "プロジェクトの取得に失敗しました。再試行してください。"
                 }
             },
-            "footerMessage": "プロジェクトがここに表示されない場合、GitLabのauto-cicdグループまたはそのサブグループにあることを確認してください。",
+            "footerMessage": "プロジェクトがここに表示されていない場合は、GitLab の auto-cicd サブグループに含まれていることをご確認ください。",
             "transferProject": "プロジェクトの移動方法を学ぶ"
         },
         "faq": {
