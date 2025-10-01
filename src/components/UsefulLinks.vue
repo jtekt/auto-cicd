@@ -25,22 +25,19 @@
 
         <!-- List of useful links -->
         <v-list>
-          <v-list-item
-          v-if="authStore.session?.groupUrl"
-            class="mb-2"
-          >
+          <v-list-item v-if="authStore.session?.groupUrl" class="mb-2">
             <template #prepend>
               <v-img
-              src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
-              alt="GitLab Logo"
-              contain
-              style="
+                src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
+                alt="GitLab Logo"
+                contain
+                style="
                   width: 50px;
                   height: 50px;
                   margin-right: 10px;
                   vertical-align: middle;
                 "
-            />
+              />
             </template>
             <v-list-item-title class="text-h6">
               <a :href="authStore.session.groupUrl" target="_blank">
@@ -96,7 +93,7 @@ import { onMounted, ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 
 const { t } = useLocale();
-const authStore = useAuthStore()
+const authStore = useAuthStore();
 
 // State for dialog
 const dialog = ref(false);
@@ -115,13 +112,14 @@ const usefulLinks = [
     : []),
 ];
 
-onMounted(()=>{
+onMounted(() => {
   // Check if first 3 times login and show the links
-  const hasUsed = parseInt(localStorage.getItem("welcome") || "")
+  const hasUsed = parseInt(localStorage.getItem("welcome") || "", 10);
+  const safeHasUsed = Number.isNaN(hasUsed) ? 0 : hasUsed;
 
-  if(hasUsed > 2) return
+  if (safeHasUsed > 2) return;
 
-  dialog.value = true
-  localStorage.setItem("welcome", (hasUsed + 1).toString())
-})
+  dialog.value = true;
+  localStorage.setItem("welcome", (safeHasUsed + 1).toString());
+});
 </script>
