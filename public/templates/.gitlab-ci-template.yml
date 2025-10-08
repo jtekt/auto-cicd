@@ -115,7 +115,7 @@ deploy-job:
     # If the deployment fails or times out, the pipeline will fail with an error
     - echo "Validating deployment rollout status for $APPLICATION_NAME..."
     - |
-      if ! kubectl rollout status deployment/$APPLICATION_NAME --timeout=300; then
+      if ! kubectl rollout status deployment/$APPLICATION_NAME --timeout=300s; then
         echo ""
         echo "❌ DEPLOYMENT VALIDATION FAILED!"
         echo ""
