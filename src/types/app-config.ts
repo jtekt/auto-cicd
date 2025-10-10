@@ -6,7 +6,7 @@ export type AcceptedFramework =
   | "streamlit"
   | "fastapi"
   | "unknown";
-export type AcceptedPackageManager = "npm" | "yarn" | "pnpm" | "pip";
+export type AcceptedPackageManager = "npm" | "yarn" | "pnpm" | "pip" | "unknown";
 export type Language = "javascript" | "python";
 export type OptionalFiles = "nginx.conf"; // Optional files exclusive to some frameworks
 export type DefaultInjectedFiles =

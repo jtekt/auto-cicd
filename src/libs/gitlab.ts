@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { parse } from "yaml";
 import type { Group } from "@/types/group";
 import type { ProjectNode } from "@/types/project";
-import { envKey } from "@/config/frameworks-config";
+import { envKey, type ConfigFileInfo } from "@/config/frameworks-config";
 import type { Env } from "@/types/env";
 import type { User } from "@/types/user";
 import { UserSchema } from "@/schemas/user";
@@ -149,61 +149,147 @@ export const getGitlabProfile = async (
   }
 };
 
+export type GitLabFile = {
+  fileName: string;
+  content?: string; // Optional: only for detection files with checks
+};
+
 export const getGitLabFiles = async ({
   access_token,
   paths,
   project,
 }: {
   access_token: string;
-  paths: string[];
-  project: ProjectNode;
+  paths: ConfigFileInfo[];
+  project: { fullPath: string; repository: { rootRef: string } };
 }): Promise<
-  | {
-      success: true;
-      data: { fileName: string; content: string }[];
-    }
+  | { success: true; data: GitLabFile[] }
   | { success: false; error: string }
 > => {
-  try {
-    const res = await axios.post<{
-      data: {
-        project: {
-          repository: {
-            blobs: {
-              edges: Array<{
-                node: { name: string; rawBlob: string; path: string };
-              }>;
-            };
-          };
-        };
-        correlationId: string;
-      };
-    }>(
-      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
-      {
-        query: `{
-          project(fullPath: "${project.fullPath}") {
-            repository {
-              blobs(ref: "${
-                project.repository.rootRef
-              }", paths: ${JSON.stringify(paths)}) {
-                edges { node { name rawBlob path } }
+  if (!paths.length) {
+    return { success: true, data: [] };
+  }
+
+  const detectionPaths: ConfigFileInfo[] = paths.filter((p) => p.checks);
+  const metadataPaths: ConfigFileInfo[] = paths.filter((p) => !p.checks);
+
+  // Dynamic sizes: Smaller for expensive content fetches
+  const CONTENT_BATCH_SIZE = 2; // Conservative to avoid complexity >250
+  const METADATA_BATCH_SIZE = 20; // Cheaper, larger OK
+
+  const baseUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`;
+
+  const fetchBatch = async (
+    filePaths: string[],
+    includeContent: boolean,
+    batchSize: number
+  ): Promise<{ fileName: string; content?: string }[]> => {
+    if (!filePaths.length) return [];
+
+    const chunks: string[][] = [];
+    for (let i = 0; i < filePaths.length; i += batchSize) {
+      chunks.push(filePaths.slice(i, i + batchSize));
+    }
+
+    const batchResults: { fileName: string; content?: string }[] = [];
+
+    for (const chunk of chunks) {
+      let success = false;
+      // First, try batched
+      success = await attemptQuery(chunk, includeContent, batchResults);
+
+      if (!success && chunk.length > 1) {
+        // Fallback: Fetch one-by-one on complexity error
+        console.warn(`Batch failed; falling back to singles for: ${chunk.join(", ")}`);
+        for (const singleFile of chunk) {
+          const res = await attemptQuery([singleFile], includeContent, batchResults);
+
+          console.warn(`Single fetch for ${singleFile} ${res ? "succeeded" : "failed"}`);
+        }
+      }
+    }
+
+    console.log(`Fetched ${batchResults.length} files (includeContent=${includeContent})`, batchResults);
+
+    return batchResults;
+  };
+
+  const attemptQuery = async (
+    chunk: string[],
+    includeContent: boolean,
+    results: { fileName: string; content?: string }[]
+  ): Promise<boolean> => { // Returns true if succeeded
+    const fields = includeContent
+      ? `name path rawBlob`
+      : `name path`;
+
+    const query = `
+      query {
+        project(fullPath: "${project.fullPath}") {
+          repository {
+            blobs(ref: "${project.repository.rootRef}", paths: ${JSON.stringify(chunk)}) {
+              edges {
+                node {
+                  ${fields}
+                }
               }
             }
           }
-        }`,
-      },
-      { headers: { Authorization: `Bearer ${access_token}` } }
+        }
+      }`;
+
+    try {
+      const res = await axios.post(baseUrl, { query }, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+
+      if (res.data.errors) {
+        const errorMsg = res.data.errors[0]?.message || "Unknown error";
+        if (errorMsg.includes("exceeds max complexity")) {
+          console.error(`Complexity error for batch ${chunk.join(", ")}: ${errorMsg}`);
+          return false; // Trigger fallback
+        }
+        console.error("GraphQL errors:", res.data.errors);
+        throw new Error(errorMsg);
+      }
+
+      const edges = res.data?.data?.project?.repository?.blobs?.edges ?? [];
+      for (const e of edges) {
+        const node = e.node;
+        results.push({
+          fileName: node.path,
+          ...(includeContent && { content: node.rawBlob }),
+        });
+      }
+      return true;
+    } catch (err) {
+      console.error(`Error fetching chunk ${chunk.join(", ")}:`, err);
+      return false; // Skip on non-complexity errors, or customize
+    }
+  };
+
+  try {
+    const detectionResults = await fetchBatch(
+      detectionPaths.map((p) => p.file),
+      true,
+      CONTENT_BATCH_SIZE
     );
 
-    return {
-      success: true,
-      data: res.data.data.project.repository.blobs.edges.map((e) => ({
-        fileName: e.node.path,
-        content: e.node.rawBlob,
-      })),
-    };
+    const metadataResults = await fetchBatch(
+      metadataPaths.map((p) => p.file),
+      false,
+      METADATA_BATCH_SIZE
+    );
+
+    const allResults = [...detectionResults, ...metadataResults].sort((a, b) =>
+      a.fileName.localeCompare(b.fileName)
+    );
+
+    console.debug(`Fetched ${allResults.length} files from GitLab`, allResults);
+
+    return { success: true, data: allResults };
   } catch (err) {
+    console.error("Overall error in getGitLabFiles:", err);
     return { success: false, error: (err as Error).message };
   }
 };
@@ -336,7 +422,7 @@ export const updateEnvs = async ({
   return await axios.post(url, body, config);
 };
 
-export async function removeDeploymentFiles({
+export async function undeploy({
   project,
   session,
 }: {
@@ -360,6 +446,13 @@ export async function removeDeploymentFiles({
   }
 
   const yamlContent = gitLabCi.rawTextBlob;
+
+  if (!yamlContent) {
+    return {
+      success: false,
+    };
+  }
+
   const parsedYaml = parse(yamlContent);
 
   if (!parsedYaml.variables) {
@@ -463,7 +556,7 @@ export const isDeployed = (project: ProjectNode): boolean => {
 
   if (!gitLabCi) return false;
 
-  if (gitLabCi.rawTextBlob.indexOf("cleanup") !== -1) {
+  if (gitLabCi.rawTextBlob?.indexOf("cleanup") !== -1) {
     return false;
   }
 

@@ -47,13 +47,12 @@ export interface ProjectNode {
     blobs: {
       nodes: {
         name: string;
-        rawTextBlob: string;
       }[];
     };
   };
   deploymentFiles?: {
     name: string;
-    rawTextBlob: string;
+    rawTextBlob?: string;
   }[];
 }
 
@@ -70,11 +69,12 @@ interface ProjectEdge {
 }
 
 export interface ProjectsResponse {
-  data: {
+  data?: {
     projects: {
       count: number;
       pageInfo: PageInfo;
       edges: ProjectEdge[] | null;
     };
   };
+  errors?: { message: string }[];
 }

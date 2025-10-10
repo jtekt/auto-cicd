@@ -157,7 +157,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@jtekt-private/vue3-toaster";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
-import { isDeployed, removeDeploymentFiles } from "@/libs/gitlab";
+import { isDeployed,  undeploy } from "@/libs/gitlab";
 import { defaultInjectedFiles, managedFiles } from "@/config/frameworks-config";
 import type { DefaultInjectedFiles } from "@/types/app-config";
 import UndeployHandler from "@/components/undeploy/UndeployHandler.vue";
@@ -309,7 +309,6 @@ const fetchProjects = async (clear?: boolean) => {
                 blobs(paths: ["${managedFiles.join('", "')}"]) {
                   nodes {
                     name
-                    rawTextBlob
                   }
                 }
               }
@@ -332,8 +331,15 @@ const fetchProjects = async (clear?: boolean) => {
       }
     );
 
-    if (res.status !== 200) {
-      throw new Error("Failed to fetch projects");
+    if (res.data.errors) {
+      return toast.error(
+        t("views.index.projects.errors.fetchProjects") +
+          ": " +
+          res.data.errors.map((e) => e.message).join(", "),
+        { closeButton: true, duration: Infinity }
+      );
+    } else if (!res.data.data) {
+      throw new Error("Failed to fetch projects: No projects data found");
     }
 
     const filteredLangs = ["dockerfile", "html", "css", "scss"]; // TODO: Add more languages to filter
@@ -400,7 +406,7 @@ const handleUndeploy = async (project: ProjectNode) => {
   try {
     if (!authStore.session) return;
 
-    const res = await removeDeploymentFiles({
+    const res = await undeploy({
       project,
       session: authStore.session,
     });

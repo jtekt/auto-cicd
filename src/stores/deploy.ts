@@ -19,6 +19,7 @@ import {
 import type {
   AcceptedFramework,
   AcceptedPackageManager,
+  FrameworkConfig,
   ProjectConfig,
 } from "@/types/app-config";
 import { getDefaultProjectConfig } from "@/libs/deploy/config";
@@ -42,7 +43,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
   // Select models
   const frameworkSelector = ref<AcceptedFramework>("unknown");
-  const managerSelector = ref<AcceptedPackageManager>("npm");
+  const managerSelector = ref<AcceptedPackageManager>("unknown");
 
   // Dialogs models
   const deployDialog = ref(false);
@@ -70,7 +71,7 @@ export const useDeployStore = defineStore("deploy", () => {
   >([]);
 
   // Files in the repository
-  const repositoryFiles = ref<{ fileName: string; content: string }[]>([]);
+  const repositoryFiles = ref<{ fileName: string; content?: string }[]>([]);
 
   // Error messages and deployment info
   const deploymentInfo = ref<{
@@ -183,6 +184,7 @@ export const useDeployStore = defineStore("deploy", () => {
   async function openDeployment(selectedProject: ProjectNode) {
     isLoading.value = true;
     project.value = selectedProject;
+
     if (!authStore.session || !project.value) {
       toast.error(t("components.deployHandler.script.errors.unauthorized"));
       isLoading.value = false;
@@ -191,6 +193,16 @@ export const useDeployStore = defineStore("deploy", () => {
 
     deployDialog.value = true;
 
+    // Reset state
+    error.value = null;
+    deploymentInfo.value = null;
+    injectFiles.value = [];
+    projectConfig.value = getDefaultProjectConfig("unknown");
+    frameworkSelector.value = "unknown";
+    managerSelector.value = "unknown";
+    repositoryFiles.value = []
+
+    // Get current envs
     const envs = await getEnvs({
       access_token: authStore.session.auth_token.access_token,
       project: project.value,
@@ -425,70 +437,120 @@ export const useDeployStore = defineStore("deploy", () => {
   }
 
   async function identifyProject(): Promise<ProjectConfig> {
-    if (!project.value?.languages.length || !authStore.session)
+    if (!project.value?.languages.length || !authStore.session) {
       return getDefaultProjectConfig("unknown");
+    }
 
     const mainLang = project.value.languages[0];
-
     if (!mainLang) return getDefaultProjectConfig("unknown");
 
-    // Get all files that we might need
-    const allConfigFiles = getConfigFiles();
+    // Filter config files by language for efficiency
+    const configFiles = getConfigFiles(mainLang.name);
+    if (!configFiles.length) return getDefaultProjectConfig("unknown");
 
-    if (!allConfigFiles.length) return getDefaultProjectConfig("unknown");
-
-    const files = await getGitLabFiles({
+    const filesResponse = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: allConfigFiles,
+      paths: configFiles,
       project: project.value,
     });
 
-    if (!files.success) return getDefaultProjectConfig("unknown");
+    console.debug("Fetched files for detection:", filesResponse);
 
-    repositoryFiles.value = files.data;
+    if (!filesResponse.success) {
+      console.warn(
+        "Failed to fetch files; falling back to unknown:",
+        filesResponse.error
+      );
+      return getDefaultProjectConfig("unknown");
+    }
 
-    for (const framework of Object.values(frameworksConfig)) {
-      if (!framework.configFiles || !framework.langs?.includes(mainLang.name))
-        continue;
+    // Map fileName to content for quick lookup (handle optional content)
+    const fileContents = new Map(
+      filesResponse.data.map((f) => [f.fileName, f.content || null])
+    );
 
-      const hasFramework = framework.configFiles.some((configFile) => {
-        const file = files.data.find((f) => {
-          if (typeof configFile.file === "string")
-            return f.fileName === configFile.file;
-          return configFile.file.includes(f.fileName);
-        });
-        return (
-          file &&
-          configFile.checkFor.some((check) => file.content.includes(check))
-        );
-      });
+    repositoryFiles.value = filesResponse.data; // Keep for UI/other uses
 
-      if (hasFramework) {
-        let detectedManager: AcceptedPackageManager | undefined;
-        for (const manager of framework.supportedManagers) {
-          const pmConfig = packageManagers[manager.manager];
-          const hasManager = pmConfig.detectionFiles.some((df) => {
-            const file = files.data.find((f) => f.fileName === df.file);
-            return file && (!df.checkFor || file.content.includes(df.checkFor));
-          });
-          if (hasManager) {
-            detectedManager = manager.manager;
-            break;
+    // Single-pass detection using structured checks
+    const frameworkMatches: Array<{
+      framework: AcceptedFramework;
+      score: number; // e.g., num matching configFiles
+      config: FrameworkConfig;
+    }> = [];
+
+    configFiles.forEach((info) => {
+      if (!info.checks || !info.isDetectionFile) return; // Skip non-check files
+
+      // check if file was found
+      if (!fileContents.has(info.file)) return;
+
+      const content = fileContents.get(info.file);
+      if (!content) {
+        console.warn(`Missing content for detection file: ${info.file}`);
+        return;
+      }
+
+      info.checks.forEach(({ framework, strings }) => {
+        const matches = strings.some((str) => content.includes(str));
+        if (matches) {
+          const existing = frameworkMatches.find(
+            (m) => m.framework === framework
+          );
+          if (existing) {
+            existing.score += 1; // Increment for multi-file match
+          } else {
+            const config = frameworksConfig[framework];
+            if (config && config.langs?.includes(mainLang.name)) {
+              frameworkMatches.push({
+                framework,
+                score: 1,
+                config,
+              });
+            }
           }
         }
+      });
+    });
 
-        const packageManager =
-          detectedManager &&
-          framework.supportedManagers.some(
-            (sm) => sm.manager === detectedManager
-          )
-            ? detectedManager
-            : framework.defaultManager;
+    if (!frameworkMatches.length) {
+      return getDefaultProjectConfig("unknown");
+    }
 
-        return getDefaultProjectConfig(framework.id, packageManager);
+    // Pick best match: highest score, then highest priority
+    const sortedMatches = frameworkMatches.sort((a, b) => b.score - a.score);
+
+    const bestMatch = sortedMatches[0]!;
+    console.debug(
+      `Detected framework: ${bestMatch.framework} (score: ${bestMatch.score})`
+    );
+
+    // Detect package manager using supportedManagers' requiredFiles
+    const detectedManager = detectPackageManager(
+      bestMatch.config,
+      fileContents
+    );
+    const packageManager = detectedManager || bestMatch.config.defaultManager;
+
+    return getDefaultProjectConfig(bestMatch.framework, packageManager);
+  }
+
+  function detectPackageManager(
+    frameworkConfig: FrameworkConfig,
+    fileContents: Map<string, string | null>
+  ): AcceptedPackageManager | undefined {
+    for (const {
+      manager,
+      requiredFiles,
+    } of frameworkConfig.supportedManagers) {
+      const hasAllRequired = requiredFiles.every((reqFile) => {
+        const filesToCheck = Array.isArray(reqFile) ? reqFile : [reqFile];
+        return filesToCheck.some((f) => fileContents.has(f)); // Existence check
+      });
+      if (hasAllRequired) {
+        return manager;
       }
     }
-    return getDefaultProjectConfig("unknown");
+    return undefined;
   }
 
   async function searchFile(file: string) {
@@ -496,7 +558,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     const filesData = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: [file],
+      paths: [{ file, isDetectionFile: false }],
       project: project.value,
     });
 

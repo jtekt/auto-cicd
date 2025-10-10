@@ -56,11 +56,15 @@ export const packageManagers: Record<
     commands: { install: "pip install --no-cache-dir -r requirements.txt" },
     detectionFiles: [{ file: "requirements.txt" }],
   },
+  unknown: {
+    name: "unknown",
+    commands: { install: "" },
+    detectionFiles: [],
+  },
+
   // poetry: {
   //   name: "poetry",
-  //   commands: {
-  //     install: "poetry install --no-root",
-  //   },
+  //   commands: { install: "poetry install --no-dev" },
   //   detectionFiles: [{ file: "pyproject.toml" }],
   // },
 };
@@ -232,7 +236,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     files: [],
     configFiles: [
       { file: ["requirements.txt"], checkFor: ["fastapi"] },
-      { file: ["pyproject.toml"], checkFor: ["fastapi"] },
+      // { file: ["pyproject.toml"], checkFor: ["fastapi"] },
     ],
     supportedManagers: [
       { manager: "pip", requiredFiles: ["requirements.txt"] },
@@ -256,7 +260,7 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     files: [],
     configFiles: [
       { file: ["requirements.txt"], checkFor: ["streamlit"] },
-      { file: ["pyproject.toml"], checkFor: ["streamlit"] },
+      // { file: ["pyproject.toml"], checkFor: ["streamlit"] },
     ],
     supportedManagers: [
       { manager: "pip", requiredFiles: ["requirements.txt"] },
@@ -264,6 +268,39 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     ],
     defaultManager: "pip",
   },
+
+  // Template for new frameworks (e.g., add SvelteKit like this):
+  // sveltekit: {
+  //   id: "sveltekit",
+  //   name: "SvelteKit",
+  //   language: "javascript",
+  //   image: { type: "img", value: "/icons/Svelte.svg" },
+  //   langs: ["typescript", "javascript"],
+  //   userConfigurable: {
+  //     buildCommand: { defaultEmpty: false },
+  //     installCommand: { defaultEmpty: false },
+  //   },
+  //   outputFile: "build/index.js", // Adapter-dependent
+  //   port: 3000,
+  //   deployType: "server", // New field: "static" | "server" | "hybrid" for K8s manifest gen
+  //   files: ["svelte.config.js"], // Framework-specific injections
+  //   configFiles: [
+  //     {
+  //       file: ["svelte.config.js", "svelte.config.ts"],
+  //       checkFor: ["config", "vite"], // Strings to grep for detection
+  //     },
+  //   ],
+  //   supportedManagers: [ // Optional: defaults to JS if language="javascript"
+  //     { manager: "npm", requiredFiles: ["package-lock.json"] },
+  //     { manager: "yarn", requiredFiles: ["yarn.lock"] },
+  //   ],
+  //   defaultManager: "npm",
+  //   requiredFiles: [
+  //     ["svelte.config.js", "svelte.config.ts"],
+  //     "package.json",
+  //   ],
+  // },
+
   unknown: {
     id: "unknown",
     name: "Unknown Framework",
@@ -276,53 +313,119 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
   },
 };
 
-export const getConfigFiles = (lang?: string) => {
-  // Using Set to ensure unique file paths
-  const uniqueFiles = new Set<string>(defaultInjectedFiles);
+// Helper to get default supported managers based on language
+const getDefaultSupportedManagers = (
+  language: string
+): FrameworkConfig["supportedManagers"] => {
+  if (language === "python") {
+    return [{ manager: "pip", requiredFiles: ["requirements.txt"] }];
+  }
+  return [
+    { manager: "npm", requiredFiles: ["package-lock.json"] },
+    { manager: "yarn", requiredFiles: ["yarn.lock"] },
+    { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
+  ];
+};
 
-  // Process all framework configurations
-  Object.values(frameworksConfig).forEach((frameworkConfig) => {
+// Validate configs on load (call in your app init)
+export const validateConfigs = (): void => {
+  Object.values(frameworksConfig).forEach((config) => {
+    if (!config.id || !config.name) {
+      throw new Error(`Invalid config for ${config.id}: missing id/name`);
+    }
+    // Add more checks as needed (e.g., supportedManagers align with language)
+  });
+};
+
+export type ConfigFileInfo = {
+  file: string;
+  isDetectionFile: boolean;
+  checks?: Array<{ framework: AcceptedFramework; strings: string[] }>;
+  alwaysFetch?: boolean; // e.g., for defaults like Dockerfile
+};
+
+export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
+  const fileMap = new Map<string, ConfigFileInfo>(); // Use Map for easy merging
+
+  // Add always-fetch defaults (injected files)
+  defaultInjectedFiles.forEach((file) => {
+    fileMap.set(file, { file, isDetectionFile: false, alwaysFetch: true });
+  });
+
+  // Process frameworks
+  Object.entries(frameworksConfig).forEach(([frameworkId, frameworkConfig]) => {
+    const framework = frameworkId as AcceptedFramework;
     if (lang && !frameworkConfig.langs?.includes(lang)) return;
 
-    // Handle framework config files
+    // Ensure supportedManagers if missing
+    if (!frameworkConfig.supportedManagers?.length) {
+      frameworkConfig.supportedManagers = getDefaultSupportedManagers(
+        frameworkConfig.language
+      );
+    }
+
+    // Track detection checks (key improvement: per-file, per-framework strings)
     if (frameworkConfig.configFiles) {
-      frameworkConfig.configFiles.forEach((configFileEntry) => {
-        configFileEntry.file.forEach((filePath) => {
-          uniqueFiles.add(filePath);
+      frameworkConfig.configFiles.forEach((configEntry) => {
+        configEntry.file.forEach((filePath) => {
+          if (!fileMap.has(filePath)) {
+            fileMap.set(filePath, { file: filePath, isDetectionFile: true });
+          }
+          const info = fileMap.get(filePath)!;
+          if (!info.checks) info.checks = [];
+          info.checks!.push({ framework, strings: configEntry.checkFor });
         });
       });
     }
 
-    // Add output file name if it exists
+    // Add output file (if configurable, but always include for deploy)
     if (frameworkConfig.outputFile) {
-      uniqueFiles.add(frameworkConfig.outputFile);
+      const info = fileMap.get(frameworkConfig.outputFile) || {
+        file: frameworkConfig.outputFile,
+        isDetectionFile: false,
+      };
+      fileMap.set(frameworkConfig.outputFile, info);
     }
 
-    // Handle required files (can be strings or arrays of strings)
+    // Add required files
     if (frameworkConfig.requiredFiles) {
       frameworkConfig.requiredFiles.forEach((requiredFile) => {
-        if (typeof requiredFile === "string") {
-          uniqueFiles.add(requiredFile);
-        } else {
-          // Handle array of strings
-          requiredFile.forEach((filePath) => uniqueFiles.add(filePath));
-        }
+        const filesToAdd = Array.isArray(requiredFile)
+          ? requiredFile
+          : [requiredFile];
+        filesToAdd.forEach((filePath) => {
+          if (!fileMap.has(filePath)) {
+            fileMap.set(filePath, { file: filePath, isDetectionFile: false });
+          }
+        });
       });
     }
 
     // Add complementary files
     if (frameworkConfig.files) {
-      frameworkConfig.files.forEach((f) => uniqueFiles.add(f));
+      frameworkConfig.files.forEach((f) => {
+        if (!fileMap.has(f)) {
+          fileMap.set(f, { file: f, isDetectionFile: false });
+        }
+      });
     }
 
-    // Process all package manager configurations
+    // Add manager detection files
     frameworkConfig.supportedManagers.forEach((manager) => {
-      packageManagers[manager.manager].detectionFiles.forEach((df) =>
-        uniqueFiles.add(df.file)
-      );
+      const pmConfig = packageManagers[manager.manager];
+      if (pmConfig) {
+        pmConfig.detectionFiles.forEach((df) => {
+          if (!fileMap.has(df.file)) {
+            fileMap.set(df.file, { file: df.file, isDetectionFile: true });
+          }
+          // Optionally add checks here if managers have string-based detection
+        });
+      }
     });
   });
 
-  // Convert Set back to array for return
-  return Array.from(uniqueFiles);
+  // Convert to array, sorted for consistency
+  return Array.from(fileMap.values()).sort((a, b) =>
+    a.file.localeCompare(b.file)
+  );
 };
