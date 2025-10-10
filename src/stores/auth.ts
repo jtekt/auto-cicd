@@ -11,7 +11,6 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     isAuthenticated(): boolean {
       if (this.session) {
-        console.log("Already have session in store", this.session);
         return true;
       }
       this.session = this.getSession();
@@ -32,7 +31,6 @@ export const useAuthStore = defineStore("auth", {
               session = data.data;
             } else {
               // Session expired, remove cookie
-              console.log("Session expired, removing cookie");
               CookieUtils.remove("auth", { path: "/" });
             }
           }
@@ -76,20 +74,10 @@ export const useAuthStore = defineStore("auth", {
           };
 
           CookieUtils.set("auth", JSON.stringify(session), cookieOptions);
-
-          console.log("Saved session to cookie", {
-            session,
-            expiresAt: cookieExpiration,
-            expiresIn:
-              Math.floor((expirationDate.getTime() - now.getTime()) / 1000) +
-              " seconds",
-            cookieOptions,
-          });
         } else {
           console.error("Invalid session, not saving to cookie", res.error);
         }
       } else {
-        console.log("Removing session cookie");
         CookieUtils.remove("auth", { path: "/" });
       }
     },
@@ -109,7 +97,6 @@ export const useAuthStore = defineStore("auth", {
 
       // Use setSession to handle cookie logic properly
       this.setSession(updatedSession);
-      console.log("Updated auth token in session", updatedSession);
     },
 
     logout() {

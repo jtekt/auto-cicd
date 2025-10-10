@@ -53,10 +53,10 @@ export type FrameworkConfig = {
   langs?: string[];
   userConfigurable?: {
     installCommand?: {
-      defaultEmpty: boolean;
+      defaultEmpty: boolean; // If true, the user must provide a command
     };
     buildCommand?: {
-      defaultEmpty: boolean;
+      defaultEmpty: boolean; // If true, the user must provide a command
     };
     outputFile?: {
       defaultEmpty: boolean; // If true, the user must provide a command

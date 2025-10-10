@@ -163,8 +163,7 @@ export const getGitLabFiles = async ({
   paths: ConfigFileInfo[];
   project: { fullPath: string; repository: { rootRef: string } };
 }): Promise<
-  | { success: true; data: GitLabFile[] }
-  | { success: false; error: string }
+  { success: true; data: GitLabFile[] } | { success: false; error: string }
 > => {
   if (!paths.length) {
     return { success: true, data: [] };
@@ -174,7 +173,7 @@ export const getGitLabFiles = async ({
   const metadataPaths: ConfigFileInfo[] = paths.filter((p) => !p.checks);
 
   // Dynamic sizes: Smaller for expensive content fetches
-  const CONTENT_BATCH_SIZE = 2; // Conservative to avoid complexity >250
+  const CONTENT_BATCH_SIZE = 1; // Conservative to avoid complexity >250
   const METADATA_BATCH_SIZE = 20; // Cheaper, larger OK
 
   const baseUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`;
@@ -200,16 +199,11 @@ export const getGitLabFiles = async ({
 
       if (!success && chunk.length > 1) {
         // Fallback: Fetch one-by-one on complexity error
-        console.warn(`Batch failed; falling back to singles for: ${chunk.join(", ")}`);
         for (const singleFile of chunk) {
-          const res = await attemptQuery([singleFile], includeContent, batchResults);
-
-          console.warn(`Single fetch for ${singleFile} ${res ? "succeeded" : "failed"}`);
+          await attemptQuery([singleFile], includeContent, batchResults);
         }
       }
     }
-
-    console.log(`Fetched ${batchResults.length} files (includeContent=${includeContent})`, batchResults);
 
     return batchResults;
   };
@@ -218,16 +212,17 @@ export const getGitLabFiles = async ({
     chunk: string[],
     includeContent: boolean,
     results: { fileName: string; content?: string }[]
-  ): Promise<boolean> => { // Returns true if succeeded
-    const fields = includeContent
-      ? `name path rawBlob`
-      : `name path`;
+  ): Promise<boolean> => {
+    // Returns true if succeeded
+    const fields = includeContent ? `name path rawBlob` : `name path`;
 
     const query = `
       query {
         project(fullPath: "${project.fullPath}") {
           repository {
-            blobs(ref: "${project.repository.rootRef}", paths: ${JSON.stringify(chunk)}) {
+            blobs(ref: "${project.repository.rootRef}", paths: ${JSON.stringify(
+      chunk
+    )}) {
               edges {
                 node {
                   ${fields}
@@ -239,14 +234,20 @@ export const getGitLabFiles = async ({
       }`;
 
     try {
-      const res = await axios.post(baseUrl, { query }, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
+      const res = await axios.post(
+        baseUrl,
+        { query },
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+        }
+      );
 
       if (res.data.errors) {
         const errorMsg = res.data.errors[0]?.message || "Unknown error";
         if (errorMsg.includes("exceeds max complexity")) {
-          console.error(`Complexity error for batch ${chunk.join(", ")}: ${errorMsg}`);
+          console.error(
+            `Complexity error for batch ${chunk.join(", ")}: ${errorMsg}`
+          );
           return false; // Trigger fallback
         }
         console.error("GraphQL errors:", res.data.errors);
@@ -284,8 +285,6 @@ export const getGitLabFiles = async ({
     const allResults = [...detectionResults, ...metadataResults].sort((a, b) =>
       a.fileName.localeCompare(b.fileName)
     );
-
-    console.debug(`Fetched ${allResults.length} files from GitLab`, allResults);
 
     return { success: true, data: allResults };
   } catch (err) {

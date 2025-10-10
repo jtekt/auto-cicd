@@ -8,6 +8,14 @@ import type {
   PackageManagerConfig,
 } from "@/types/app-config";
 
+// Import individual framework configs
+import { viteConfig } from "./frameworks/vite";
+import { nuxtConfig } from "./frameworks/nuxt";
+import { nextConfig } from "./frameworks/next";
+import { expressConfig } from "./frameworks/express";
+import { streamlitConfig } from "./frameworks/streamlit";
+import { fastapiConfig } from "./frameworks/fastapi";
+
 export const envKey = "ENV"; // Name of the file saved in gitlab with the envs
 
 export const defaultInjectedFiles: DefaultInjectedFiles[] = [
@@ -70,236 +78,12 @@ export const packageManagers: Record<
 };
 
 export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
-  vite: {
-    id: "vite",
-    name: "Vite",
-    language: "javascript",
-    image: { type: "img", value: "/icons/Vite.js.svg" },
-    langs: ["vue", "typescript", "javascript", "tsx", "jsx"],
-    userConfigurable: {
-      buildCommand: { defaultEmpty: false },
-      installCommand: { defaultEmpty: false },
-    },
-    outputFile: "dist/index.html",
-    port: 5173,
-    files: ["nginx.conf"],
-    configFiles: [
-      {
-        file: [
-          "vite.config.ts",
-          "vite.config.mts",
-          "vite.config.js",
-          "vite.config.mjs",
-        ],
-        checkFor: ["defineConfig"],
-      },
-    ],
-    supportedManagers: [
-      { manager: "npm", requiredFiles: ["package-lock.json"] },
-      { manager: "yarn", requiredFiles: ["yarn.lock"] },
-      { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
-    ],
-    defaultManager: "npm",
-    requiredFiles: [
-      [
-        "vite.config.ts",
-        "vite.config.mts",
-        "vite.config.js",
-        "vite.config.mjs",
-      ],
-      "package.json",
-    ],
-  },
-  nuxt: {
-    id: "nuxt",
-    name: "Nuxt",
-    language: "javascript",
-    image: { type: "img", value: "/icons/Nuxt.svg" },
-    langs: ["vue", "typescript", "javascript"],
-    userConfigurable: {
-      buildCommand: { defaultEmpty: false },
-      installCommand: { defaultEmpty: false },
-    },
-    outputFile: "/app/server/index.mjs",
-    port: 3000,
-    files: [],
-    configFiles: [
-      {
-        file: [
-          "nuxt.config.ts",
-          "nuxt.config.mts",
-          "nuxt.config.js",
-          "nuxt.config.mjs",
-        ],
-        checkFor: ["defineNuxtConfig"],
-      },
-    ],
-    supportedManagers: [
-      { manager: "npm", requiredFiles: ["package-lock.json"] },
-      { manager: "yarn", requiredFiles: ["yarn.lock"] },
-      { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
-    ],
-    defaultManager: "npm",
-    requiredFiles: [
-      [
-        "nuxt.config.ts",
-        "nuxt.config.mts",
-        "nuxt.config.js",
-        "nuxt.config.mjs",
-      ],
-      "package.json",
-    ],
-  },
-  nextjs: {
-    id: "nextjs",
-    name: "NextJs",
-    language: "javascript",
-    image: { type: "img", value: "/icons/Nextjs.svg" },
-    langs: ["tsx", "jsx", "typescript", "javascript"],
-    userConfigurable: {
-      buildCommand: { defaultEmpty: false },
-      installCommand: { defaultEmpty: false },
-    },
-    outputFile: ".next/server.js",
-    port: 3000,
-    files: [],
-    configFiles: [
-      {
-        file: [
-          "next.config.ts",
-          "next.config.mts",
-          "next.config.js",
-          "next.config.mjs",
-        ],
-        checkFor: ["NextConfig"],
-      },
-    ],
-    supportedManagers: [
-      { manager: "npm", requiredFiles: ["package-lock.json"] },
-      { manager: "yarn", requiredFiles: ["yarn.lock"] },
-      { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
-    ],
-    defaultManager: "npm",
-    requiredFiles: [
-      [
-        "next.config.ts",
-        "next.config.mts",
-        "next.config.js",
-        "next.config.mjs",
-      ],
-      "package.json",
-    ],
-    tips: [
-      {
-        text: `To deploy you need to add the config "output: 'standalone'" in your next.config.js`,
-        link: "https://nextjs.org/docs/pages/api-reference/config/next-config-js/output#automatically-copying-traced-files",
-      },
-    ],
-  },
-  express: {
-    id: "express",
-    name: "Express",
-    language: "javascript",
-    image: { type: "img", value: "/icons/Express.svg" },
-    langs: ["javascript", "typescript"],
-    userConfigurable: {
-      buildCommand: { defaultEmpty: true },
-      installCommand: { defaultEmpty: false },
-      outputFile: { defaultEmpty: false },
-      port: { defaultEmpty: false },
-    },
-    outputFile: "app.js",
-    port: 3000,
-    files: [],
-    configFiles: [{ file: ["package.json"], checkFor: ["express"] }],
-    supportedManagers: [
-      { manager: "npm", requiredFiles: ["package-lock.json"] },
-      { manager: "yarn", requiredFiles: ["yarn.lock"] },
-      { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
-    ],
-    defaultManager: "npm",
-    requiredFiles: ["package.json"],
-  },
-  fastapi: {
-    id: "fastapi",
-    name: "FastAPI",
-    language: "python",
-    image: { type: "img", value: "/icons/FastAPI.svg" },
-    langs: ["python"],
-    userConfigurable: {
-      installCommand: { defaultEmpty: false },
-      outputFile: { defaultEmpty: false },
-      port: { defaultEmpty: false },
-    },
-    outputFile: "main.py",
-    port: 8000,
-    files: [],
-    configFiles: [
-      { file: ["requirements.txt"], checkFor: ["fastapi"] },
-      // { file: ["pyproject.toml"], checkFor: ["fastapi"] },
-    ],
-    supportedManagers: [
-      { manager: "pip", requiredFiles: ["requirements.txt"] },
-      // { manager: "poetry", requiredFiles: ["pyproject.toml"] },
-    ],
-    defaultManager: "pip",
-  },
-  streamlit: {
-    id: "streamlit",
-    name: "Streamlit",
-    language: "python",
-    image: { type: "img", value: "/icons/Streamlit.svg" },
-    langs: ["python"],
-    userConfigurable: {
-      installCommand: { defaultEmpty: false },
-      outputFile: { defaultEmpty: false },
-      port: { defaultEmpty: false },
-    },
-    outputFile: "app.py",
-    port: 8501,
-    files: [],
-    configFiles: [
-      { file: ["requirements.txt"], checkFor: ["streamlit"] },
-      // { file: ["pyproject.toml"], checkFor: ["streamlit"] },
-    ],
-    supportedManagers: [
-      { manager: "pip", requiredFiles: ["requirements.txt"] },
-      // { manager: "poetry", requiredFiles: ["pyproject.toml"] },
-    ],
-    defaultManager: "pip",
-  },
-
-  // Template for new frameworks (e.g., add SvelteKit like this):
-  // sveltekit: {
-  //   id: "sveltekit",
-  //   name: "SvelteKit",
-  //   language: "javascript",
-  //   image: { type: "img", value: "/icons/Svelte.svg" },
-  //   langs: ["typescript", "javascript"],
-  //   userConfigurable: {
-  //     buildCommand: { defaultEmpty: false },
-  //     installCommand: { defaultEmpty: false },
-  //   },
-  //   outputFile: "build/index.js", // Adapter-dependent
-  //   port: 3000,
-  //   deployType: "server", // New field: "static" | "server" | "hybrid" for K8s manifest gen
-  //   files: ["svelte.config.js"], // Framework-specific injections
-  //   configFiles: [
-  //     {
-  //       file: ["svelte.config.js", "svelte.config.ts"],
-  //       checkFor: ["config", "vite"], // Strings to grep for detection
-  //     },
-  //   ],
-  //   supportedManagers: [ // Optional: defaults to JS if language="javascript"
-  //     { manager: "npm", requiredFiles: ["package-lock.json"] },
-  //     { manager: "yarn", requiredFiles: ["yarn.lock"] },
-  //   ],
-  //   defaultManager: "npm",
-  //   requiredFiles: [
-  //     ["svelte.config.js", "svelte.config.ts"],
-  //     "package.json",
-  //   ],
-  // },
+  vite: viteConfig,
+  nuxt: nuxtConfig,
+  nextjs: nextConfig,
+  express: expressConfig,
+  fastapi: fastapiConfig,
+  streamlit: streamlitConfig,
 
   unknown: {
     id: "unknown",
@@ -312,6 +96,10 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
     defaultManager: "npm",
   },
 };
+
+export const acceptedFrameworks = Object.keys(
+  frameworksConfig
+) as AcceptedFramework[];
 
 // Helper to get default supported managers based on language
 const getDefaultSupportedManagers = (
@@ -339,8 +127,9 @@ export const validateConfigs = (): void => {
 
 export type ConfigFileInfo = {
   file: string;
-  isDetectionFile: boolean;
   checks?: Array<{ framework: AcceptedFramework; strings: string[] }>;
+  detectedFrameworks?: Set<AcceptedFramework>; // Unique frameworks this file helps detect (for checks)
+  requiredFor?: Set<AcceptedFramework>; // Frameworks that require this file's existence
   alwaysFetch?: boolean; // e.g., for defaults like Dockerfile
 };
 
@@ -349,7 +138,7 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
 
   // Add always-fetch defaults (injected files)
   defaultInjectedFiles.forEach((file) => {
-    fileMap.set(file, { file, isDetectionFile: false, alwaysFetch: true });
+    fileMap.set(file, { file, alwaysFetch: true });
   });
 
   // Process frameworks
@@ -364,30 +153,35 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
       );
     }
 
-    // Track detection checks (key improvement: per-file, per-framework strings)
+    // Track detection checks (per-file, per-framework strings)
     if (frameworkConfig.configFiles) {
       frameworkConfig.configFiles.forEach((configEntry) => {
         configEntry.file.forEach((filePath) => {
           if (!fileMap.has(filePath)) {
-            fileMap.set(filePath, { file: filePath, isDetectionFile: true });
+            fileMap.set(filePath, { file: filePath });
           }
+
           const info = fileMap.get(filePath)!;
           if (!info.checks) info.checks = [];
           info.checks!.push({ framework, strings: configEntry.checkFor });
+
+          // Track unique detected frameworks with Set
+          if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
+          info.detectedFrameworks.add(framework);
         });
       });
     }
 
-    // Add output file (if configurable, but always include for deploy)
+    // Add output file (always include for deploy, no detection)
     if (frameworkConfig.outputFile) {
-      const info = fileMap.get(frameworkConfig.outputFile) || {
-        file: frameworkConfig.outputFile,
-        isDetectionFile: false,
-      };
-      fileMap.set(frameworkConfig.outputFile, info);
+      if (!fileMap.has(frameworkConfig.outputFile)) {
+        fileMap.set(frameworkConfig.outputFile, {
+          file: frameworkConfig.outputFile,
+        });
+      }
     }
 
-    // Add required files
+    // Add required files (existence check, no content unless already marked)
     if (frameworkConfig.requiredFiles) {
       frameworkConfig.requiredFiles.forEach((requiredFile) => {
         const filesToAdd = Array.isArray(requiredFile)
@@ -395,30 +189,51 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
           : [requiredFile];
         filesToAdd.forEach((filePath) => {
           if (!fileMap.has(filePath)) {
-            fileMap.set(filePath, { file: filePath, isDetectionFile: false });
+            fileMap.set(filePath, { file: filePath });
           }
+          const info = fileMap.get(filePath)!;
+          if (!info.requiredFor) info.requiredFor = new Set();
+          info.requiredFor.add(framework);
         });
       });
     }
 
-    // Add complementary files
+    // Add complementary files (no detection)
     if (frameworkConfig.files) {
       frameworkConfig.files.forEach((f) => {
         if (!fileMap.has(f)) {
-          fileMap.set(f, { file: f, isDetectionFile: false });
+          fileMap.set(f, { file: f, alwaysFetch: true });
         }
       });
     }
 
-    // Add manager detection files
+    // Add manager detection files (existence primarily; content if checkFor)
     frameworkConfig.supportedManagers.forEach((manager) => {
       const pmConfig = packageManagers[manager.manager];
       if (pmConfig) {
         pmConfig.detectionFiles.forEach((df) => {
           if (!fileMap.has(df.file)) {
-            fileMap.set(df.file, { file: df.file, isDetectionFile: true });
+            fileMap.set(df.file, {
+              file: df.file,
+              // For PM, checks only if df.checkFor (rare, e.g., for poetry sections)
+            });
           }
-          // Optionally add checks here if managers have string-based detection
+          const info = fileMap.get(df.file)!;
+          if (df.checkFor && !info.checks) {
+            info.checks = []; // Initialize if needed
+          }
+          if (df.checkFor) {
+            // Add PM-specific check (use a special framework like 'pm-detection' or integrate into detection flow)
+            // For now, add as generic check; adjust detection logic to handle PM separately
+            if (info.checks) {
+              info.checks.push({
+                framework: framework, // Or a placeholder; PM is post-framework detection
+                strings: [df.checkFor],
+              });
+              if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
+              info.detectedFrameworks.add(framework); // Tie to framework for simplicity
+            }
+          }
         });
       }
     });

@@ -15,6 +15,7 @@ import {
   packageManagers,
   envKey,
   getConfigFiles,
+  acceptedFrameworks,
 } from "@/config/frameworks-config";
 import type {
   AcceptedFramework,
@@ -200,7 +201,7 @@ export const useDeployStore = defineStore("deploy", () => {
     projectConfig.value = getDefaultProjectConfig("unknown");
     frameworkSelector.value = "unknown";
     managerSelector.value = "unknown";
-    repositoryFiles.value = []
+    repositoryFiles.value = [];
 
     // Get current envs
     const envs = await getEnvs({
@@ -454,8 +455,6 @@ export const useDeployStore = defineStore("deploy", () => {
       project: project.value,
     });
 
-    console.debug("Fetched files for detection:", filesResponse);
-
     if (!filesResponse.success) {
       console.warn(
         "Failed to fetch files; falling back to unknown:",
@@ -471,18 +470,31 @@ export const useDeployStore = defineStore("deploy", () => {
 
     repositoryFiles.value = filesResponse.data; // Keep for UI/other uses
 
-    // Single-pass detection using structured checks
-    const frameworkMatches: Array<{
-      framework: AcceptedFramework;
-      score: number; // e.g., num matching configFiles
-      config: FrameworkConfig;
-    }> = [];
+    // Detection using structured checks
+    const frameworkMatches: Map<AcceptedFramework, number> = new Map(
+      acceptedFrameworks.map((framework) => [framework, 0]) // Key: framework, Value: initial score 0
+    );
 
     configFiles.forEach((info) => {
-      if (!info.checks || !info.isDetectionFile) return; // Skip non-check files
+      // Skip if file not fetched
+      if (!fileContents.has(info.file)) {
+        return;
+      }
 
-      // check if file was found
-      if (!fileContents.has(info.file)) return;
+      // Existence-based scoring for required files
+      if (info.requiredFor && info.requiredFor.size > 0) {
+        info.requiredFor.forEach((framework) => {
+          if (framework !== "unknown") {
+            const currentScore = frameworkMatches.get(framework) ?? 0;
+            frameworkMatches.set(framework, currentScore + 1);
+          }
+        });
+      }
+
+      // String-based scoring for files with checks (requires content)
+      if (!info.checks || !info.checks.length) {
+        return;
+      }
 
       const content = fileContents.get(info.file);
       if (!content) {
@@ -490,48 +502,38 @@ export const useDeployStore = defineStore("deploy", () => {
         return;
       }
 
+      // Check each framework's indicators
       info.checks.forEach(({ framework, strings }) => {
         const matches = strings.some((str) => content.includes(str));
-        if (matches) {
-          const existing = frameworkMatches.find(
-            (m) => m.framework === framework
-          );
-          if (existing) {
-            existing.score += 1; // Increment for multi-file match
-          } else {
-            const config = frameworksConfig[framework];
-            if (config && config.langs?.includes(mainLang.name)) {
-              frameworkMatches.push({
-                framework,
-                score: 1,
-                config,
-              });
-            }
-          }
+        if (matches && framework !== "unknown") {
+          const currentScore = frameworkMatches.get(framework) ?? 0;
+          frameworkMatches.set(framework, currentScore + 1);
         }
       });
     });
 
-    if (!frameworkMatches.length) {
+    // Find best match by highest score (skip 'unknown')
+    let maxScore = -1;
+    let bestFramework: AcceptedFramework | null = null;
+    for (const [framework, score] of frameworkMatches.entries()) {
+      if (framework === "unknown" || score <= maxScore) continue;
+      maxScore = score;
+      bestFramework = framework;
+    }
+
+    if (!bestFramework) {
+      console.debug("No framework matched; defaulting to unknown");
       return getDefaultProjectConfig("unknown");
     }
 
-    // Pick best match: highest score, then highest priority
-    const sortedMatches = frameworkMatches.sort((a, b) => b.score - a.score);
-
-    const bestMatch = sortedMatches[0]!;
-    console.debug(
-      `Detected framework: ${bestMatch.framework} (score: ${bestMatch.score})`
-    );
+    const bestConfig = frameworksConfig[bestFramework];
+    console.debug(`Detected framework: ${bestFramework} (score: ${maxScore})`);
 
     // Detect package manager using supportedManagers' requiredFiles
-    const detectedManager = detectPackageManager(
-      bestMatch.config,
-      fileContents
-    );
-    const packageManager = detectedManager || bestMatch.config.defaultManager;
+    const detectedManager = detectPackageManager(bestConfig, fileContents);
+    const packageManager = detectedManager || bestConfig.defaultManager;
 
-    return getDefaultProjectConfig(bestMatch.framework, packageManager);
+    return getDefaultProjectConfig(bestFramework, packageManager);
   }
 
   function detectPackageManager(
@@ -558,7 +560,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     const filesData = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: [{ file, isDetectionFile: false }],
+      paths: [{ file, alwaysFetch: true }],
       project: project.value,
     });
 
