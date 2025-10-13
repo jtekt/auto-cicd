@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ${APPLICATION_NAME}
+  annotations:
+    users: ${GITLAB_USER_EMAIL}
+    repository.url: ${CI_REPOSITORY_URL}
 spec:
   replicas: 1
   selector:
