@@ -7,7 +7,6 @@
       item-value="id"
       :label="t('components.deployHandler.deployDialog.selectFramework')"
       variant="outlined"
-      :error="deployStore.projectConfig.framework === 'unknown'"
     >
       <template #selection="{ item }">
         <div class="d-flex align-center" style="gap: 16px">
@@ -39,8 +38,7 @@
     </v-select>
     <v-select
       v-if="
-        deployStore.packageManagersOptions.length > 0 &&
-        deployStore.projectConfig.framework !== 'unknown'
+        deployStore.packageManagersOptions.length > 0
       "
       v-model="deployStore.managerSelector"
       :items="deployStore.packageManagersOptions"

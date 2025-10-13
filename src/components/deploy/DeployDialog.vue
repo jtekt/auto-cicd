@@ -64,12 +64,7 @@
         >
           {{ deployStore.error }}
         </v-alert>
-        <template
-          v-else-if="
-            !deployStore.isLoading ||
-            deployStore.projectConfig.framework !== 'unknown'
-          "
-        >
+        <template v-else-if="!deployStore.isLoading">
           <!-- Missing Files Warning -->
           <v-alert
             variant="tonal"
@@ -106,7 +101,7 @@
             variant="tonal"
             color="warning"
             class="mb-5"
-            v-if="deployStore.isOutputFileInvalid"
+            v-if="deployStore.isOutputFileInvalid && deployStore.projectConfig"
           >
             {{
               t("components.deployHandler.confirmDialog.missingOutputFile", {
@@ -118,16 +113,18 @@
             }}
           </v-alert>
           <DeployFrameworkSelector />
-          <v-expansion-panels>
+          <v-expansion-panels v-if="deployStore.projectConfig">
             <DeployBuildSettings
               v-if="
-                deployStore.projectConfig &&
                 frameworksConfig[deployStore.projectConfig.framework]
                   .userConfigurable
               "
             />
             <DeployEnvironmentSettings />
           </v-expansion-panels>
+          <v-alert v-else type="error" variant="tonal" class="pa-5 mt-5">
+            {{ t("components.deployHandler.deployDialog.noFrameworkIdentified") }}
+          </v-alert>
         </template>
       </div>
       <div
@@ -137,10 +134,7 @@
         <v-btn
           color="success"
           variant="tonal"
-          :disabled="
-            deployStore.isLoading ||
-            deployStore.projectConfig.framework === 'unknown'
-          "
+          :disabled="deployStore.isLoading || !deployStore.projectConfig"
           @click="deployStore.handleDeploy"
         >
           {{ t("components.deployHandler.actionBtn") }}

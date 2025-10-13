@@ -43,8 +43,8 @@ export const useDeployStore = defineStore("deploy", () => {
   const project = ref<ProjectNode | null>(null);
 
   // Select models
-  const frameworkSelector = ref<AcceptedFramework>("unknown");
-  const managerSelector = ref<AcceptedPackageManager>("unknown");
+  const frameworkSelector = ref<AcceptedFramework>();
+  const managerSelector = ref<AcceptedPackageManager>();
 
   // Dialogs models
   const deployDialog = ref(false);
@@ -55,7 +55,7 @@ export const useDeployStore = defineStore("deploy", () => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
-  const projectConfig = ref<ProjectConfig>(getDefaultProjectConfig("unknown"));
+  const projectConfig = ref<ProjectConfig>();
 
   // Environment variables
   const environmentVariables = ref<Env[]>([]);
@@ -86,6 +86,8 @@ export const useDeployStore = defineStore("deploy", () => {
   const frameworks = computed(() => Object.values(frameworksConfig));
 
   const packageManagersOptions = computed(() => {
+    if (!projectConfig.value) return [];
+
     return frameworksConfig[
       projectConfig.value.framework
     ].supportedManagers.map((m) => ({
@@ -95,13 +97,13 @@ export const useDeployStore = defineStore("deploy", () => {
   });
 
   const filesMightHaveMissed = computed<(string | string[])[]>(() => {
-    if (!project.value) return [];
+    if (!project.value || !projectConfig.value) return [];
 
     const requiredByFramework =
       frameworksConfig[projectConfig.value.framework].requiredFiles || [];
     const requiredByPackageManager =
       frameworksConfig[projectConfig.value.framework].supportedManagers.find(
-        (sm) => sm.manager === projectConfig.value.manager
+        (sm) => sm.manager === projectConfig.value?.manager
       )?.requiredFiles || [];
     const requiredFilesForConfig = [
       ...new Set([...requiredByFramework, ...requiredByPackageManager]),
@@ -118,10 +120,10 @@ export const useDeployStore = defineStore("deploy", () => {
 
   const isOutputFileInvalid = computed(() => {
     // If has buildCommand, outputFile is not required
-    if (projectConfig.value.buildCommand) return false;
+    if (projectConfig.value?.buildCommand) return false;
 
     return !repositoryFiles.value.find(
-      (f) => f.fileName === projectConfig.value.outputFile
+      (f) => f.fileName === projectConfig.value?.outputFile
     );
   });
 
@@ -152,22 +154,30 @@ export const useDeployStore = defineStore("deploy", () => {
   watch(
     () => frameworkSelector.value,
     (newFramework) => {
-      if (newFramework !== projectConfig.value.framework) {
-        // Update projectConfig with the new framework
-        projectConfig.value = getDefaultProjectConfig(
-          newFramework,
-          managerSelector.value
-        );
+      if (newFramework === projectConfig.value?.framework) {
+        return;
+      } else if (!newFramework) {
+        reset();
 
-        // Check if the selected manager is supported by the new framework
-        const supportedManagers = frameworksConfig[
-          newFramework
-        ].supportedManagers.map((m) => m.manager);
+        return;
+      }
 
-        if (!supportedManagers.includes(managerSelector.value)) {
-          managerSelector.value = frameworksConfig[newFramework].defaultManager;
-          projectConfig.value.manager = managerSelector.value;
-        }
+      console.log("Updating projectConfig for new framework:", newFramework);
+
+      // Update projectConfig with the new framework
+      projectConfig.value = getDefaultProjectConfig(
+        newFramework,
+        managerSelector.value
+      );
+
+      // Check if the selected manager is supported by the new framework
+      const supportedManagers = frameworksConfig[
+        newFramework
+      ].supportedManagers.map((m) => m.manager);
+
+      if (!managerSelector.value || !supportedManagers.includes(managerSelector.value)) {
+        managerSelector.value = frameworksConfig[newFramework].defaultManager;
+        projectConfig.value.manager = managerSelector.value;
       }
     }
   );
@@ -175,7 +185,11 @@ export const useDeployStore = defineStore("deploy", () => {
   watch(
     () => managerSelector.value,
     (newManager) => {
-      if (newManager !== projectConfig.value.manager) {
+      if (
+        newManager &&
+        projectConfig.value &&
+        newManager !== projectConfig.value.manager
+      ) {
         projectConfig.value.manager = newManager;
       }
     }
@@ -198,9 +212,9 @@ export const useDeployStore = defineStore("deploy", () => {
     error.value = null;
     deploymentInfo.value = null;
     injectFiles.value = [];
-    projectConfig.value = getDefaultProjectConfig("unknown");
-    frameworkSelector.value = "unknown";
-    managerSelector.value = "unknown";
+    projectConfig.value = undefined;
+    frameworkSelector.value = undefined;
+    managerSelector.value = undefined;
     repositoryFiles.value = [];
 
     // Get current envs
@@ -215,9 +229,10 @@ export const useDeployStore = defineStore("deploy", () => {
     environmentVariables.value = JSON.parse(JSON.stringify(envs));
 
     const detectedConfig = await identifyProject();
+
     projectConfig.value = detectedConfig;
-    frameworkSelector.value = detectedConfig.framework;
-    managerSelector.value = detectedConfig.manager;
+    frameworkSelector.value = detectedConfig?.framework;
+    managerSelector.value = detectedConfig?.manager;
 
     isLoading.value = false;
   }
@@ -231,12 +246,18 @@ export const useDeployStore = defineStore("deploy", () => {
     const invalidEnvs = environmentVariables.value.filter(
       (e) => !e.key || !e.value
     );
+
     if (invalidEnvs.length) {
       toast.error(
         t("components.deployHandler.script.errors.invalidEnvs", {
           keys: invalidEnvs.map((e) => e.key).join(", "),
         })
       );
+      return;
+    }
+
+    if (!projectConfig.value) {
+      toast.error(t("components.deployHandler.script.errors.missingConfig"));
       return;
     }
 
@@ -437,17 +458,17 @@ export const useDeployStore = defineStore("deploy", () => {
     confirmDeployDialog.value = false;
   }
 
-  async function identifyProject(): Promise<ProjectConfig> {
+  async function identifyProject(): Promise<ProjectConfig | undefined> {
     if (!project.value?.languages.length || !authStore.session) {
-      return getDefaultProjectConfig("unknown");
+      return;
     }
 
     const mainLang = project.value.languages[0];
-    if (!mainLang) return getDefaultProjectConfig("unknown");
+    if (!mainLang) return;
 
     // Filter config files by language for efficiency
     const configFiles = getConfigFiles(mainLang.name);
-    if (!configFiles.length) return getDefaultProjectConfig("unknown");
+    if (!configFiles.length) return;
 
     const filesResponse = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
@@ -460,7 +481,7 @@ export const useDeployStore = defineStore("deploy", () => {
         "Failed to fetch files; falling back to unknown:",
         filesResponse.error
       );
-      return getDefaultProjectConfig("unknown");
+      return;
     }
 
     // Map fileName to content for quick lookup (handle optional content)
@@ -484,10 +505,8 @@ export const useDeployStore = defineStore("deploy", () => {
       // Existence-based scoring for required files
       if (info.requiredFor && info.requiredFor.size > 0) {
         info.requiredFor.forEach((framework) => {
-          if (framework !== "unknown") {
-            const currentScore = frameworkMatches.get(framework) ?? 0;
-            frameworkMatches.set(framework, currentScore + 1);
-          }
+          const currentScore = frameworkMatches.get(framework) ?? 0;
+          frameworkMatches.set(framework, currentScore + 1);
         });
       }
 
@@ -505,7 +524,8 @@ export const useDeployStore = defineStore("deploy", () => {
       // Check each framework's indicators
       info.checks.forEach(({ framework, strings }) => {
         const matches = strings.some((str) => content.includes(str));
-        if (matches && framework !== "unknown") {
+
+        if (matches) {
           const currentScore = frameworkMatches.get(framework) ?? 0;
           frameworkMatches.set(framework, currentScore + 1);
         }
@@ -516,14 +536,14 @@ export const useDeployStore = defineStore("deploy", () => {
     let maxScore = -1;
     let bestFramework: AcceptedFramework | null = null;
     for (const [framework, score] of frameworkMatches.entries()) {
-      if (framework === "unknown" || score <= maxScore) continue;
+      if (score <= maxScore) continue;
       maxScore = score;
       bestFramework = framework;
     }
 
     if (!bestFramework) {
       console.debug("No framework matched; defaulting to unknown");
-      return getDefaultProjectConfig("unknown");
+      return;
     }
 
     const bestConfig = frameworksConfig[bestFramework];
@@ -584,6 +604,13 @@ export const useDeployStore = defineStore("deploy", () => {
         repositoryFiles.value.push(fileData);
       }
     }
+  }
+
+  function reset() {
+    project.value = null;
+    frameworkSelector.value = undefined;
+    projectConfig.value = undefined;
+    managerSelector.value = undefined;
   }
 
   return {

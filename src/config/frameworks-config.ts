@@ -64,17 +64,6 @@ export const packageManagers: Record<
     commands: { install: "pip install --no-cache-dir -r requirements.txt" },
     detectionFiles: [{ file: "requirements.txt" }],
   },
-  unknown: {
-    name: "unknown",
-    commands: { install: "" },
-    detectionFiles: [],
-  },
-
-  // poetry: {
-  //   name: "poetry",
-  //   commands: { install: "poetry install --no-dev" },
-  //   detectionFiles: [{ file: "pyproject.toml" }],
-  // },
 };
 
 export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
@@ -84,17 +73,6 @@ export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
   express: expressConfig,
   fastapi: fastapiConfig,
   streamlit: streamlitConfig,
-
-  unknown: {
-    id: "unknown",
-    name: "Unknown Framework",
-    language: "javascript",
-    image: { type: "icon", value: "mdi-help-circle-outline" },
-    outputFile: "index.js",
-    port: 3000,
-    supportedManagers: [],
-    defaultManager: "npm",
-  },
 };
 
 export const acceptedFrameworks = Object.keys(

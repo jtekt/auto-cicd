@@ -31,7 +31,8 @@
                     "value": "Value",
                     "pasteHint": "You can paste the contents of a valid .env file directly into one of the key input fields, and it will automatically populate the corresponding values for you.",
                     "addMore": "Add More"
-                }
+                },
+                "noFrameworkIdentified": "No framework identified, please select one to proceed."
             },
             "confirmDialog": {
                 "title": "Confirm Deployment",
