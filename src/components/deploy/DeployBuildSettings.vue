@@ -1,5 +1,5 @@
 <template>
-  <v-expansion-panel>
+  <v-expansion-panel v-if="deployStore.projectConfig && selectedFramework">
     <v-expansion-panel-title>
       {{ t("components.deployHandler.deployDialog.buildSettings.title") }}
     </v-expansion-panel-title>
@@ -88,7 +88,7 @@ const { t } = useLocale();
 const deployStore = useDeployStore();
 
 const selectedFramework = computed(
-  () => frameworksConfig[deployStore.projectConfig.framework]
+  () => deployStore.projectConfig && frameworksConfig[deployStore.projectConfig.framework] 
 );
 
 // Debounce implementation
@@ -115,10 +115,10 @@ const searchFileDebounced = debounce((fileName: string) => {
 
 // Watch outputFile
 watch(
-  () => deployStore.projectConfig.outputFile,
+  () => deployStore.projectConfig?.outputFile,
   (newValue, oldValue) => {
     if (
-      selectedFramework.value.userConfigurable?.outputFile &&
+      selectedFramework.value?.userConfigurable?.outputFile &&
       newValue &&
       deployStore.isOutputFileInvalid &&
       newValue !== oldValue &&
