@@ -66,7 +66,7 @@
             <v-card-item>
               <v-btn
                 variant="text"
-                class="h-auto pa-0"
+                class="h-auto pa-0 w-100 d-flex justify-start"
                 :href="project.webUrl"
                 target="_blank"
               >
@@ -192,14 +192,6 @@ const sortBy = ref(
 const lastCursor = ref<string | null>(null);
 const hasNextPage = ref<boolean | null>(null);
 const loadMoreTrigger = ref<HTMLElement | null>(null);
-
-const groupUrl = computed(
-  () =>
-    authStore.session?.groupUrl ||
-    `${import.meta.env.VITE_APP_GITLAB_URL}/${
-      import.meta.env.VITE_APP_DEPLOYED_NAMESPACE
-    }/${authStore.session?.user.nickname}`
-);
 
 const observer = new IntersectionObserver(
   (entries) => {

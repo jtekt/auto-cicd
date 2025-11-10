@@ -1,26 +1,30 @@
 import { frameworksConfig, packageManagers } from "@/config/frameworks-config";
 import type {
-  AcceptedFramework,
-  AcceptedPackageManager,
   ProjectConfig,
 } from "@/types/app-config";
 
 // Helper to get default ProjectConfig
 export const getDefaultProjectConfig = (
-  frameworkId: AcceptedFramework,
-  managerName?: AcceptedPackageManager
+  frameworkId: string,
+  managerName?: string
 ): ProjectConfig => {
   const framework = frameworksConfig[frameworkId];
+
+  if(!framework) throw new Error("No framework found")
+
   const manager =
     managerName &&
     framework.supportedManagers.find((sm) => sm.manager === managerName)
       ? managerName
       : framework.defaultManager;
+
   const managerConfig = packageManagers[manager];
 
+  if(!managerConfig) throw new Error("No manager found")
+
   return {
-    language: framework.language,
-    framework: framework.id,
+    language: framework.languages[0]!,
+    framework: frameworkId,
     manager: manager,
     installCommand: managerConfig.commands.install,
     buildCommand: !framework.userConfigurable?.buildCommand?.defaultEmpty
@@ -30,11 +34,4 @@ export const getDefaultProjectConfig = (
     port: framework.port || 3000,
     files: framework.files || [],
   };
-};
-
-// Helper to get supported frameworks
-export const getSupportedFrameworks = (): AcceptedFramework[] => {
-  return Object.keys(frameworksConfig).filter(
-    (framework) => framework !== "unknown"
-  ) as AcceptedFramework[];
 };

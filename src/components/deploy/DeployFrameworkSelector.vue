@@ -11,15 +11,11 @@
       <template #selection="{ item }">
         <div class="d-flex align-center" style="gap: 16px">
           <v-img
-            v-if="item.raw.image.type === 'img'"
-            :src="item.raw.image.value"
+            :src="item.raw.image"
             alt="Framework Image"
             width="28"
             height="28"
           />
-          <v-icon v-else style="font-size: 28px">
-            {{ item.raw.image.value }}
-          </v-icon>
           {{ item.raw.name }}
         </div>
       </template>
@@ -27,10 +23,7 @@
         <v-list-item
           v-bind="props"
           :prepend-avatar="
-            item.raw.image.type === 'img' ? item.raw.image.value : undefined
-          "
-          :prepend-icon="
-            item.raw.image.type === 'icon' ? item.raw.image.value : undefined
+            item.raw.image ? item.raw.image : undefined
           "
           style="font-size: 28px"
         />

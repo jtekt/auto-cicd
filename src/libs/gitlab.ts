@@ -169,7 +169,9 @@ export const getGitLabFiles = async ({
     return { success: true, data: [] };
   }
 
-  const detectionPaths: ConfigFileInfo[] = paths.filter((p) => p.checks);
+  const detectionPaths: ConfigFileInfo[] = paths.filter(
+    (p) => p.alwaysFetch || p.checks
+  );
   const metadataPaths: ConfigFileInfo[] = paths.filter((p) => !p.checks);
 
   // Dynamic sizes: Smaller for expensive content fetches
@@ -253,13 +255,14 @@ export const getGitLabFiles = async ({
         console.error("GraphQL errors:", res.data.errors);
         throw new Error(errorMsg);
       }
-
+      
       const edges = res.data?.data?.project?.repository?.blobs?.edges ?? [];
       for (const e of edges) {
         const node = e.node;
+        
         results.push({
           fileName: node.path,
-          ...(includeContent && { content: node.rawBlob }),
+          ...(includeContent ? { content: node.rawBlob } : {}),
         });
       }
       return true;

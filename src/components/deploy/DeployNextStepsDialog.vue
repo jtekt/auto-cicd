@@ -82,74 +82,56 @@
           <h3 class="text-subtitle-s font-weight-medium mb-2">
             {{ t("components.deployHandler.nextStepsDialog.debugSection") }}
           </h3>
-          <v-alert type="info" variant="tonal" density="compact" class="mt-2">
-            <p class="text-body-2 mb-2">
-              {{ t("components.deployHandler.nextStepsDialog.debugIntro") }}
-            </p>
-            <ul class="text-body-2">
-              <li>
-                <strong
-                  >{{
-                    t("components.deployHandler.nextStepsDialog.buildLogs")
-                  }}:</strong
-                >
+          <v-list>
+            <v-list-item class="mb-2">
+              <template #prepend>
+                <v-img
+                  src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
+                  alt="GitLab Logo"
+                  style="
+                    width: 50px;
+                    height: 50px;
+                    margin-right: 10px;
+                    vertical-align: middle;
+                  "
+                />
+              </template>
+              <v-list-item-title class="text-h6">
+                <a :href="deployStore.project?.webUrl" target="_blank">
+                  GitLab pipeline
+                </a>
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item
+              v-for="(link, index) in config.usefulLinks"
+              :key="index"
+              class="mb-2"
+            >
+              <template #prepend>
+                <img
+                  :src="link.icon"
+                  :alt="link.name"
+                  style="
+                    width: 50px;
+                    height: 50px;
+                    margin-right: 10px;
+                    vertical-align: middle;
+                  "
+                />
+              </template>
+              <v-list-item-title class="text-h6">
+                <a :href="link.url" target="_blank">
+                  {{ link.name }}
+                </a>
+              </v-list-item-title>
+              <p class="text-body-2">
                 {{
-                  t(
-                    "components.deployHandler.nextStepsDialog.buildLogsDescription"
-                  )
+                  link.description[current as "ja"] ??
+                  Object.values(link.description)[0]
                 }}
-                <div class="my-4">
-                  <a
-                    :href="`${deployStore.project?.webUrl}/-/jobs`"
-                    target="_blank"
-                  >
-                    <img
-                      src="/icons/GitLab.svg"
-                      alt="gitLab"
-                      style="
-                        width: 30px;
-                        height: 30px;
-                        margin-right: 10px;
-                        vertical-align: middle;
-                      "
-                    />
-                    <span>Gitlab</span>
-                  </a>
-                </div>
-              </li>
-              <li v-if="podViewerUrl" class="mt-2">
-                <strong
-                  >{{
-                    t("components.deployHandler.nextStepsDialog.appStatus")
-                  }}:</strong
-                >
-                {{
-                  t(
-                    "components.deployHandler.nextStepsDialog.appStatusDescription"
-                  )
-                }}
-                <div class="my-4">
-                  <a :href="podViewerUrl" target="_blank">
-                    <img
-                      src="/icons/podviewer.png"
-                      alt="podViewer"
-                      style="
-                        width: 30px;
-                        height: 30px;
-                        margin-right: 10px;
-                        vertical-align: middle;
-                      "
-                    />
-                    <span>PodViewer</span>
-                  </a>
-                </div>
-                {{
-                  t("components.deployHandler.nextStepsDialog.appStatusPattern")
-                }}
-                <strong>username-projectName-deploymentId</strong>.
-              </li>
-            </ul>
-          </v-alert>
+              </p>
+            </v-list-item>
+          </v-list>
         </div>
 
         <!-- Errors -->
@@ -193,10 +175,9 @@ import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
 import { computed } from "vue";
 import DeployEnvStatus from "./DeployEnvStatus.vue";
+import config from "@/config";
 
-const podViewerUrl = import.meta.env.VITE_APP_POD_VIEWER_URL;
-
-const { t } = useLocale();
+const { t, current } = useLocale();
 const deployStore = useDeployStore();
 
 // Computed properties for deployment status

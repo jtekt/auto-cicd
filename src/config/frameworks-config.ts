@@ -1,20 +1,10 @@
 import type {
-  AcceptedFramework,
-  AcceptedPackageManager,
   DefaultInjectedFiles,
-  FrameworkConfig,
   ManagedFile,
   OptionalFiles,
-  PackageManagerConfig,
 } from "@/types/app-config";
 
-// Import individual framework configs
-import { viteConfig } from "./frameworks/vite";
-import { nuxtConfig } from "./frameworks/nuxt";
-import { nextConfig } from "./frameworks/next";
-import { expressConfig } from "./frameworks/express";
-import { streamlitConfig } from "./frameworks/streamlit";
-import { fastapiConfig } from "./frameworks/fastapi";
+import config from "./index";
 
 export const envKey = "ENV"; // Name of the file saved in gitlab with the envs
 
@@ -31,83 +21,17 @@ export const managedFiles: ManagedFile[] = [
   ...extraInjectedFiles,
 ];
 
-export const packageManagers: Record<
-  AcceptedPackageManager,
-  PackageManagerConfig
-> = {
-  npm: {
-    name: "npm",
-    commands: {
-      install: "npm install",
-      build: "npm run build",
-    },
-    detectionFiles: [{ file: "package-lock.json" }],
-  },
-  yarn: {
-    name: "yarn",
-    commands: {
-      install: "yarn install",
-      build: "yarn build",
-    },
-    detectionFiles: [{ file: "yarn.lock" }],
-  },
-  pnpm: {
-    name: "pnpm",
-    commands: {
-      install: "corepack enable pnpm && pnpm i",
-      build: "corepack enable pnpm && pnpm run build",
-    },
-    detectionFiles: [{ file: "pnpm-lock.yaml" }],
-  },
-  pip: {
-    name: "pip",
-    commands: { install: "pip install --no-cache-dir -r requirements.txt" },
-    detectionFiles: [{ file: "requirements.txt" }],
-  },
-};
+export const packageManagers = config.packageManagers;
 
-export const frameworksConfig: Record<AcceptedFramework, FrameworkConfig> = {
-  vite: viteConfig,
-  nuxt: nuxtConfig,
-  nextjs: nextConfig,
-  express: expressConfig,
-  fastapi: fastapiConfig,
-  streamlit: streamlitConfig,
-};
+export const frameworksConfig = config.frameworks;
 
-export const acceptedFrameworks = Object.keys(
-  frameworksConfig
-) as AcceptedFramework[];
-
-// Helper to get default supported managers based on language
-const getDefaultSupportedManagers = (
-  language: string
-): FrameworkConfig["supportedManagers"] => {
-  if (language === "python") {
-    return [{ manager: "pip", requiredFiles: ["requirements.txt"] }];
-  }
-  return [
-    { manager: "npm", requiredFiles: ["package-lock.json"] },
-    { manager: "yarn", requiredFiles: ["yarn.lock"] },
-    { manager: "pnpm", requiredFiles: ["pnpm-lock.yaml"] },
-  ];
-};
-
-// Validate configs on load (call in your app init)
-export const validateConfigs = (): void => {
-  Object.values(frameworksConfig).forEach((config) => {
-    if (!config.id || !config.name) {
-      throw new Error(`Invalid config for ${config.id}: missing id/name`);
-    }
-    // Add more checks as needed (e.g., supportedManagers align with language)
-  });
-};
+export const acceptedFrameworks = Object.keys(frameworksConfig);
 
 export type ConfigFileInfo = {
   file: string;
-  checks?: Array<{ framework: AcceptedFramework; strings: string[] }>;
-  detectedFrameworks?: Set<AcceptedFramework>; // Unique frameworks this file helps detect (for checks)
-  requiredFor?: Set<AcceptedFramework>; // Frameworks that require this file's existence
+  checks?: Array<{ framework: string; strings: string[] }>;
+  detectedFrameworks?: Set<string>; // Unique frameworks this file helps detect (for checks)
+  requiredFor?: Set<string>; // Frameworks that require this file's existence
   alwaysFetch?: boolean; // e.g., for defaults like Dockerfile
 };
 
@@ -121,15 +45,8 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
 
   // Process frameworks
   Object.entries(frameworksConfig).forEach(([frameworkId, frameworkConfig]) => {
-    const framework = frameworkId as AcceptedFramework;
-    if (lang && !frameworkConfig.langs?.includes(lang)) return;
-
-    // Ensure supportedManagers if missing
-    if (!frameworkConfig.supportedManagers?.length) {
-      frameworkConfig.supportedManagers = getDefaultSupportedManagers(
-        frameworkConfig.language
-      );
-    }
+    const framework = frameworkId;
+    if (lang && !frameworkConfig.languages?.includes(lang)) return;
 
     // Track detection checks (per-file, per-framework strings)
     if (frameworkConfig.configFiles) {
@@ -188,6 +105,7 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
     // Add manager detection files (existence primarily; content if checkFor)
     frameworkConfig.supportedManagers.forEach((manager) => {
       const pmConfig = packageManagers[manager.manager];
+
       if (pmConfig) {
         pmConfig.detectionFiles.forEach((df) => {
           if (!fileMap.has(df.file)) {
@@ -206,8 +124,9 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
             if (info.checks) {
               info.checks.push({
                 framework: framework, // Or a placeholder; PM is post-framework detection
-                strings: [df.checkFor],
+                strings: df.checkFor,
               });
+
               if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
               info.detectedFrameworks.add(framework); // Tie to framework for simplicity
             }

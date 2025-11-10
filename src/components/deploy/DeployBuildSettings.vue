@@ -22,7 +22,7 @@
         variant="outlined"
         :class="
           deployStore.projectConfig.installCommand ===
-          packageManagers[deployStore.projectConfig.manager].commands.install
+          packageManagers[deployStore.projectConfig.manager]?.commands.install
             ? ''
             : 'text-warning'
         "
@@ -37,7 +37,7 @@
         :class="
           selectedFramework.userConfigurable?.buildCommand.defaultEmpty ||
           deployStore.projectConfig.buildCommand ===
-            packageManagers[deployStore.projectConfig.manager].commands.build
+            packageManagers[deployStore.projectConfig.manager]?.commands.build
             ? ''
             : 'text-warning'
         "

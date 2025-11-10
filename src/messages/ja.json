@@ -122,11 +122,7 @@
             "buttonText": "役立つリンク",
             "dialogTitle": "自動デプロイのための役立つリンク",
             "dialogDescription": "デプロイ中に役立つリソースを以下に示します：",
-            "closeButton": "閉じる",
-            "links": {
-                "podViewerDescription": "デプロイの状態を確認し、'username-projectname-deploymentId' のパターンを使用してアプリケーションログを確認できます。",
-                "gitlabGroupDescription": "このグループにプロジェクトを移管すると、Auto-CICD に表示され、デプロイできるようになります。"
-            }
+            "closeButton": "閉じる"
         }
     },
     "views": {

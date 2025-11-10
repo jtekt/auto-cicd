@@ -49,7 +49,7 @@
             </p>
           </v-list-item>
           <v-list-item
-            v-for="(link, index) in usefulLinks"
+            v-for="(link, index) in config.usefulLinks"
             :key="index"
             class="mb-2"
           >
@@ -71,7 +71,10 @@
               </a>
             </v-list-item-title>
             <p class="text-body-2">
-              {{ t(link.descriptionKey) }}
+              {{
+                link.description[current as "ja"] ??
+                Object.values(link.description)[0]
+              }}
             </p>
           </v-list-item>
         </v-list>
@@ -91,26 +94,13 @@
 import { useLocale } from "vuetify";
 import { onMounted, ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import config from "@/config";
 
-const { t } = useLocale();
+const { t, current } = useLocale();
 const authStore = useAuthStore();
 
 // State for dialog
 const dialog = ref(false);
-
-// List of useful links with icons, URLs, and description keys
-const usefulLinks = [
-  ...(import.meta.env.VITE_APP_POD_VIEWER_URL
-    ? [
-        {
-          name: "PodViewer",
-          icon: "/icons/podviewer.png",
-          url: import.meta.env.VITE_APP_POD_VIEWER_URL,
-          descriptionKey: "components.usefulLinks.links.podViewerDescription",
-        },
-      ]
-    : []),
-];
 
 onMounted(() => {
   // Check if first 3 times login and show the links

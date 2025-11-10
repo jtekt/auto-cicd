@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import type { ProjectNode } from "@/types/project";
 import { generateFiles } from "@/libs/templates";
 import {
@@ -12,21 +12,15 @@ import {
 } from "@/libs/gitlab";
 import {
   frameworksConfig,
-  packageManagers,
-  envKey,
   getConfigFiles,
   acceptedFrameworks,
 } from "@/config/frameworks-config";
-import type {
-  AcceptedFramework,
-  AcceptedPackageManager,
-  FrameworkConfig,
-  ProjectConfig,
-} from "@/types/app-config";
 import { getDefaultProjectConfig } from "@/libs/deploy/config";
 import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@jtekt-private/vue3-toaster";
 import { useI18n } from "vue-i18n";
+import type { ProjectConfig } from "@/types/app-config";
+import type { FrameworkConfigType } from "@/config";
 
 type Env = {
   key: string;
@@ -43,8 +37,8 @@ export const useDeployStore = defineStore("deploy", () => {
   const project = ref<ProjectNode | null>(null);
 
   // Select models
-  const frameworkSelector = ref<AcceptedFramework>();
-  const managerSelector = ref<AcceptedPackageManager>();
+  const frameworkSelector = ref<string>();
+  const managerSelector = ref<string>();
 
   // Dialogs models
   const deployDialog = ref(false);
@@ -83,26 +77,34 @@ export const useDeployStore = defineStore("deploy", () => {
   } | null>(null);
 
   // Computed properties
-  const frameworks = computed(() => Object.values(frameworksConfig));
+  const frameworks = computed(() =>
+    Object.entries(frameworksConfig).map(([id, value]) => ({
+      id,
+      ...value,
+    }))
+  );
+
+  const currentProjectFrameworkConfig = computed(() => {
+    if (!projectConfig.value) return;
+    return frameworksConfig[projectConfig.value.framework];
+  });
 
   const packageManagersOptions = computed(() => {
-    if (!projectConfig.value) return [];
+    if (!currentProjectFrameworkConfig.value) return [];
 
-    return frameworksConfig[
-      projectConfig.value.framework
-    ].supportedManagers.map((m) => ({
+    return currentProjectFrameworkConfig.value.supportedManagers.map((m) => ({
       title: m.manager,
       value: m.manager,
     }));
   });
 
   const filesMightHaveMissed = computed<(string | string[])[]>(() => {
-    if (!project.value || !projectConfig.value) return [];
+    if (!project.value || !currentProjectFrameworkConfig.value) return [];
 
     const requiredByFramework =
-      frameworksConfig[projectConfig.value.framework].requiredFiles || [];
+      currentProjectFrameworkConfig.value.requiredFiles || [];
     const requiredByPackageManager =
-      frameworksConfig[projectConfig.value.framework].supportedManagers.find(
+      currentProjectFrameworkConfig.value.supportedManagers.find(
         (sm) => sm.manager === projectConfig.value?.manager
       )?.requiredFiles || [];
     const requiredFilesForConfig = [
@@ -162,7 +164,9 @@ export const useDeployStore = defineStore("deploy", () => {
         return;
       }
 
-      console.log("Updating projectConfig for new framework:", newFramework);
+      const newFrameworkConfig = frameworksConfig[newFramework];
+
+      if (!newFrameworkConfig) throw new Error("No framework set");
 
       // Update projectConfig with the new framework
       projectConfig.value = getDefaultProjectConfig(
@@ -171,12 +175,15 @@ export const useDeployStore = defineStore("deploy", () => {
       );
 
       // Check if the selected manager is supported by the new framework
-      const supportedManagers = frameworksConfig[
-        newFramework
-      ].supportedManagers.map((m) => m.manager);
+      const supportedManagers = newFrameworkConfig.supportedManagers.map(
+        (m) => m.manager
+      );
 
-      if (!managerSelector.value || !supportedManagers.includes(managerSelector.value)) {
-        managerSelector.value = frameworksConfig[newFramework].defaultManager;
+      if (
+        !managerSelector.value ||
+        !supportedManagers.includes(managerSelector.value)
+      ) {
+        managerSelector.value = newFrameworkConfig.defaultManager;
         projectConfig.value.manager = managerSelector.value;
       }
     }
@@ -285,6 +292,7 @@ export const useDeployStore = defineStore("deploy", () => {
       const originalFile = repositoryFiles.value.find(
         (original) => original.fileName === file.fileName
       );
+      
       if (!originalFile) {
         fs.push({ ...file, action: "create", isChecked: true });
       } else if (originalFile.content !== file.content) {
@@ -492,7 +500,7 @@ export const useDeployStore = defineStore("deploy", () => {
     repositoryFiles.value = filesResponse.data; // Keep for UI/other uses
 
     // Detection using structured checks
-    const frameworkMatches: Map<AcceptedFramework, number> = new Map(
+    const frameworkMatches: Map<string, number> = new Map(
       acceptedFrameworks.map((framework) => [framework, 0]) // Key: framework, Value: initial score 0
     );
 
@@ -534,7 +542,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     // Find best match by highest score (skip 'unknown')
     let maxScore = -1;
-    let bestFramework: AcceptedFramework | null = null;
+    let bestFramework: string | null = null;
     for (const [framework, score] of frameworkMatches.entries()) {
       if (score <= maxScore) continue;
       maxScore = score;
@@ -547,6 +555,12 @@ export const useDeployStore = defineStore("deploy", () => {
     }
 
     const bestConfig = frameworksConfig[bestFramework];
+
+    if (!bestConfig) {
+      console.debug("No framework matched; defaulting to unknown");
+      return;
+    }
+
     console.debug(`Detected framework: ${bestFramework} (score: ${maxScore})`);
 
     // Detect package manager using supportedManagers' requiredFiles
@@ -557,9 +571,9 @@ export const useDeployStore = defineStore("deploy", () => {
   }
 
   function detectPackageManager(
-    frameworkConfig: FrameworkConfig,
+    frameworkConfig: FrameworkConfigType,
     fileContents: Map<string, string | null>
-  ): AcceptedPackageManager | undefined {
+  ): string | undefined {
     for (const {
       manager,
       requiredFiles,
@@ -614,6 +628,7 @@ export const useDeployStore = defineStore("deploy", () => {
   }
 
   return {
+    currentProjectFrameworkConfig,
     project,
     deployDialog,
     confirmDeployDialog,

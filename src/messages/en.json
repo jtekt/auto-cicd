@@ -122,11 +122,7 @@
             "buttonText": "Useful Links",
             "dialogTitle": "Useful Links for Auto Deployment",
             "dialogDescription": "Here are some resources to assist you during deployment:",
-            "closeButton": "Close",
-            "links": {
-                "podViewerDescription": "Check the status of your deployment and review application logs using the pattern 'username-projectname-deploymentId'.",
-                "gitlabGroupDescription": "Group where you can transfer your projects. Once transferred, they will appear in Auto-CICD so you can deploy them."
-            }
+            "closeButton": "Close"
         }
     },
     "views": {

@@ -35,7 +35,7 @@
               }}
             </p>
             <div class="d-flex ga-2 align-center">
-              <v-avatar image="/icons/GitLab.svg" size="24"></v-avatar>
+              <v-avatar image="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg" size="24"></v-avatar>
               <p class="text-body-1 font-weight-medium">
                 {{ deployStore.project.fullPath }}
               </p>
@@ -107,8 +107,7 @@
               t("components.deployHandler.confirmDialog.missingOutputFile", {
                 framework: deployStore.projectConfig.framework,
                 defaultFilename:
-                  frameworksConfig[deployStore.projectConfig.framework]
-                    .outputFile,
+                  frameworksConfig[deployStore.projectConfig.framework]?.outputFile,
               })
             }}
           </v-alert>
@@ -116,8 +115,7 @@
           <v-expansion-panels v-if="deployStore.projectConfig">
             <DeployBuildSettings
               v-if="
-                frameworksConfig[deployStore.projectConfig.framework]
-                  .userConfigurable
+                frameworksConfig[deployStore.projectConfig.framework]?.userConfigurable
               "
             />
             <DeployEnvironmentSettings />

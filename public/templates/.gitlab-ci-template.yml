@@ -10,7 +10,7 @@ variables:
   CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
   K8S_IMAGE_PULL_SECRET_NAME: { IMAGE_PULL_SECRET_NAME }
-  K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}-env
+  K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
   PORT: { PORT }
 
 # Build the Docker container image
@@ -49,15 +49,6 @@ deploy-job:
 
     # Uses the correct Kubernetes namespace
     - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
-
-    # Create Kubernetes secret for accessing ECR
-    - >
-      kubectl create secret docker-registry ${K8S_IMAGE_PULL_SECRET_NAME}
-      --docker-server=${CONTAINER_REGISTRY_URL}
-      --docker-username=AWS
-      --docker-password $(aws ecr get-login-password)
-      --dry-run=client -o yaml
-      | kubectl apply -f -
   script:
     # Deploy the app to Kubernetes using the Kubernetes manifest
 
