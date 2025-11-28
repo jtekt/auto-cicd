@@ -8,7 +8,7 @@
         backgroundColor: theme.current.value.dark ? '#000' : '#fff',
       }"
     >
-      <v-container class="d-flex align-center">
+      <v-container class="d-flex align-center ga-1">
         <RouterLink
           to="/"
           class="d-flex align-center mr-auto text-decoration-none"
@@ -24,8 +24,8 @@
             contain
           />
         </RouterLink>
-        <v-divider class="mx-4" vertical></v-divider>
-        <h1 class="text-h5 font-weight-bold">Auto CI&CD</h1>
+        <v-divider vertical></v-divider>
+        <h1 class="text-h5 font-weight-bold px-2">Auto CI&CD</h1>
         <v-spacer />
         <v-btn
           :icon="
@@ -97,16 +97,6 @@
           </template>
 
           <span>{{ c.label }}</span>
-        </v-tooltip>
-
-        <!-- Optional fallback if nothing exists -->
-        <v-tooltip v-if="!supportContacts.length" location="bottom">
-          <template #activator="{ props }">
-            <v-btn v-bind="props" icon variant="text" disabled>
-              <v-icon>mdi-help-circle-outline</v-icon>
-            </v-btn>
-          </template>
-          <span>{{ t("views.support.noSupportConfigured") }}</span>
         </v-tooltip>
       </div>
     </v-footer>
