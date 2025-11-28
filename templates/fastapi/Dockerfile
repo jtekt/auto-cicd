@@ -17,4 +17,4 @@ COPY . .
 ENV PORT={{PORT}}
 
 # Command to run FastAPI with Uvicorn
-CMD ["uvicorn", "{{OUTPUT_FILENAME}}:app", "--host", "0.0.0.0", "--port", "{{PORT}}", "--app-dir", "{{OUTPUT_DIRECTORY}}"]
+CMD ["uvicorn", "{{OUTPUT_MODULE_NAME}}:app", "--host", "0.0.0.0", "--port", "{{PORT}}", "--app-dir", "{{OUTPUT_DIRECTORY}}"]

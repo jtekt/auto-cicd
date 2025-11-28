@@ -7,8 +7,9 @@ export const templateDataBuilder = (
   username: string
 ): Record<string, string> => {
   const splitOutputFile = config.outputFile?.split("/") || [];
-  const fileName =
+  const fullFileName =
     splitOutputFile[splitOutputFile.length - 1] || project.projectName;
+  const moduleName = fullFileName.split(".").slice(0, -1).join(".");
   const outputDirectory =
     splitOutputFile.length > 1
       ? [...splitOutputFile].slice(0, -1).join("/") + "/"
@@ -32,9 +33,10 @@ export const templateDataBuilder = (
     BUILD_COMMAND: config.buildCommand || "echo 'Skipping build'",
 
     // Output configuration
-    OUTPUT_FILENAME: fileName,
+    OUTPUT_FILENAME: fullFileName,
+    OUTPUT_MODULE_NAME: moduleName,
     OUTPUT_DIRECTORY: outputDirectory,
-    OUTPUT_PATH: outputDirectory + fileName,
+    OUTPUT_PATH: outputDirectory + fullFileName,
 
     // Server configuration
     PORT: config.port?.toString() || "80",
