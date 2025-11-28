@@ -1,11 +1,11 @@
 # Start from an appropriate base image
-FROM node:22-slim as build-stage
+FROM node:24-alpine as build-stage
 
 # Set the working directory for building
 WORKDIR /app
 
 # Install dependencies
-COPY package.json .npmrc ./
+COPY package.json ./
 
 RUN npm install
 
