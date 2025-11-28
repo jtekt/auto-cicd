@@ -37,11 +37,14 @@ const messages = {
 
 // Get the saved language from localStorage, defaulting to 'en'
 const savedLanguage = localStorage.getItem("preferred_language") || "ja";
-const prefersDarkMode = window.matchMedia(
-  "(prefers-color-scheme: dark)"
-).matches;
-const defaultTheme =
-  localStorage.getItem("theme") || prefersDarkMode ? "dark" : "light";
+
+let defaultTheme = localStorage.getItem("theme");
+
+if (!defaultTheme) {
+  defaultTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
 
 export const i18n = createI18n({
   legacy: false, // Vuetify does not support the legacy mode of vue-i18n
