@@ -72,14 +72,14 @@ const ConfigSchema = z.object({
 const parsedConfig = ConfigSchema.parse(configYaml);
 
 // Validate that all template files exist
-export const templates = import.meta.glob([
-  "/templates/**",
-  "/templates/**/.*"
-], {
-  query: "?raw",
-  eager: true,
-  import: "default",
-}) as Record<string, string>;
+export const templates = import.meta.glob(
+  ["/templates/**", "/templates/**/.*"],
+  {
+    query: "?raw",
+    eager: true,
+    import: "default",
+  }
+) as Record<string, string>;
 
 // Check that all framework files exist in the templates
 Object.values(parsedConfig.frameworks).forEach((framework) => {
@@ -87,10 +87,10 @@ Object.values(parsedConfig.frameworks).forEach((framework) => {
     const expectedPath = `/templates/${framework.name.toLowerCase()}/${file}`;
 
     if (!templates[expectedPath]) {
-      // Check if the file exists in the common folder 
-      const commonFile =templates[`/templates/common/${file}`]
+      // Check if the file exists in the common folder
+      const commonFile = templates[`/templates/common/${file}`];
 
-      if(commonFile) {
+      if (commonFile) {
         // Set the path to the common template
         templates[expectedPath] = commonFile;
         return;
@@ -103,6 +103,45 @@ Object.values(parsedConfig.frameworks).forEach((framework) => {
   });
 });
 
+const raw: string = import.meta.env.VITE_SUPPORT_CONTACTS ?? "";
+
+// Format: "Icon|Label|URL,Icon|Label|URL" or "Label|URL,Label|URL" or "URL,Label|URL"
+export const supportContacts = raw
+  .split(",")
+  .map((c) => c.trim())
+  .filter(Boolean)
+  .map((c) => {
+    const parts = c
+      .split("|")
+      .map((p) => p?.trim())
+      .filter(Boolean);
+
+    let icon: string | undefined = "";
+    let label: string | undefined = "Support";
+    let url: string | undefined = "#";
+
+    if (parts.length === 3) {
+      // Format: Icon|Label|URL
+      [icon, label, url] = parts;
+    } else if (parts.length === 2) {
+      // Could be Icon|URL or Label|URL
+      if (parts[0]?.startsWith("mdi-") || parts[0]?.includes("/")) {
+        // Assume Icon|URL
+        [icon, url] = parts;
+      } else if (parts[1]?.startsWith("http") || parts[1]?.includes("@")) {
+        // Assume Label|URL
+        [label, url] = parts;
+      } else {
+        // Fallback: Label|URL
+        [label, url] = parts;
+      }
+    } else if (parts.length === 1) {
+      // Just URL
+      url = parts[0];
+    }
+
+    return { label, icon, url };
+  });
 
 export default parsedConfig;
 

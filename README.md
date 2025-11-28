@@ -117,13 +117,14 @@ VITE_APP_IMAGE_PULL_SECRET_NAME=auto-cicd-container-secret
 
 # Optional
 VITE_APP_GITLAB_GROUP_MANAGER_URL=
-VITE_APP_POD_VIEWER_URL=
+VITE_SUPPORT_CONTACTS==GitLab|mdi-gitlab|https://gitlab.com/...,Email|mdi-email|mailto:support@example.com
 ```
 
 Notes:
 
 - Do not put confidential secrets in these `VITE_*` variables; they are embedded client-side.
 - `VITE_APP_DEPLOYED_NAMESPACE` is where apps created by users will be deployed.
+- `VITE_APP_GITLAB_GROUP_MANAGER_URL` is a REST API endpoint to generate the current user group by using its username. By using the Bearer token from the Gitlab Auth
 
 Additionally, at the GitLab group/project where users will deploy, define CI/CD variables (see [Required GitLab CI/CD variables](#required-gitlab-cicd-variables-group-or-project)).
 

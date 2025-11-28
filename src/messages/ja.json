@@ -124,6 +124,10 @@
             "dialogDescription": "デプロイ中に役立つリソースを以下に示します：",
             "closeButton": "閉じる",
             "gitlabGroupDescription": "プロジェクトを Auto CI&CD を使用してデプロイできるグループ"
+        },
+        "support": {
+            "needHelp": "ヘルプが必要な場合や質問がある場合は、次にご連絡ください：",
+            "noSupportConfigured": "サポート連絡先が設定されていません。"
         }
     },
     "views": {
@@ -152,8 +156,8 @@
                     "fetchProjects": "プロジェクトの取得に失敗しました。再試行してください。"
                 }
             },
-            "footerMessage": "プロジェクトがここに表示されていない場合は、GitLab の auto-cicd サブグループに含まれていることをご確認ください。",
-            "transferProject": "プロジェクトの移動方法を学ぶ"
+            "footerMessage": "プロジェクトが表示されない場合は、GitLab の auto-cicd サブグループに含まれているか確認してください。",
+            "transferProject": "プロジェクトの移動方法を見る"
         },
         "faq": {
             "moveProject": "GitLabでリポジトリを別の名前空間に移動する方法",

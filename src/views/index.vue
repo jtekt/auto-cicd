@@ -8,6 +8,7 @@
           prepend-icon="mdi-magnify"
           variant="outlined"
           @input="updateDebouncedUrlParams"
+          hide-details
         />
       </v-col>
       <v-col cols="4">
@@ -20,6 +21,7 @@
           prepend-icon="mdi-sort"
           variant="outlined"
           @update:model-value="updateUrlParams"
+          hide-details
         >
           <template #item="{ item, props }">
             <v-list-item v-bind="props">
@@ -52,7 +54,7 @@
     </v-row>
 
     <template v-else>
-      <v-row class="mb-4">
+      <v-row class="mb-2">
         <v-col
           v-for="project in projects"
           :key="project.id"
@@ -132,7 +134,7 @@
 
     <v-row>
       <v-col cols="12">
-        <v-alert variant="tonal" class="text-center">
+        <v-alert variant="tonal" class="text-center" density="compact">
           {{ t("views.index.footerMessage") }}
           <RouterLink to="/faq#move-project">
             {{ t("views.index.transferProject") }}

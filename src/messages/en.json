@@ -124,6 +124,10 @@
             "dialogDescription": "Here are some resources to assist you during deployment:",
             "closeButton": "Close",
             "gitlabGroupDescription": "Group where the projects can be deployed using Auto CI&CD"
+        },
+        "support": {
+            "needHelp": "If you need help or have questions, please contact:",
+            "noSupportConfigured": "No support contacts are configured."
         }
     },
     "views": {
@@ -152,8 +156,8 @@
                     "fetchProjects": "Failed to fetch projects. Please try again."
                 }
             },
-            "footerMessage": "If your project is not listed here, please ensure it in your auto-cicd sub-group in GitLab.",
-            "transferProject": "Learn how to transfer your project"
+            "footerMessage": "If your project is not listed, please ensure it in your auto-cicd sub-group in GitLab.",
+            "transferProject": "How to transfer your project"
         },
         "faq": {
             "moveProject": "How to Move a Repository to Another Namespace in GitLab",

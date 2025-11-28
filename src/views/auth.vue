@@ -10,7 +10,7 @@
         <v-card class="elevation-8">
           <v-card-text class="text-center pa-8">
             <v-img
-              src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
+              src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/gitlab/gitlab-original.svg"
               alt="GitLab Logo"
               contain
               height="100"

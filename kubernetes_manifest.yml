@@ -35,6 +35,9 @@ spec:
 
             - name: VITE_APP_IMAGE_PULL_SECRET_NAME
               value: ecr-credentials
+            
+            - name: VITE_SUPPORT_CONTACTS
+              value: mdi-gitlab|GitLab Issues|http://10.115.1.14/on-premise-k8s-cluster/fabel/auto-cicd/-/issues,mdi-email|Email Support|mailto:kevin_fabel@jtekt.co.jp
       imagePullSecrets:
         - name: ${K8S_ECR_SECRET_NAME}
 ---

@@ -28,18 +28,17 @@
           <v-list-item v-if="authStore.session?.groupUrl" class="mb-2">
             <template #prepend>
               <v-img
-                src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
+                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/gitlab/gitlab-original.svg"
                 alt="GitLab Logo"
                 contain
                 style="
-                  width: 50px;
-                  height: 50px;
-                  margin-right: 10px;
-                  vertical-align: middle;
+                  width: 40px;
+                  height: 40px;
+                  margin-right: 16px;
                 "
               />
             </template>
-            <v-list-item-title class="text-h6">
+            <v-list-item-title>
               <a :href="authStore.session.groupUrl" target="_blank">
                 My Group
               </a>
@@ -58,14 +57,13 @@
                 :src="link.icon"
                 :alt="link.name"
                 style="
-                  width: 50px;
-                  height: 50px;
-                  margin-right: 10px;
-                  vertical-align: middle;
+                  width: 40px;
+                  height: 40px;
+                  margin-right: 16px;
                 "
               />
             </template>
-            <v-list-item-title class="text-h6">
+            <v-list-item-title>
               <a :href="link.url" target="_blank">
                 {{ link.name }}
               </a>
@@ -78,6 +76,7 @@
             </p>
           </v-list-item>
         </v-list>
+        <SupportContact />
       </v-card-text>
 
       <v-card-actions class="pa-4">
@@ -95,6 +94,7 @@ import { useLocale } from "vuetify";
 import { onMounted, ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import config from "@/config";
+import SupportContact from "./SupportContact.vue";
 
 const { t, current } = useLocale();
 const authStore = useAuthStore();

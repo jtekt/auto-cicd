@@ -34,10 +34,12 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
+    <SupportContact />
   </v-container>
 </template>
 
 <script setup lang="ts">
+import SupportContact from "@/components/SupportContact.vue";
 import { useLocale } from "vuetify";
 
 const { t } = useLocale();

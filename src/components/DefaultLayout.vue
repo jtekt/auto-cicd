@@ -33,23 +33,26 @@
               ? 'mdi-weather-night'
               : 'mdi-weather-sunny'
           "
+          size="small"
           @click="toggleTheme"
         />
         <v-btn
           :text="current === 'en' ? '日本語' : 'EN'"
+          size="small"
+          icon
           @click="setLanguage(current === 'en' ? 'ja' : 'en')"
         />
         <v-btn
           v-if="!!authStore.session"
+          size="small"
           icon="mdi-logout"
-          class="ml-4"
           @click="authStore.logout"
         />
       </v-container>
     </v-app-bar>
 
     <v-main>
-      <v-container style="height: 100%" class="py-8 d-flex flex-column">
+      <v-container style="height: 100%" class="py-2 d-flex flex-column">
         <v-row v-if="isLoading" justify="center" align="center" style="flex: 1">
           <AppLoader />
         </v-row>
@@ -73,14 +76,43 @@
         backgroundColor: theme.current.value.dark ? '#000' : '#fff',
       }"
     >
-      <div class="px-4 py-2 text-center w-100">
-        {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
+      <div class="d-flex align-center justify-center ga-2 px-4 py-2 w-100">
+        <span>
+          {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
+        </span>
+        <v-divider v-if="supportContacts.length" vertical />
+        <v-tooltip v-for="(c, i) in supportContacts" :key="i" location="bottom">
+          <template #activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon
+              variant="text"
+              :href="c.url"
+              target="_blank"
+              rel="noopener"
+              size="small"
+            >
+              <v-icon>{{ c.icon || "mdi-help-circle-outline" }}</v-icon>
+            </v-btn>
+          </template>
+
+          <span>{{ c.label }}</span>
+        </v-tooltip>
+
+        <!-- Optional fallback if nothing exists -->
+        <v-tooltip v-if="!supportContacts.length" location="bottom">
+          <template #activator="{ props }">
+            <v-btn v-bind="props" icon variant="text" disabled>
+              <v-icon>mdi-help-circle-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t("views.support.noSupportConfigured") }}</span>
+        </v-tooltip>
       </div>
     </v-footer>
   </v-app>
 
-  <Toaster
-  />
+  <Toaster />
 </template>
 
 <script setup lang="ts">
@@ -92,8 +124,9 @@ import { useRoute, useRouter } from "vue-router";
 import { useLocale, useTheme } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
 import Toaster from "./Toaster.vue";
+import { supportContacts } from "@/config";
 
-const { current } = useLocale();
+const { current, t } = useLocale();
 
 const authStore = useAuthStore();
 const isLoading = ref(true);
