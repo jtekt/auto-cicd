@@ -91,18 +91,13 @@
             <v-list-item class="mb-2">
               <template #prepend>
                 <v-img
-                  src="https://about.gitlab.com/images/press/logo/svg/gitlab-logo-500.svg"
+                  src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/gitlab/gitlab-original.svg"
                   alt="GitLab Logo"
-                  style="
-                    width: 50px;
-                    height: 50px;
-                    margin-right: 10px;
-                    vertical-align: middle;
-                  "
+                  style="width: 40px; height: 40px; margin-right: 16px"
                 />
               </template>
-              <v-list-item-title class="text-h6">
-                <a :href="deployStore.project?.webUrl" target="_blank">
+              <v-list-item-title>
+                <a :href="`${deployStore.project?.webUrl}/-/pipelines/latest`" target="_blank">
                   GitLab pipeline
                 </a>
               </v-list-item-title>
@@ -113,18 +108,13 @@
               class="mb-2"
             >
               <template #prepend>
-                <img
+                <v-img
                   :src="link.icon"
                   :alt="link.name"
-                  style="
-                    width: 50px;
-                    height: 50px;
-                    margin-right: 10px;
-                    vertical-align: middle;
-                  "
+                  style="width: 40px; height: 40px; margin-right: 16px"
                 />
               </template>
-              <v-list-item-title class="text-h6">
+              <v-list-item-title>
                 <a :href="link.url" target="_blank">
                   {{ link.name }}
                 </a>
