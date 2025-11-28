@@ -56,7 +56,7 @@ frameworks:
     outputFile: app.js
     port: 3000
     files: 
-      - manifest.yml
+      - kubernetes_manifest.yml
       - Dockerfile
       - .gitlab-ci.yml
     configFiles:
@@ -92,7 +92,7 @@ frameworks:
     outputFile: main.py
     port: 8000
     files: 
-      - manifest.yml
+      - kubernetes_manifest.yml
       - Dockerfile
       - .gitlab-ci.yml
     configFiles:
@@ -121,7 +121,7 @@ frameworks:
     outputFile: .next/server.js
     port: 3000
     files: 
-      - manifest.yml
+      - kubernetes_manifest.yml
       - Dockerfile
       - .gitlab-ci.yml
     configFiles:
@@ -170,7 +170,7 @@ frameworks:
     outputFile: /app/server/index.mjs
     port: 3000
     files: 
-      - manifest.yml
+      - kubernetes_manifest.yml
       - Dockerfile
       - .gitlab-ci.yml
     configFiles:
@@ -213,7 +213,7 @@ frameworks:
     outputFile: app.py
     port: 8501
     files: 
-      - manifest.yml
+      - kubernetes_manifest.yml
       - Dockerfile
       - .gitlab-ci.yml
     configFiles:
@@ -243,7 +243,7 @@ frameworks:
     outputFile: dist/index.html
     port: 5173
     files:
-      - manifest.yml
+      - kubernetes_manifest.yml
       - Dockerfile
       - .gitlab-ci.yml
       - nginx.conf

@@ -43,4 +43,3 @@ spec:
     app: ${APPLICATION_NAME}
   ports:
     - port: ${PORT}
-      nodePort: ${K8S_NODEPORT}
