@@ -1,5 +1,5 @@
 # From https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -8,8 +8,19 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
-RUN {INSTALL_COMMAND}
+# Copy package files and configs
+COPY package.json \
+     yarn.lock* \
+     package-lock.json* \
+     pnpm-lock.yaml* \
+     bun.lockb* \
+     .npmrc* \
+     .yarnrc* \
+     .yarnrc.yml* \
+     bunfig.toml* \
+     pnpm-workspace.yaml* \
+     ./
+RUN {{INSTALL_COMMAND}}
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -17,11 +28,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Make sure the public exists
+RUN mkdir -p /app/public
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
-{BUILD_COMMAND}
+
+# Build the application if there is a build command
+RUN {{BUILD_COMMAND}}
+
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
@@ -39,12 +56,9 @@ COPY --from=builder /app/.next/static ./.next/static
 
 # Define environment variables
 ENV NODE_ENV=production
-ENV PORT={PORT}
-
-# Expose the port the application will run on
-EXPOSE {PORT}
+ENV PORT={{PORT}}
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
 ENV HOSTNAME="0.0.0.0"
-CMD ["node", "{OUTPUT_FILENAME}"]
+CMD ["node", "{{OUTPUT_FILENAME}}"]

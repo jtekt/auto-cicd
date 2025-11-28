@@ -137,7 +137,7 @@ export const getGitlabProfile = async (
         return { user };
       }
 
-      return { user };
+      return { user, groupUrl: createdGroup.data.group.web_url };
     } catch (error) {
       console.error(error);
     }
@@ -157,11 +157,11 @@ export type GitLabFile = {
 export const getGitLabFiles = async ({
   access_token,
   paths,
-  project,
 }: {
   access_token: string;
-  paths: ConfigFileInfo[];
-  project: { fullPath: string; repository: { rootRef: string } };
+  paths: (ConfigFileInfo & {
+    project: { fullPath: string; repository: { rootRef: string } };
+  })[];
 }): Promise<
   { success: true; data: GitLabFile[] } | { success: false; error: string }
 > => {
@@ -169,10 +169,41 @@ export const getGitLabFiles = async ({
     return { success: true, data: [] };
   }
 
-  const detectionPaths: ConfigFileInfo[] = paths.filter(
-    (p) => p.alwaysFetch || p.checks
-  );
-  const metadataPaths: ConfigFileInfo[] = paths.filter((p) => !p.checks);
+  // Group paths by project fullPath
+  const projectGroups = new Map<
+    string,
+    {
+      ref: string;
+      detection: ConfigFileInfo[];
+      metadata: ConfigFileInfo[];
+    }
+  >();
+
+  paths.forEach((p) => {
+    const fullPath = p.project.fullPath;
+    const rootRef = p.project.repository.rootRef;
+
+    if (!projectGroups.has(fullPath)) {
+      projectGroups.set(fullPath, {
+        ref: rootRef,
+        detection: [],
+        metadata: [],
+      });
+    } else {
+      const group = projectGroups.get(fullPath)!;
+      if (group.ref !== rootRef) {
+        console.warn(
+          `Different rootRefs detected for project ${fullPath}. Using the first one: ${group.ref}`
+        );
+      }
+    }
+
+    if (p.alwaysFetch || p.checks) {
+      projectGroups.get(fullPath)!.detection.push(p);
+    } else {
+      projectGroups.get(fullPath)!.metadata.push(p);
+    }
+  });
 
   // Dynamic sizes: Smaller for expensive content fetches
   const CONTENT_BATCH_SIZE = 1; // Conservative to avoid complexity >250
@@ -181,10 +212,13 @@ export const getGitLabFiles = async ({
   const baseUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`;
 
   const fetchBatch = async (
-    filePaths: string[],
+    fullPath: string,
+    ref: string,
+    fileInfos: ConfigFileInfo[],
     includeContent: boolean,
     batchSize: number
-  ): Promise<{ fileName: string; content?: string }[]> => {
+  ): Promise<GitLabFile[]> => {
+    const filePaths = fileInfos.map((p) => p.file);
     if (!filePaths.length) return [];
 
     const chunks: string[][] = [];
@@ -192,17 +226,29 @@ export const getGitLabFiles = async ({
       chunks.push(filePaths.slice(i, i + batchSize));
     }
 
-    const batchResults: { fileName: string; content?: string }[] = [];
+    const batchResults: GitLabFile[] = [];
 
     for (const chunk of chunks) {
       let success = false;
       // First, try batched
-      success = await attemptQuery(chunk, includeContent, batchResults);
+      success = await attemptQuery(
+        fullPath,
+        ref,
+        chunk,
+        includeContent,
+        batchResults
+      );
 
       if (!success && chunk.length > 1) {
         // Fallback: Fetch one-by-one on complexity error
         for (const singleFile of chunk) {
-          await attemptQuery([singleFile], includeContent, batchResults);
+          await attemptQuery(
+            fullPath,
+            ref,
+            [singleFile],
+            includeContent,
+            batchResults
+          );
         }
       }
     }
@@ -211,20 +257,20 @@ export const getGitLabFiles = async ({
   };
 
   const attemptQuery = async (
+    fullPath: string,
+    ref: string,
     chunk: string[],
     includeContent: boolean,
-    results: { fileName: string; content?: string }[]
+    results: GitLabFile[]
   ): Promise<boolean> => {
     // Returns true if succeeded
     const fields = includeContent ? `name path rawBlob` : `name path`;
 
     const query = `
       query {
-        project(fullPath: "${project.fullPath}") {
+        project(fullPath: "${fullPath}") {
           repository {
-            blobs(ref: "${project.repository.rootRef}", paths: ${JSON.stringify(
-      chunk
-    )}) {
+            blobs(ref: "${ref}", paths: ${JSON.stringify(chunk)}) {
               edges {
                 node {
                   ${fields}
@@ -255,11 +301,11 @@ export const getGitLabFiles = async ({
         console.error("GraphQL errors:", res.data.errors);
         throw new Error(errorMsg);
       }
-      
+
       const edges = res.data?.data?.project?.repository?.blobs?.edges ?? [];
       for (const e of edges) {
         const node = e.node;
-        
+
         results.push({
           fileName: node.path,
           ...(includeContent ? { content: node.rawBlob } : {}),
@@ -273,21 +319,30 @@ export const getGitLabFiles = async ({
   };
 
   try {
-    const detectionResults = await fetchBatch(
-      detectionPaths.map((p) => p.file),
-      true,
-      CONTENT_BATCH_SIZE
-    );
+    const allResults: GitLabFile[] = [];
 
-    const metadataResults = await fetchBatch(
-      metadataPaths.map((p) => p.file),
-      false,
-      METADATA_BATCH_SIZE
-    );
+    for (const [fullPath, group] of projectGroups) {
+      const detectionResults = await fetchBatch(
+        fullPath,
+        group.ref,
+        group.detection,
+        true,
+        CONTENT_BATCH_SIZE
+      );
 
-    const allResults = [...detectionResults, ...metadataResults].sort((a, b) =>
-      a.fileName.localeCompare(b.fileName)
-    );
+      const metadataResults = await fetchBatch(
+        fullPath,
+        group.ref,
+        group.metadata,
+        false,
+        METADATA_BATCH_SIZE
+      );
+
+      allResults.push(...detectionResults, ...metadataResults);
+    }
+
+    // Sort by fileName
+    allResults.sort((a, b) => a.fileName.localeCompare(b.fileName));
 
     return { success: true, data: allResults };
   } catch (err) {

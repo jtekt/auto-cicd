@@ -1,71 +1,63 @@
-import type { ManagedFile, ProjectConfig } from "@/types/app-config";
-import { generateDockerfile } from "./dockerfile";
-import { generateGitLabCI } from "./gitlab-ci-template";
-import { generateKubernetesManifest } from "./kubernetes-manifest-template";
-import { generateNginxConf } from "./nginx-template";
+import type { ProjectConfig } from "@/types/app-config";
 import type { ProjectNode } from "@/types/project";
 import type { Result } from "@/types/result";
+import { templates } from "@/config";
+import { templateDataBuilder } from "./data-builder";
+import { parseTemplate } from "../mustache";
+
+type GenerateFile = { fileName: string; content: string };
 
 export const generateFiles = async (
   config: ProjectConfig,
   project: ProjectNode,
   username: string
-): Promise<Result<{ fileName: ManagedFile; content: string }[]>> => {
-  const errors: string[] = [];
-  const files: { fileName: ManagedFile; content: string }[] = [];
+): Promise<Result<GenerateFile[]>> => {
+  try {
+    // Build template data
+    const templateData = templateDataBuilder(
+      config,
+      project,
+      username
+    );
+    const filesPaths: string[] = []
 
-  // Mandatory files
-  const dockerFile = await generateDockerfile(config);
-  if (dockerFile.success) {
-    files.push({
-      fileName: "Dockerfile",
-      content: dockerFile.content,
+    // Add additional files from config
+    config.files.forEach((file) => {
+      filesPaths.push(`/templates/${config.framework}/${file}`);
     });
-  } else {
-    errors.push(dockerFile.error);
-  }
 
-  const gitlabCI = await generateGitLabCI(config, project, username);
-  if (gitlabCI.success) {
-    files.push({
-      fileName: ".gitlab-ci.yml",
-      content: gitlabCI.content,
-    });
-  } else {
-    errors.push(gitlabCI.error);
-  }
+    const result: GenerateFile[] = [];
 
-  const kubernetesFile = await generateKubernetesManifest(config);
-  if (kubernetesFile.success) {
-    files.push({
-      fileName: "kubernetes_manifest.yml",
-      content: kubernetesFile.content,
-    });
-  } else {
-    errors.push(kubernetesFile.error);
-  }
-
-  // Optional files
-  for (const file of config.files) {
-    if (file === "nginx.conf") {
-      const nginxFile = await generateNginxConf(config);
-      if (nginxFile.success) {
-        files.push({
-          fileName: "nginx.conf",
-          content: nginxFile.content,
-        });
-      } else {
-        errors.push(nginxFile.error);
+    // Process each template
+    for (const path of filesPaths) {
+      const template = templates[path];
+      if (!template) {
+        return {
+          success: false,
+          error: `Template not found for ${path}`,
+        };
       }
-    }
-  }
 
-  if (errors.length > 0) {
+      // Replace placeholders in template
+      const content = parseTemplate(template, templateData);
+
+      const fileName = path.split("/").pop();
+      if (!fileName) {
+        return {
+          success: false,
+          error: `Invalid file name for template ${path}`,
+        };
+      }
+
+      result.push({ fileName, content });
+    }
+
+    return { success: true, content: result };
+  } catch (error) {
+    console.error("Error generating files:", error);
     return {
       success: false,
-      error: errors.join("; "),
+      error: "Error generating files",
     };
   }
-
-  return { success: true, content: files };
 };

@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-alpine
+FROM python:3.12-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -8,16 +8,13 @@ WORKDIR /app
 COPY requirements.txt ./
 
 # Install dependencies
-RUN {INSTALL_COMMAND}
+RUN {{INSTALL_COMMAND}}
 
 # Copy the rest of the application code
 COPY . .
 
 # Define environment variables
-ENV PORT={PORT}
-
-# Expose the port FastAPI runs on
-EXPOSE {PORT}
+ENV PORT={{PORT}}
 
 # Command to run FastAPI with Uvicorn
-CMD ["uvicorn", "{OUTPUT_FILENAME}:app", "--host", "0.0.0.0", "--port", "{PORT}", "--app-dir", "{OUTPUT_DIRECTORY}"]
+CMD ["uvicorn", "{{OUTPUT_FILENAME}}:app", "--host", "0.0.0.0", "--port", "{{PORT}}", "--app-dir", "{{OUTPUT_DIRECTORY}}"]

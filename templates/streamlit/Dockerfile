@@ -1,5 +1,5 @@
 # Use a base image that has Python installed
-FROM python:3.9-slim
+FROM python:3.12-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -8,16 +8,13 @@ WORKDIR /app
 COPY requirements.txt ./
 
 # Install the Python dependencies
-RUN {INSTALL_COMMAND}
+RUN {{INSTALL_COMMAND}}
 
 # Copy the rest of the application code into the container
 COPY . .
 
 # Define environment variables
-ENV PORT={PORT}
-
-# Expose the port the application will run on
-EXPOSE {PORT}
+ENV PORT={{PORT}}
 
 # Set the entry point for Streamlit
-CMD ["streamlit", "run", "{OUTPUT_DIRECTORY}{OUTPUT_FILENAME}", "--server.port={PORT}", "--server.address=0.0.0.0", "--server.headless=true"]
+CMD ["streamlit", "run", "{{OUTPUT_PATH}}", "--server.port={{PORT}}", "--server.address=0.0.0.0", "--server.headless=true"]

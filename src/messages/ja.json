@@ -122,7 +122,8 @@
             "buttonText": "役立つリンク",
             "dialogTitle": "自動デプロイのための役立つリンク",
             "dialogDescription": "デプロイ中に役立つリソースを以下に示します：",
-            "closeButton": "閉じる"
+            "closeButton": "閉じる",
+            "gitlabGroupDescription": "プロジェクトを Auto CI&CD を使用してデプロイできるグループ"
         }
     },
     "views": {
@@ -130,7 +131,8 @@
             "signInMessage": "アカウントにサインインして、プロジェクトにアクセスし、デプロイしてください。",
             "errors": {
                 "token": "GitLabアクセストークンの作成エラー。",
-                "profile": "GitLabからユーザープロフィールの取得エラー。"
+                "profile": "GitLabからユーザープロフィールの取得エラー。",
+                "group": "GitLabからグループの取得エラー。"
             }
         },
         "index": {

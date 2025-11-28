@@ -4,6 +4,7 @@ import Vue from "@vitejs/plugin-vue";
 import Vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 import ViteFonts from "unplugin-fonts/vite";
 import VueRouter from "unplugin-vue-router/vite";
+import ViteYaml from '@modyfi/vite-plugin-yaml';
 
 // Utilities
 import { defineConfig } from "vite";
@@ -34,6 +35,7 @@ export default defineConfig({
         ],
       },
     }),
+    ViteYaml()
   ],
   define: { "process.env": {} },
   resolve: {

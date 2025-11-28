@@ -1,5 +1,10 @@
 <template>
-  <v-dialog v-model="deployStore.nextStepsDialog" max-width="600px">
+  <v-dialog
+    v-model="deployStore.nextStepsDialog"
+    width="900"
+    max-width="90vw"
+    max-height="90vh"
+  >
     <v-card class="pa-4">
       <v-card-title
         class="text-h5 font-weight-bold text-center py-4"

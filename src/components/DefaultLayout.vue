@@ -80,9 +80,6 @@
   </v-app>
 
   <Toaster
-    :theme="{
-      dark: theme.current.value.dark,
-    }"
   />
 </template>
 
@@ -94,7 +91,7 @@ import { refreshAccessToken } from "@/libs/gitlab";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale, useTheme } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
-import { Toaster } from "@jtekt-private/vue3-toaster";
+import Toaster from "./Toaster.vue";
 
 const { current } = useLocale();
 

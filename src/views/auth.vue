@@ -48,8 +48,7 @@ import {
   getGitlabProfile,
 } from "@/libs/gitlab";
 import { useAuthStore } from "@/stores/auth";
-import { useToast } from "@jtekt-private/vue3-toaster";
-import axios from "axios";
+import { useToast } from "@/stores/toast";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useLocale } from "vuetify";

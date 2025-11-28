@@ -1,10 +1,7 @@
 import z from "zod";
-
-import configObject from "../../config.json";
+import configYaml from "../../config.yml";
 
 const UserConfigSchema = z.object({ defaultEmpty: z.boolean() });
-
-const OptionalFilesSchema = z.enum(["nginx.conf"]);
 
 const FrameworkConfigSchema = z.object({
   name: z.string(),
@@ -20,7 +17,7 @@ const FrameworkConfigSchema = z.object({
     .optional(),
   outputFile: z.string(),
   port: z.int().optional(),
-  files: z.array(OptionalFilesSchema).optional(),
+  files: z.array(z.string()).optional(),
   configFiles: z
     .array(
       z.object({ file: z.array(z.string()), checkFor: z.array(z.string()) })
@@ -72,6 +69,41 @@ const ConfigSchema = z.object({
   usefulLinks: z.array(UsefulLinkSchema),
 });
 
-export default ConfigSchema.parse(configObject);
+const parsedConfig = ConfigSchema.parse(configYaml);
+
+// Validate that all template files exist
+export const templates = import.meta.glob([
+  "/templates/**",
+  "/templates/**/.*"
+], {
+  query: "?raw",
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+// Check that all framework files exist in the templates
+Object.values(parsedConfig.frameworks).forEach((framework) => {
+  framework.files?.forEach((file) => {
+    const expectedPath = `/templates/${framework.name.toLowerCase()}/${file}`;
+
+    if (!templates[expectedPath]) {
+      // Check if the file exists in the common folder 
+      const commonFile =templates[`/templates/common/${file}`]
+
+      if(commonFile) {
+        // Set the path to the common template
+        templates[expectedPath] = commonFile;
+        return;
+      }
+
+      throw new Error(
+        `Template file "${file}" for framework "${framework.name}" is missing at path: ${expectedPath}`
+      );
+    }
+  });
+});
+
+
+export default parsedConfig;
 
 export type FrameworkConfigType = z.infer<typeof FrameworkConfigSchema>;

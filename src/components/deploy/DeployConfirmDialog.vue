@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     v-model="deployStore.confirmDeployDialog"
-    width="700"
+    width="900"
     max-width="90vw"
     max-height="90vh"
   >
@@ -68,7 +68,7 @@
           </h3>
           <v-expansion-panels
             v-if="deployStore.injectFiles.length"
-            variant="accordion"
+            variant="popout"
             elevation="1"
             class="rounded-lg"
           >

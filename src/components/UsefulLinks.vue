@@ -45,7 +45,7 @@
               </a>
             </v-list-item-title>
             <p class="text-body-2">
-              {{ t("components.usefulLinks.links.gitlabGroupDescription") }}
+              {{ t("components.usefulLinks.gitlabGroupDescription") }}
             </p>
           </v-list-item>
           <v-list-item

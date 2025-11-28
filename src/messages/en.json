@@ -122,7 +122,8 @@
             "buttonText": "Useful Links",
             "dialogTitle": "Useful Links for Auto Deployment",
             "dialogDescription": "Here are some resources to assist you during deployment:",
-            "closeButton": "Close"
+            "closeButton": "Close",
+            "gitlabGroupDescription": "Group where the projects can be deployed using Auto CI&CD"
         }
     },
     "views": {
@@ -130,7 +131,8 @@
             "signInMessage": "Sign in to your account to access your projects and deploy them.",
             "errors": {
                 "token": "Error creating GitLab access token.",
-                "profile": "Error retrieving user profile from GitLab."
+                "profile": "Error retrieving user profile from GitLab.",
+                "group": "Error retrieving user group from GitLab."
             }
         },
         "index": {

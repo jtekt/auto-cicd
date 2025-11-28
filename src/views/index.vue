@@ -154,12 +154,10 @@ import DeployBtn from "@/components/deploy/DeployButton.vue";
 import { useLocale } from "vuetify";
 import { type ProjectNode, type ProjectsResponse } from "@/types/project";
 import { useRoute, useRouter } from "vue-router";
-import { useToast } from "@jtekt-private/vue3-toaster";
+import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
-import { isDeployed,  undeploy } from "@/libs/gitlab";
-import { defaultInjectedFiles, managedFiles } from "@/config/frameworks-config";
-import type { DefaultInjectedFiles } from "@/types/app-config";
+import { isDeployed, undeploy } from "@/libs/gitlab";
 import UndeployHandler from "@/components/undeploy/UndeployHandler.vue";
 
 const { t } = useLocale();
@@ -233,164 +231,143 @@ const sortOptions = computed(() => [
   },
 ]);
 
-const projects = ref<ProjectNode[]>([]);
+const projects = ref<(ProjectNode & { mightBeUpdated?: boolean })[]>([]);
 
 const fetchProjects = async (clear?: boolean) => {
   try {
     if (!authStore.session || (hasNextPage.value === false && !clear)) return;
-
     isLoading.value = true;
 
     if (clear) {
-      // Reset all projects data
       projects.value = [];
       lastCursor.value = null;
     }
 
-    const pageSize = 16;
+    // Step 1: Fetch projects without file contents
+    const projectsData = await fetchProjectsMetadata();
+    if (!projectsData) return;
 
-    const search = `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${
-      authStore.session.user.nickname
-    }/${searchQuery.value}`;
-
-    const query = `
-      {
-        projects(
-          minAccessLevel: DEVELOPER,
-          membership: true,
-          searchNamespaces: true,
-          archived: EXCLUDE,
-          search: "${search}",
-          sort: "${sortBy.value}",
-          first: ${pageSize},
-          after: "${lastCursor.value || ""}"
-        ) {
-          count
-          pageInfo {
-            endCursor
-            hasNextPage
-            hasPreviousPage
-            startCursor
-          }
-          edges {
-            cursor
-            node {
-              id
-              description
-              name
-              webUrl
-              fullPath
-              languages {
-                name
-                share
-              }
-              namespace {
-                name
-                fullPath
-                path
-                webUrl
-              }
-              updatedAt
-              avatarUrl
-              maxAccessLevel {
-                humanAccess
-                stringValue
-              }
-              repository {
-                rootRef
-                blobs(paths: ["${managedFiles.join('", "')}"]) {
-                  nodes {
-                    name
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
-
-    const res = await axios.post<ProjectsResponse>(
-      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
-      {
-        query,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (res.data.errors) {
-      return toast.error(
-        t("views.index.projects.errors.fetchProjects") +
-          ": " +
-          res.data.errors.map((e) => e.message).join(", "),
-        { closeButton: true, duration: Infinity }
-      );
-    } else if (!res.data.data) {
-      throw new Error("Failed to fetch projects: No projects data found");
-    }
-
-    const filteredLangs = ["dockerfile", "html", "css", "scss"]; // TODO: Add more languages to filter
-
-    const { edges, pageInfo } = res.data.data.projects;
-
-    if (edges) {
-      projects.value.push(
-        ...edges.map((project) => {
-          const id = project.node.id.split("/").pop();
-
-          if (!id) {
-            throw new Error("Invalid project ID");
-          }
-
-          // Process languages
-          const languages = project.node.languages
-            .reduce<{ name: string; share: number }[]>((acc, l) => {
-              const lowercasedName = l.name.toLowerCase();
-              if (!filteredLangs.includes(lowercasedName)) {
-                acc.push({ name: lowercasedName, share: l.share });
-              }
-              return acc;
-            }, [])
-            .sort((a, b) => b.share - a.share);
-
-          const projectPath = project.node.fullPath.split("/").pop();
-
-          if (!projectPath) {
-            throw new Error("Invalid project path");
-          }
-
-          const projectName = projectPath
-            .replace(/_/g, "-") // Replace underscores with hyphens
-            .replace(/\./g, "-") // Replace periods with hyphens
-            .toLowerCase() // Ensure lowercase
-            .replace(/[^a-z0-9-]/g, "");
-
-          return {
-            ...project.node,
-            id: id,
-            projectName,
-            languages,
-            deploymentFiles: project.node.repository.blobs.nodes.filter(
-              (blob) =>
-                defaultInjectedFiles.includes(blob.name as DefaultInjectedFiles)
-            ),
-          };
-        })
-      ); // Append new projects
-      lastCursor.value = pageInfo.endCursor; // Update the cursor for the next request
-      hasNextPage.value = pageInfo.hasNextPage;
-    }
+    projects.value.push(...projectsData);
   } catch (error) {
     toast.error(t("views.index.projects.errors.fetchProjects"));
     console.error("Error fetching projects:", error);
   } finally {
     isLoading.value = false;
   }
+};
+
+const fetchProjectsMetadata = async () => {
+  if (!authStore.session) return null;
+
+  const pageSize = 16;
+  const search = `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${
+    authStore.session.user.nickname
+  }/${searchQuery.value}`;
+
+  const query = `
+     {
+      projects(
+        minAccessLevel: DEVELOPER,
+        membership: true,
+        searchNamespaces: true,
+        archived: EXCLUDE,
+        search: "${search}",
+        sort: "${sortBy.value}",
+        first: ${pageSize},
+        after: "${lastCursor.value || ""}"
+      ) {
+        count
+        pageInfo {
+          endCursor
+          hasNextPage
+          hasPreviousPage
+          startCursor
+        }
+        edges {
+          cursor
+          node {
+            id
+            description
+            name
+            webUrl
+            fullPath
+            languages { 
+              name 
+              share
+            }
+            namespace {
+              name
+              fullPath
+              path
+              webUrl
+            }
+            updatedAt
+            avatarUrl
+            maxAccessLevel {
+              humanAccess
+              stringValue
+            }
+            repository {
+              rootRef
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const res = await axios.post<ProjectsResponse>(
+    `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
+    {
+      query,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${authStore.session!.auth_token.access_token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (res.data.errors || !res.data.data) {
+    toast.error(
+      t("views.index.projects.errors.fetchProjects") +
+        ": " +
+        res.data.errors?.map((e) => e.message).join(", ")
+    );
+    return null;
+  }
+
+  const { edges, pageInfo } = res.data.data.projects;
+  lastCursor.value = pageInfo.endCursor;
+  hasNextPage.value = pageInfo.hasNextPage;
+
+  return edges?.map((project) => {
+    // Your existing project processing logic
+    const id = project.node.id.split("/").pop()!;
+    const languages = project.node.languages
+      .filter(
+        (l) =>
+          !["dockerfile", "html", "css", "scss"].includes(l.name.toLowerCase())
+      )
+      .map((l) => ({ name: l.name.toLowerCase(), share: l.share }))
+      .sort((a, b) => b.share - a.share);
+
+    const projectPath = project.node.fullPath.split("/").pop()!;
+    const projectName = projectPath
+      .replace(/_/g, "-")
+      .replace(/\./g, "-")
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "");
+
+    return {
+      ...project.node,
+      id,
+      projectName,
+      languages,
+      deploymentFiles: [],
+    } satisfies ProjectNode;
+  });
 };
 
 const handleUndeploy = async (project: ProjectNode) => {
@@ -487,6 +464,7 @@ watch(
 
 <style scoped>
 .project-card {
+  position: relative;
   transition: all 0.3s ease;
 }
 

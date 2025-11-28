@@ -4,14 +4,14 @@ stages:
   - deploy # Stage responsible for deploying the application to Kubernetes
 
 variables:
-  APPLICATION_NAME: autocicd-{ USERNAME }-{ APPLICATION_NAME }
-  K8S_NAMESPACE: { DEPLOYED_NAMESPACE }
-  CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{ USERNAME }/{ APPLICATION_NAME }
+  APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
+  K8S_NAMESPACE: {{DEPLOYED_NAMESPACE}}
+  CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{{USERNAME}}/${APPLICATION_NAME}
   CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  K8S_IMAGE_PULL_SECRET_NAME: { IMAGE_PULL_SECRET_NAME }
+  K8S_IMAGE_PULL_SECRET_NAME: {{IMAGE_PULL_SECRET_NAME}}
   K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
-  PORT: { PORT }
+  PORT: {{PORT}}
 
 # Build the Docker container image
 build-job:
@@ -21,7 +21,7 @@ build-job:
     - docker
   only:
     # Branches to run the Build stage
-    - { ROOT_REF }
+    - {{ROOT_REF}}
   before_script:
     # Create repository if needed
     # The repository might already exist if the pipeline have already run
@@ -42,7 +42,7 @@ deploy-job:
     - docker
   only:
     # Branches to run the Deploy stage
-    - { ROOT_REF }
+    - {{ROOT_REF}}
   before_script:
     # Uses the correct Kubernetes context
     - kubectl config use-context ${K8S_NAMESPACE}/gitlab-agent-for-kubernetes:${K8S_NAMESPACE}

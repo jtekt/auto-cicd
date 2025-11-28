@@ -1,25 +1,6 @@
-import type {
-  DefaultInjectedFiles,
-  ManagedFile,
-  OptionalFiles,
-} from "@/types/app-config";
-
 import config from "./index";
 
 export const envKey = "ENV"; // Name of the file saved in gitlab with the envs
-
-export const defaultInjectedFiles: DefaultInjectedFiles[] = [
-  "Dockerfile",
-  ".gitlab-ci.yml",
-  "kubernetes_manifest.yml",
-];
-
-export const extraInjectedFiles: OptionalFiles[] = ["nginx.conf"];
-
-export const managedFiles: ManagedFile[] = [
-  ...defaultInjectedFiles,
-  ...extraInjectedFiles,
-];
 
 export const packageManagers = config.packageManagers;
 
@@ -37,11 +18,6 @@ export type ConfigFileInfo = {
 
 export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
   const fileMap = new Map<string, ConfigFileInfo>(); // Use Map for easy merging
-
-  // Add always-fetch defaults (injected files)
-  defaultInjectedFiles.forEach((file) => {
-    fileMap.set(file, { file, alwaysFetch: true });
-  });
 
   // Process frameworks
   Object.entries(frameworksConfig).forEach(([frameworkId, frameworkConfig]) => {

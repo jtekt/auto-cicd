@@ -1,17 +1,10 @@
-export type OptionalFiles = "nginx.conf"; // Optional files exclusive to some frameworks
-export type DefaultInjectedFiles =
-  | "Dockerfile"
-  | "kubernetes_manifest.yml"
-  | ".gitlab-ci.yml";
-export type ManagedFile = OptionalFiles | DefaultInjectedFiles;
-
 export type FileAction = "create" | "update";
 
 export type ProjectConfig = {
   language: string;
   framework: string;
   manager: string;
-  files: OptionalFiles[]; // Optional files to generate
+  files: string[]; // Optional files to generate
   runtimeDependencies?: string[]; // For Python frameworks
 
   // User configurable commands

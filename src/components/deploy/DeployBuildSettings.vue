@@ -111,7 +111,7 @@ const searchFileDebounced = debounce((fileName: string) => {
       isSearching.value = false;
     });
   }
-}, 800); // 800ms debounce delay
+}, 1000); // 1s debounce delay
 
 // Watch outputFile
 watch(

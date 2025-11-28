@@ -17,7 +17,7 @@ import {
 } from "@/config/frameworks-config";
 import { getDefaultProjectConfig } from "@/libs/deploy/config";
 import { useAuthStore } from "@/stores/auth";
-import { useToast } from "@jtekt-private/vue3-toaster";
+import { useToast } from "@/stores/toast";
 import { useI18n } from "vue-i18n";
 import type { ProjectConfig } from "@/types/app-config";
 import type { FrameworkConfigType } from "@/config";
@@ -292,7 +292,7 @@ export const useDeployStore = defineStore("deploy", () => {
       const originalFile = repositoryFiles.value.find(
         (original) => original.fileName === file.fileName
       );
-      
+
       if (!originalFile) {
         fs.push({ ...file, action: "create", isChecked: true });
       } else if (originalFile.content !== file.content) {
@@ -480,8 +480,10 @@ export const useDeployStore = defineStore("deploy", () => {
 
     const filesResponse = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: configFiles,
-      project: project.value,
+      paths: configFiles.map((cf) => ({
+        ...cf,
+        project: project.value!,
+      })),
     });
 
     if (!filesResponse.success) {
@@ -561,8 +563,6 @@ export const useDeployStore = defineStore("deploy", () => {
       return;
     }
 
-    console.debug(`Detected framework: ${bestFramework} (score: ${maxScore})`);
-
     // Detect package manager using supportedManagers' requiredFiles
     const detectedManager = detectPackageManager(bestConfig, fileContents);
     const packageManager = detectedManager || bestConfig.defaultManager;
@@ -594,8 +594,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     const filesData = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: [{ file, alwaysFetch: true }],
-      project: project.value,
+      paths: [{ file, alwaysFetch: true, project: project.value }],
     });
 
     if (filesData.success && filesData.data.length === 1) {

@@ -1,3 +1,5 @@
+import type { GitLabFile } from "@/libs/gitlab";
+
 // Define the enum for access levels
 export enum AccessLevel {
   NO_ACCESS = "NO_ACCESS",
@@ -12,7 +14,6 @@ export enum AccessLevel {
 }
 
 // Define the interfaces for the GraphQL response structure
-
 interface Language {
   name: string;
   share: number;
@@ -44,11 +45,6 @@ export interface ProjectNode {
   maxAccessLevel: MaxAccessLevel;
   repository: {
     rootRef: string;
-    blobs: {
-      nodes: {
-        name: string;
-      }[];
-    };
   };
   deploymentFiles?: {
     name: string;
