@@ -273,16 +273,6 @@ frameworks:
         - vite.config.mjs
       - package.json
 usefulLinks:
-  - name: PodViewer
-    icon: 'http://172.16.98.151:31030/icon.png'
-    url: 'http://172.16.98.151:31030/namespaces/auto-cicd/pods'
-    description:
-      en: >-
-        Monitor your deployments and view application logs using the naming
-        pattern 'username-project-deploymentId'.
-      ja: >-
-        デプロイの状態を監視し、'username-project-deploymentId'
-        の命名パターンを使用してアプリケーションログを確認できます。
   - name: K8s Dashboard
     icon: 'http://172.16.98.151:31030/icon.png'
     url: 'http://172.16.98.151:31389/?namespace=auto-cicd'
