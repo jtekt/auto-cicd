@@ -170,6 +170,7 @@ Define these in GitLab → Settings → CI/CD → Variables.
 
 Common:
 
+- `K8S_CONTEXT`: The name of the context to be used in k8s cluster
 - `K8S_HOST`: Public IP or DNS users will access when the service is of type NodePort (e.g., your node or load balancer address).
 
 For GitLab Container Registry:

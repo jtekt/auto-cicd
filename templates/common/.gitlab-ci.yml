@@ -45,7 +45,7 @@ deploy-job:
     - {{ROOT_REF}}
   before_script:
     # Uses the correct Kubernetes context
-    - kubectl config use-context ${K8S_NAMESPACE}/gitlab-agent-for-kubernetes:${K8S_NAMESPACE}
+    - kubectl config use-context ${K8S_CONTEXT}
 
     # Uses the correct Kubernetes namespace
     - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
