@@ -80,24 +80,19 @@
         <span>
           {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
         </span>
-        <v-divider v-if="supportContacts.length" vertical />
-        <v-tooltip v-for="(c, i) in supportContacts" :key="i" location="bottom">
-          <template #activator="{ props }">
-            <v-btn
-              v-bind="props"
-              icon
-              variant="text"
-              :href="c.url"
-              target="_blank"
-              rel="noopener"
-              size="small"
-            >
-              <v-icon>{{ c.icon || "mdi-help-circle-outline" }}</v-icon>
-            </v-btn>
-          </template>
-
-          <span>{{ c.label }}</span>
-        </v-tooltip>
+        <template v-if="supportContact">
+          <v-divider vertical />
+          <v-btn
+            icon
+            variant="text"
+            :href="supportContact"
+            target="_blank"
+            rel="noopener"
+            size="small"
+          >
+            <v-icon>{{ "mdi-help-circle-outline" }}</v-icon>
+          </v-btn>
+        </template>
       </div>
     </v-footer>
   </v-app>
@@ -114,7 +109,8 @@ import { useRoute, useRouter } from "vue-router";
 import { useLocale, useTheme } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
 import Toaster from "./Toaster.vue";
-import { supportContacts } from "@/config";
+
+const supportContact = import.meta.env.VITE_APP_SUPPORT_CONTACT
 
 const { current, t } = useLocale();
 

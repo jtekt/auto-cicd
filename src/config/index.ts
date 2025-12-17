@@ -103,47 +103,6 @@ Object.values(parsedConfig.frameworks).forEach((framework) => {
   });
 });
 
-const supportContactsPlaceholder = import.meta.env.VITE_APP_SUPPORT_CONTACTS;
-const supportContactsRaw: string =
-  supportContactsPlaceholder !== "VITE_APP_SUPPORT_CONTACTS_PLACEHOLDER"
-    ? supportContactsPlaceholder
-    : "";
-
-// Format: "Icon;Label;URL,Icon;Label;URL" or "Label;URL,Label;URL" or "URL,Label;URL"
-export const supportContacts = supportContactsRaw
-  .split(",")
-  .map((c) => c.trim())
-  .filter(Boolean)
-  .map((c) => {
-    const parts = c
-      .split(";")  // Changed from "|" to ";"
-      .map((p) => p?.trim())
-      .filter(Boolean);
-    let icon: string | undefined = "";
-    let label: string | undefined = "Support";
-    let url: string | undefined = "#";
-    if (parts.length === 3) {
-      // Format: Icon;Label;URL
-      [icon, label, url] = parts;
-    } else if (parts.length === 2) {
-      // Could be Icon;URL or Label;URL
-      if (parts[0]?.startsWith("mdi-") || parts[0]?.includes("/")) {
-        // Assume Icon;URL
-        [icon, url] = parts;
-      } else if (parts[1]?.startsWith("http") || parts[1]?.includes("@")) {
-        // Assume Label;URL
-        [label, url] = parts;
-      } else {
-        // Fallback: Label;URL
-        [label, url] = parts;
-      }
-    } else if (parts.length === 1) {
-      // Just URL
-      url = parts[0];
-    }
-    return { label, icon, url };
-  });
-
 export default parsedConfig;
 
 export type FrameworkConfigType = z.infer<typeof FrameworkConfigSchema>;
