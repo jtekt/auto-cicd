@@ -127,7 +127,7 @@
         },
         "support": {
             "needHelp": "ヘルプが必要な場合や質問がある場合は、次にご連絡ください：",
-            "noSupportConfigured": "サポート連絡先が設定されていません。"
+            "contactSupport": "サポートに連絡する"
         },
         "tutorial": {
             "title": "Auto-CiCd へようこそ",

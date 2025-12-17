@@ -127,7 +127,7 @@
         },
         "support": {
             "needHelp": "If you need help or have questions, please contact:",
-            "noSupportConfigured": "No support contacts are configured."
+            "contactSupport": "Contact Support"
         },
         "tutorial": {
             "title": "Welcome to Auto-CiCd",
