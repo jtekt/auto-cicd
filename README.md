@@ -117,7 +117,7 @@ VITE_APP_IMAGE_PULL_SECRET_NAME=auto-cicd-container-secret
 
 # Optional
 VITE_APP_GITLAB_GROUP_MANAGER_URL=
-VITE_SUPPORT_CONTACTS==GitLab|mdi-gitlab|https://gitlab.com/...,Email|mdi-email|mailto:support@example.com
+VITE_APP_SUPPORT_CONTACTS==GitLab|mdi-gitlab|https://gitlab.com/...,Email|mdi-email|mailto:support@example.com
 ```
 
 Notes:

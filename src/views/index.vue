@@ -1,39 +1,47 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="4">
-        <v-text-field
-          v-model="searchQuery"
-          :label="t('views.index.searchLabel')"
-          prepend-icon="mdi-magnify"
-          variant="outlined"
-          @input="updateDebouncedUrlParams"
-          hide-details
-        />
+      <v-col cols="12" md="4">
+      <v-text-field
+        v-model="searchQuery"
+        :label="t('views.index.searchLabel')"
+        prepend-icon="mdi-magnify"
+        variant="outlined"
+        @input="updateDebouncedUrlParams"
+        hide-details
+      />
       </v-col>
-      <v-col cols="4">
-        <v-select
-          v-model="sortBy"
-          :items="sortOptions"
-          item-title="text"
-          item-value="value"
-          :label="t('views.index.sortLabel')"
-          prepend-icon="mdi-sort"
-          variant="outlined"
-          @update:model-value="updateUrlParams"
-          hide-details
-        >
-          <template #item="{ item, props }">
-            <v-list-item v-bind="props">
-              <template #prepend>
-                <v-icon :icon="item.raw.icon" />
-              </template>
-            </v-list-item>
+      <v-col cols="12" md="4">
+      <v-select
+        v-model="sortBy"
+        :items="sortOptions"
+        item-title="text"
+        item-value="value"
+        :label="t('views.index.sortLabel')"
+        prepend-icon="mdi-sort"
+        variant="outlined"
+        @update:model-value="updateUrlParams"
+        hide-details
+      >
+        <template #item="{ item, props }">
+        <v-list-item v-bind="props">
+          <template #prepend>
+          <v-icon :icon="item.raw.icon" />
           </template>
-        </v-select>
+        </v-list-item>
+        </template>
+      </v-select>
       </v-col>
-      <v-col cols="4" class="text-right">
-        <UsefulLinks />
+      <v-col cols="12" md="4" class="text-right">
+      <UsefulLinks />
+      <v-btn
+        color="primary"
+        class="ml-4"
+        icon
+        @click="tutorialDialog = true"
+      >
+        <v-icon icon="mdi-information" />
+      </v-btn>
       </v-col>
     </v-row>
 
@@ -50,6 +58,14 @@
         <v-alert variant="tonal" class="text-center">
           {{ t("views.index.projects.noFound") }}
         </v-alert>
+        <v-btn
+          color="primary"
+          class="mt-4 mx-auto d-flex align-center"
+          @click="tutorialDialog = true"
+        >
+          <v-icon class="mr-2" icon="mdi-school" />
+          {{ t("views.index.projects.startTutorial") }}
+        </v-btn>
       </v-col>
     </v-row>
 
@@ -131,19 +147,12 @@
         </v-col>
       </v-row>
     </template>
-
-    <v-row>
-      <v-col cols="12">
-        <v-alert variant="tonal" class="text-center" density="compact">
-          {{ t("views.index.footerMessage") }}
-          <RouterLink to="/faq#move-project">
-            {{ t("views.index.transferProject") }}
-          </RouterLink>
-        </v-alert>
-      </v-col>
-    </v-row>
   </v-container>
 
+  <TutorialDialog
+    v-model="tutorialDialog"
+    :autoCicdGroupUrl="authStore.session?.groupUrl"
+  />
   <DeployHandler />
 </template>
 
@@ -161,6 +170,7 @@ import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
 import { isDeployed, undeploy } from "@/libs/gitlab";
 import UndeployHandler from "@/components/undeploy/UndeployHandler.vue";
+import TutorialDialog from "@/components/TutorialDialog.vue";
 
 const { t } = useLocale();
 
@@ -175,6 +185,7 @@ const error = ref<string | null>(null);
 const searchQuery = ref(
   typeof route.query.search === "string" ? route.query.search : ""
 );
+const tutorialDialog = ref(false);
 
 enum SortOptions {
   updated_desc = "updated_desc",

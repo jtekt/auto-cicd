@@ -128,6 +128,23 @@
         "support": {
             "needHelp": "If you need help or have questions, please contact:",
             "noSupportConfigured": "No support contacts are configured."
+        },
+        "tutorial": {
+            "title": "Welcome to Auto-CiCd",
+            "openGroup": "Open Auto-CiCd GitLab Group",
+            "previous": "Previous",
+            "next": "Next",
+            "finish": "Finish",
+            "steps": {
+                "intro": "To begin using Auto-CiCd, you need at least one project inside your Auto-CiCd GitLab group. This tutorial will guide you through adding your first project and deploying it.",
+                "transferProject": "Move or create the project inside your Auto-CiCd GitLab group. Only projects located in this group can be used in the Auto-CiCd application. Use the button above to open the group.",
+                "findProject": "After transferring or creating the project, return to the Auto-CiCd home page. Your project will now appear in the list.",
+                "deployButton": "Click the Deploy button on your project to begin the deployment setup.",
+                "frameworkInference": "Auto-CiCd will try to automatically detect your framework. If detection is not possible, choose the appropriate framework manually.",
+                "configDocker": "Configure your Docker settings: build command, start command, main file path, and port. If you are using a common framework, the default configuration usually works without changes.",
+                "envVariables": "If your project uses environment variables, you can copy your entire .env file and paste it here.",
+                "reviewCommit": "When you click Deploy, you will be shown the list of files that will be added or updated in your repository, you can select what files do you want to commit by selecting the checkboxes. If you confirm, Auto-CiCd will commit those files to the main branch of your project."
+            }
         }
     },
     "views": {
@@ -154,7 +171,8 @@
                 },
                 "errors": {
                     "fetchProjects": "Failed to fetch projects. Please try again."
-                }
+                },
+                "startTutorial": "Start Tutorial"
             },
             "footerMessage": "If your project is not listed, please ensure it in your auto-cicd sub-group in GitLab.",
             "transferProject": "How to transfer your project"

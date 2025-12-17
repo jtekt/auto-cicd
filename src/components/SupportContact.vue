@@ -8,8 +8,6 @@
       :href="c.url"
       target="_blank"
       rel="noopener"
-      variant="tonal"
-      color="primary"
       class="justify-start"
     >
       <v-icon v-if="c.icon" class="mr-2">{{ c.icon }}</v-icon>
