@@ -103,15 +103,14 @@ Object.values(parsedConfig.frameworks).forEach((framework) => {
   });
 });
 
-const raw: string =
-  import.meta.env.VITE_APP_SUPPORT_CONTACTS &&
-  import.meta.env.VITE_APP_SUPPORT_CONTACTS !==
-    "VITE_APP_SUPPORT_CONTACTS_PLACEHOLDER"
-    ? import.meta.env.VITE_APP_SUPPORT_CONTACTS
+const supportContactsPlaceholder = "VITE_APP_SUPPORT_CONTACTS_PLACEHOLDER";
+const supportContactsRaw: string =
+  supportContactsPlaceholder !== "VITE_APP_SUPPORT_CONTACTS_PLACEHOLDER"
+    ? supportContactsPlaceholder
     : "";
 
 // Format: "Icon|Label|URL,Icon|Label|URL" or "Label|URL,Label|URL" or "URL,Label|URL"
-export const supportContacts = raw
+export const supportContacts = supportContactsRaw
   .split(",")
   .map((c) => c.trim())
   .filter(Boolean)

@@ -37,7 +37,7 @@ spec:
               value: http://172.16.98.151:30173
             
             - name: VITE_APP_SUPPORT_CONTACTS
-              value: mdi-gitlab|GitLab Issues|http://10.115.1.14/on-premise-k8s-cluster/fabel/auto-cicd/-/issues,mdi-email|Email Support|mailto:kevin_fabel@jtekt.co.jp
+              value: mdi-gitlab|GitLab Issues|http://10.115.1.14/on-premise-k8s-cluster/fabel/auto-cicd/-/issues
       imagePullSecrets:
         - name: ${K8S_ECR_SECRET_NAME}
 ---
