@@ -1,6 +1,7 @@
 stages:
   - build
   - deploy
+  - release
 
 variables:
   APPLICATION_NAME: auto-cicd
@@ -57,3 +58,24 @@ deploy-job:
     name: production
     kubernetes:
       namespace: ${K8S_NAMESPACE}
+
+# Release tagged versions
+release-job:
+  stage: release
+  tags:
+    - docker
+  only:
+    - tags
+  before_script:
+    - >
+      aws ecr create-repository --repository-name ${CONTAINER_IMAGE_NAME}
+      || echo "Repository might have already existed"
+  script:
+    - echo "Releasing version ${CI_COMMIT_TAG}"
+    # Build the image fresh from the tagged commit
+    - docker build -t ${CONTAINER_IMAGE}:${CI_COMMIT_TAG} .
+    # Also tag as latest
+    - docker tag ${CONTAINER_IMAGE}:${CI_COMMIT_TAG} ${CONTAINER_IMAGE}:latest
+    # Push both tags
+    - docker push ${CONTAINER_IMAGE}:${CI_COMMIT_TAG}
+    - docker push ${CONTAINER_IMAGE}:latest
