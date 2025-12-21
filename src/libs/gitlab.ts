@@ -105,18 +105,17 @@ export const getGitlabProfile = async (
 
     // Verify if user has auto-cicd group already
     try {
+      const userGroupPath = `${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}/${
+        user.nickname
+      }`;
       const autoCICDGroup = await axios.get<Group[]>(
         `${
           import.meta.env.VITE_APP_GITLAB_URL
-        }/api/v4/groups?search=${encodeURIComponent(
-          `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${user.nickname}`
-        )}`
+        }/api/v4/groups?search=${encodeURIComponent(userGroupPath)}`
       );
 
       const groupFound = autoCICDGroup.data.find(
-        (g) =>
-          g.full_path ===
-          `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${user.nickname}`
+        (g) => g.full_path === userGroupPath
       );
 
       if (groupFound) return { user, groupUrl: groupFound.web_url };
@@ -478,133 +477,6 @@ export const updateEnvs = async ({
   }
   return await axios.post(url, body, config);
 };
-
-export async function undeploy({
-  project,
-  session,
-}: {
-  project: ProjectNode;
-  session: Session;
-}): Promise<{
-  success: boolean;
-  updatedCi?: string;
-}> {
-  const gitlabCiPath = ".gitlab-ci.yml";
-
-  // Get previous CI content
-  const gitLabCi = project.deploymentFiles?.find(
-    (file) => file.name === gitlabCiPath
-  );
-
-  if (!gitLabCi) {
-    return {
-      success: false,
-    };
-  }
-
-  const yamlContent = gitLabCi.rawTextBlob;
-
-  if (!yamlContent) {
-    return {
-      success: false,
-    };
-  }
-
-  const parsedYaml = parse(yamlContent);
-
-  if (!parsedYaml.variables) {
-    return {
-      success: false,
-    };
-  }
-
-  if (!parsedYaml.variables.APPLICATION_NAME) {
-    parsedYaml.variables.APPLICATION_NAME = `autocicd-${session.user.nickname}-${project.projectName}`;
-  }
-
-  if (!parsedYaml.variables.K8S_NAMESPACE) {
-    parsedYaml.variables.K8S_NAMESPACE =
-      import.meta.env.VITE_APP_DEPLOYED_NAMESPACE;
-  }
-
-  // Construct new CI content
-  const updatedCi = `# Define the pipeline stages
-stages:
-  - cleanup
-
-variables:
-  ${
-    parsedYaml.variables
-      ? Object.entries(parsedYaml.variables)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join("\n  ")
-      : ""
-  }
-
-cleanup-job:
-  stage: cleanup
-  before_script:
-    - kubectl config use-context ${
-      parsedYaml.variables.K8S_NAMESPACE
-    }/gitlab-agent-for-kubernetes:${parsedYaml.variables.K8S_NAMESPACE}
-    - kubectl config set-context --current --namespace=${
-      parsedYaml.variables.K8S_NAMESPACE
-    }
-  script:
-    # Delete the kubernetes deployment and service
-    - envsubst < kubernetes_manifest.yml | kubectl delete --ignore-not-found=true -f -
-    
-    # Delete the env secret if it exists
-    - kubectl delete secret $K8S_ENV_SECRET_NAME --ignore-not-found=true -n $K8S_NAMESPACE
-
-    # Validate deletion
-    - |
-      echo "Validating deletion..."
-      if kubectl get deployment $APPLICATION_NAME -n $K8S_NAMESPACE; then
-        echo "Error: Deployment $APPLICATION_NAME still exists in namespace $K8S_NAMESPACE";
-        exit 1;
-      else
-        echo "Deployment $APPLICATION_NAME successfully deleted from namespace $K8S_NAMESPACE";
-      fi
-
-    - echo "-------------------------------------------------------------------------"
-    - echo "CLEANUP COMPLETED SUCCESSFULLY!"
-    - echo "-------------------------------------------------------------------------"
-`;
-
-  const commitPayload = {
-    branch: project.repository.rootRef,
-    commit_message: "[AUTO-CICD] Update CI with cleanup stage",
-    actions: [
-      {
-        action: "update",
-        file_path: gitlabCiPath,
-        content: updatedCi,
-      },
-    ],
-  };
-
-  try {
-    const commitUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
-      project.id
-    }/repository/commits`;
-
-    await axios.post(commitUrl, commitPayload, {
-      headers: {
-        Authorization: `Bearer ${session.auth_token.access_token}`,
-      },
-    });
-  } catch (error) {
-    console.error("Error pushing commit:", error);
-    return {
-      success: false,
-    };
-  }
-  return {
-    success: true,
-    updatedCi,
-  };
-}
 
 export const isDeployed = (project: ProjectNode): boolean => {
   const gitLabCi = project.deploymentFiles?.find(

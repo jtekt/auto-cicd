@@ -39,8 +39,27 @@ metadata:
   labels:
     app: ${APPLICATION_NAME}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: ${APPLICATION_NAME}
   ports:
     - port: ${PORT}
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${APPLICATION_NAME}
+spec:
+  # ingressClassName: # Use the default so it is not needed
+  rules:
+    - host: ${DEPLOYMENT_SUB_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ${APPLICATION_NAME}
+                port:
+                  number: ${PORT}

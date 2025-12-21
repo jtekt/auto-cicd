@@ -23,7 +23,6 @@ export const templateDataBuilder = (
     ROOT_REF: project.repository.rootRef, // Set application main branch
 
     // Set kubernetes context
-    DEPLOYED_NAMESPACE: import.meta.env.VITE_APP_DEPLOYED_NAMESPACE,
     IMAGE_PULL_SECRET_NAME:
       import.meta.env.VITE_APP_IMAGE_PULL_SECRET_NAME ||
       "auto-cicd-pull-secret",

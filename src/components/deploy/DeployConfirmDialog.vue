@@ -107,6 +107,11 @@
                   readonly
                   class="mt-2 text-body-2"
                 />
+                <!-- <CodeDisplay
+                  :content="fileInfo.content"
+                  :max-height="300"
+                  class="mt-2 text-body-2"
+                /> -->
               </template>
             </v-expansion-panel>
           </v-expansion-panels>
@@ -157,7 +162,6 @@
 import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
 import { computed } from "vue";
-import DeployEnvStatus from "./DeployEnvStatus.vue";
 
 const { t } = useLocale();
 const deployStore = useDeployStore();

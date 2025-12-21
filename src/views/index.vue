@@ -127,11 +127,6 @@
 
             <v-card-actions>
               <DeployBtn :project="project" />
-              <UndeployHandler
-                v-if="isDeployed(project)"
-                :project="project"
-                @handle-undeploy="handleUndeploy(project)"
-              />
             </v-card-actions>
           </v-card>
         </v-col>
@@ -168,8 +163,6 @@ import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
-import { isDeployed, undeploy } from "@/libs/gitlab";
-import UndeployHandler from "@/components/undeploy/UndeployHandler.vue";
 import TutorialDialog from "@/components/TutorialDialog.vue";
 
 const { t } = useLocale();
@@ -273,7 +266,7 @@ const fetchProjectsMetadata = async () => {
   if (!authStore.session) return null;
 
   const pageSize = 16;
-  const search = `${import.meta.env.VITE_APP_DEPLOYED_NAMESPACE}/${
+  const search = `${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}/${
     authStore.session.user.nickname
   }/${searchQuery.value}`;
 
@@ -381,42 +374,6 @@ const fetchProjectsMetadata = async () => {
       deploymentFiles: [],
     } satisfies ProjectNode;
   });
-};
-
-const handleUndeploy = async (project: ProjectNode) => {
-  const toastId = toast.loading(t("components.undeployHandler.loading"));
-  try {
-    if (!authStore.session) return;
-
-    const res = await undeploy({
-      project,
-      session: authStore.session,
-    });
-
-    if (res.success) {
-      projects.value = projects.value.map((p) => {
-        if (p.id === project.id) {
-          return {
-            ...p,
-            deploymentFiles: p.deploymentFiles?.map((df) => {
-              return df.name === ".gitlab-ci.yml"
-                ? { ...df, rawTextBlob: res.updatedCi || "" }
-                : df;
-            }),
-          }; // Updates
-        }
-        return p;
-      });
-
-      toast.success(t("components.undeployHandler.success"), { id: toastId });
-      return;
-    }
-
-    toast.error(t("components.undeployHandler.errors"), { id: toastId });
-  } catch (error) {
-    toast.error(t("components.undeployHandler.errors"), { id: toastId });
-    console.error("Error undeploying project:", error);
-  }
 };
 
 const updateUrlParams = () => {

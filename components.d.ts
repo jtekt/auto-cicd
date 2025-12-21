@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppLoader: typeof import('./src/components/AppLoader.vue')['default']
+    CodeDisplay: typeof import('./src/components/deploy/CodeDisplay.vue')['default']
     CodeEditor: typeof import('./src/components/CodeEditor.vue')['default']
     DefaultLayout: typeof import('./src/components/DefaultLayout.vue')['default']
     DeployBuildSettings: typeof import('./src/components/deploy/DeployBuildSettings.vue')['default']
