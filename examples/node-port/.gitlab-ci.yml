@@ -54,11 +54,7 @@ deploy-job:
     # This file contains key-value pairs of environment variables needed for the application.
 
     # First delete any existing secret to ensure it is updated
-    - kubectl delete secret $K8S_ENV_SECRET_NAME --ignore-not-found=true
-    - |
-      if [ -n "$ENV" ]; then
-        kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV -o yaml | kubectl apply -f -
-      fi
+    - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
 
     # Apply the Kubernetes manifest
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
