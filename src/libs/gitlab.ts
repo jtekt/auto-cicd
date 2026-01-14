@@ -1,10 +1,7 @@
 import axios, { AxiosError } from "axios";
-import { parse } from "yaml";
-import type { Group } from "@/types/group";
 import type { ProjectNode } from "@/types/project";
 import { envKey, type ConfigFileInfo } from "@/config/frameworks-config";
 import type { Env } from "@/types/env";
-import type { User } from "@/types/user";
 import { UserSchema } from "@/schemas/user";
 import type { Session } from "@/types/session";
 import type { Token } from "@/types/token";
@@ -18,132 +15,69 @@ export interface CommitActionObject {
   encoding: "base64";
 }
 
-export const createGitlabAuthUrl = () => {
-  const scopes = "api profile openid email read_api read_user write_repository";
+const GITLAB = import.meta.env.VITE_APP_GITLAB_URL;
+const CLIENT_ID = import.meta.env.VITE_APP_GITLAB_OAUTH_ID;
+const REDIRECT = window.location.origin + "/auth";
+const CODE_VERIFIER = import.meta.env.VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR;
 
-  const url = new URL(import.meta.env.VITE_APP_GITLAB_URL + "/oauth/authorize");
-  url.searchParams.append(
-    "client_id",
-    import.meta.env.VITE_APP_GITLAB_OAUTH_ID
-  );
-  url.searchParams.append("redirect_uri", window.location.origin + "/auth");
+export const createGitlabAuthUrl = () => {
+  const url = new URL(GITLAB + "/oauth/authorize");
+  url.searchParams.append("client_id", CLIENT_ID);
+  url.searchParams.append("redirect_uri", REDIRECT);
   url.searchParams.append("response_type", "code");
-  url.searchParams.append("scope", scopes);
-  url.searchParams.append(
-    "state",
-    import.meta.env.VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR
-  );
+  url.searchParams.append("scope", "openid profile email api");
+  url.searchParams.append("code_challenge", CODE_VERIFIER);
+  url.searchParams.append("code_challenge_method", "plain");
 
   return url.toString();
 };
 
-export const createAccessToken = async (
+export const exchangeCodeForTokens = async (
   code: string
 ): Promise<Token | null> => {
   try {
     const params = new URLSearchParams();
-    params.append("client_id", import.meta.env.VITE_APP_GITLAB_OAUTH_ID);
+    params.append("client_id", CLIENT_ID);
     params.append("grant_type", "authorization_code");
     params.append("code", code);
-    params.append("redirect_uri", window.location.origin + "/auth");
-    const token = await axios.post<Token>(
-      import.meta.env.VITE_APP_GITLAB_URL + "/oauth/token",
-      params
-    );
+    params.append("redirect_uri", REDIRECT);
+    params.append("code_verifier", CODE_VERIFIER);
 
-    if (token.status !== 200) return null;
-
-    // Validate
-    return TokenSchema.parse(token.data);
-  } catch (error) {
-    console.error(error);
+    const res = await axios.post(GITLAB + "/oauth/token", params);
+    return TokenSchema.parse(res.data);
+  } catch (err) {
+    console.error("exchangeCodeForTokens error:", err);
     return null;
   }
 };
 
-export const refreshAccessToken = async (session: Session) => {
+export const refreshAccessToken = async (
+  session: Session
+): Promise<Token | null> => {
   try {
-    const url = new URL(import.meta.env.VITE_APP_GITLAB_URL + "/oauth/token");
-    url.searchParams.append(
-      "client_id",
-      import.meta.env.VITE_APP_GITLAB_OAUTH_ID
-    );
-    url.searchParams.append("refresh_token", session.auth_token.refresh_token);
-    url.searchParams.append("grant_type", "refresh_token");
-    url.searchParams.append("redirect_uri", window.location.origin + "/auth");
-    url.searchParams.append("code_verifier", session.auth_token.code);
+    const params = new URLSearchParams();
+    params.append("client_id", CLIENT_ID);
+    params.append("grant_type", "refresh_token");
+    params.append("refresh_token", session.auth_token.refresh_token);
+    params.append("redirect_uri", REDIRECT);
+    params.append("code_verifier", CODE_VERIFIER);
 
-    const token = await axios.post<Token>(url.toString());
-
-    if (token.status !== 200) return null;
-
-    // Validate
-    return TokenSchema.parse(token.data);
-  } catch (error) {
-    console.error(error);
+    const res = await axios.post(GITLAB + "/oauth/token", params);
+    return TokenSchema.parse(res.data);
+  } catch (err) {
+    console.error("refreshAccessToken error:", err);
     return null;
   }
 };
 
-export const getGitlabProfile = async (
-  access_token: string
-): Promise<{ user?: User; groupUrl?: string } | null> => {
+export const getGitlabProfile = async (token: string) => {
   try {
-    const res = await axios.get<User>(
-      import.meta.env.VITE_APP_GITLAB_URL + "/oauth/userinfo",
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      }
-    );
-
-    if (res.status !== 200) return null;
-
-    // Validate
-    const user = UserSchema.parse(res.data);
-
-    // Verify if user has auto-cicd group already
-    try {
-      const userGroupPath = `${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}/${
-        user.nickname
-      }`;
-      const autoCICDGroup = await axios.get<Group[]>(
-        `${
-          import.meta.env.VITE_APP_GITLAB_URL
-        }/api/v4/groups?search=${encodeURIComponent(userGroupPath)}`
-      );
-
-      const groupFound = autoCICDGroup.data.find(
-        (g) => g.full_path === userGroupPath
-      );
-
-      if (groupFound) return { user, groupUrl: groupFound.web_url };
-
-      // Create the group
-      const url = `${
-        import.meta.env.VITE_APP_GITLAB_GROUP_MANAGER_URL
-      }/api/gitlab/group`;
-
-      const createdGroup = await axios.post(url, undefined, {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      });
-
-      if (createdGroup.status !== 200) {
-        console.error("Error creating group", createdGroup);
-        return { user };
-      }
-
-      return { user, groupUrl: createdGroup.data.group.web_url };
-    } catch (error) {
-      console.error(error);
-    }
-
-    return { user };
-  } catch (error) {
-    console.error(error);
+    const res = await axios.get(GITLAB + "/oauth/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return UserSchema.parse(res.data);
+  } catch (err) {
+    console.error("getGitlabProfile error:", err);
     return null;
   }
 };

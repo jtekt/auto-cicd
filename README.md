@@ -7,8 +7,6 @@ A zero-friction way to deploy your GitLab repositories to Kubernetes. This proje
 - Deploys applications to a Kubernetes cluster
 - Works with GitLab Container Registry or AWS ECR
 
-> Security note: This app is a frontend. Do not expose OAuth client secrets in Vite `VITE_*` variables; use a public OAuth app with PKCE, or proxy OAuth through a backend you control.
-
 ---
 
 ## Table of Contents
@@ -117,7 +115,7 @@ VITE_APP_IMAGE_PULL_SECRET_NAME=auto-cicd-container-secret
 
 # Optional
 VITE_APP_GITLAB_GROUP_MANAGER_URL=
-VITE_APP_SUPPORT_CONTACT=https://gitlab.com/...
+VITE_APP_MORE_INFORMATION=https://gitlab.com/...
 ```
 
 Notes:
@@ -177,12 +175,9 @@ For GitLab Container Registry:
 
 - GitLab auto-provides `CI_REGISTRY`, `CI_REGISTRY_USER`, `CI_REGISTRY_PASSWORD`, `CI_JOB_TOKEN`. No extra setup needed.
 
-For AWS ECR:
+For CONTAINER REGISTRY:
 
 - `CONTAINER_REGISTRY_URL`: e.g., `123456789012.dkr.ecr.us-east-1.amazonaws.com`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_DEFAULT_REGION`: e.g., `us-east-1`
 
 Optional (email via AWS SES):
 

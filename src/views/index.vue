@@ -1,47 +1,42 @@
 <template>
   <v-container>
-    <v-row>
+    <v-row class="mb-2">
       <v-col cols="12" md="4">
-      <v-text-field
-        v-model="searchQuery"
-        :label="t('views.index.searchLabel')"
-        prepend-icon="mdi-magnify"
-        variant="outlined"
-        @input="updateDebouncedUrlParams"
-        hide-details
-      />
+        <v-text-field
+          v-model="searchQuery"
+          :label="t('views.index.searchLabel')"
+          prepend-icon="mdi-magnify"
+          variant="outlined"
+          @input="updateDebouncedUrlParams"
+          hide-details
+        />
       </v-col>
       <v-col cols="12" md="4">
-      <v-select
-        v-model="sortBy"
-        :items="sortOptions"
-        item-title="text"
-        item-value="value"
-        :label="t('views.index.sortLabel')"
-        prepend-icon="mdi-sort"
-        variant="outlined"
-        @update:model-value="updateUrlParams"
-        hide-details
-      >
-        <template #item="{ item, props }">
-        <v-list-item v-bind="props">
-          <template #prepend>
-          <v-icon :icon="item.raw.icon" />
+        <v-select
+          v-model="sortBy"
+          :items="sortOptions"
+          item-title="text"
+          item-value="value"
+          :label="t('views.index.sortLabel')"
+          prepend-icon="mdi-sort"
+          variant="outlined"
+          @update:model-value="updateUrlParams"
+          hide-details
+        >
+          <template #item="{ item, props }">
+            <v-list-item v-bind="props">
+              <template #prepend>
+                <v-icon :icon="item.raw.icon" />
+              </template>
+            </v-list-item>
           </template>
-        </v-list-item>
-        </template>
-      </v-select>
+        </v-select>
       </v-col>
       <v-col cols="12" md="4" class="text-right">
-      <UsefulLinks />
-      <v-btn
-        color="primary"
-        class="ml-4"
-        icon
-        @click="tutorialDialog = true"
-      >
-        <v-icon icon="mdi-information" />
-      </v-btn>
+        <UsefulLinks />
+        <v-btn color="primary" class="ml-4" icon @click="tutorialDialog = true">
+          <v-icon icon="mdi-school" />
+        </v-btn>
       </v-col>
     </v-row>
 
@@ -53,18 +48,43 @@
       </v-col>
     </v-row>
 
-    <v-row v-else-if="!isLoading && projects.length < 1">
-      <v-col cols="12">
-        <v-alert variant="tonal" class="text-center">
+    <v-row
+      v-else-if="!isLoading && projects.length === 0"
+      class="not-found-container d-flex flex-column align-center justify-center"
+    >
+      <v-col cols="12" class="text-center">
+        <v-icon
+          icon="mdi-folder-alert-outline"
+          size="64"
+          color="primary"
+          class="mb-4"
+        />
+
+        <p class="text-center mx-auto" max-width="400">
           {{ t("views.index.projects.noFound") }}
-        </v-alert>
+        </p>
+
         <v-btn
+          v-if="!searchQuery"
           color="primary"
           class="mt-4 mx-auto d-flex align-center"
           @click="tutorialDialog = true"
         >
           <v-icon class="mr-2" icon="mdi-school" />
           {{ t("views.index.projects.startTutorial") }}
+        </v-btn>
+
+        <v-btn
+          v-if="!searchQuery && supportContact"
+          :href="supportContact"
+          color="secondary"
+          class="mt-2 mx-auto"
+          density="default"
+          slim
+          target="_blank"
+        >
+          <v-icon class="mr-2" icon="mdi-information" />
+          {{ t("views.index.projects.moreInformation") }}
         </v-btn>
       </v-col>
     </v-row>
@@ -76,11 +96,11 @@
           :key="project.id"
           cols="12"
           sm="6"
-          lg="4"
+          lg="3"
           xl="3"
           class="pa-2"
         >
-          <v-card class="project-card pa-3" elevation="4" rounded="lg">
+          <v-card class="project-card pa-2 h-100" elevation="4" rounded="lg">
             <v-card-item>
               <v-btn
                 variant="text"
@@ -144,10 +164,7 @@
     </template>
   </v-container>
 
-  <TutorialDialog
-    v-model="tutorialDialog"
-    :autoCicdGroupUrl="authStore.session?.groupUrl"
-  />
+  <TutorialDialog v-model="tutorialDialog" />
   <DeployHandler />
 </template>
 
@@ -165,6 +182,8 @@ import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import UsefulLinks from "@/components/UsefulLinks.vue";
 import TutorialDialog from "@/components/TutorialDialog.vue";
 
+const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
+
 const { t } = useLocale();
 
 const router = useRouter();
@@ -181,16 +200,16 @@ const searchQuery = ref(
 const tutorialDialog = ref(false);
 
 enum SortOptions {
-  updated_desc = "updated_desc",
-  updated_asc = "updated_asc",
-  name_desc = "name_desc",
-  name_asc = "name_asc",
+  ACTIVITY_DESC = "ACTIVITY_DESC",
+  SIMILARITY = "SIMILARITY",
+  PATH_DESC = "PATH_DESC",
+  PATH_ASC = "PATH_ASC",
 }
 
 const sortBy = ref(
   typeof route.query.sort === "string" && route.query.sort in SortOptions
     ? route.query.sort
-    : SortOptions.updated_desc
+    : SortOptions.ACTIVITY_DESC
 );
 
 const lastCursor = ref<string | null>(null);
@@ -217,23 +236,18 @@ onMounted(() => {
 const sortOptions = computed(() => [
   {
     text: t("views.index.projects.sort.nameAscText"),
-    value: SortOptions.name_asc,
+    value: SortOptions.PATH_ASC,
     icon: "mdi-sort-alphabetical-ascending",
   },
   {
     text: t("views.index.projects.sort.nameDscText"),
-    value: SortOptions.name_desc,
+    value: SortOptions.PATH_DESC,
     icon: "mdi-sort-alphabetical-descending",
   },
   {
     text: t("views.index.projects.sort.editedAscText"),
-    value: SortOptions.updated_desc,
+    value: SortOptions.ACTIVITY_DESC,
     icon: "mdi-sort-clock-descending",
-  },
-  {
-    text: t("views.index.projects.sort.editedDscText"),
-    value: SortOptions.updated_asc,
-    icon: "mdi-sort-clock-ascending",
   },
 ]);
 
@@ -266,21 +280,18 @@ const fetchProjectsMetadata = async () => {
   if (!authStore.session) return null;
 
   const pageSize = 16;
-  const search = `${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}/${
-    authStore.session.user.nickname
-  }/${searchQuery.value}`;
 
   const query = `
-     {
+  {
+    group(fullPath: "${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}") {
       projects(
-        minAccessLevel: DEVELOPER,
-        membership: true,
-        searchNamespaces: true,
-        archived: EXCLUDE,
-        search: "${search}",
-        sort: "${sortBy.value}",
+        includeSubgroups: true,
+        includeArchived: false,
+        notAimedForDeletion: true,
+        search: "${searchQuery.value}",
         first: ${pageSize},
-        after: "${lastCursor.value || ""}"
+        after: "${lastCursor.value || ""}",
+        sort: ${searchQuery.value ? SortOptions.SIMILARITY : sortBy.value}
       ) {
         count
         pageInfo {
@@ -320,6 +331,7 @@ const fetchProjectsMetadata = async () => {
         }
       }
     }
+  }
   `;
 
   const res = await axios.post<ProjectsResponse>(
@@ -344,7 +356,7 @@ const fetchProjectsMetadata = async () => {
     return null;
   }
 
-  const { edges, pageInfo } = res.data.data.projects;
+  const { edges, pageInfo } = res.data.data.group.projects;
   lastCursor.value = pageInfo.endCursor;
   hasNextPage.value = pageInfo.hasNextPage;
 
@@ -424,7 +436,7 @@ watch(
     sortBy.value =
       typeof route.query.sort === "string" && route.query.sort in SortOptions
         ? route.query.sort
-        : SortOptions.updated_desc;
+        : SortOptions.ACTIVITY_DESC;
 
     await fetchProjects(true); // Fetch the first set of projects
   },
@@ -435,11 +447,24 @@ watch(
 <style scoped>
 .project-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   transition: all 0.3s ease;
 }
 
 .project-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 25px 0 rgba(0, 0, 0, 0.1);
+}
+
+.not-found-container {
+  min-height: 60vh;
+  border-radius: 8px;
+  margin: 40px;
+  background: linear-gradient(to bottom, #f8f8f8, transparent);
+}
+
+.v-theme--dark .not-found-container {
+  background: linear-gradient(to bottom, #1d1d1d, transparent);
 }
 </style>

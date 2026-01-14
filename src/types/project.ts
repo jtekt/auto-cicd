@@ -33,8 +33,8 @@ export interface MaxAccessLevel {
 
 export interface ProjectNode {
   id: string;
-  description: string | null;
   name: string;
+  description: string | null;
   projectName: string;
   webUrl: string;
   fullPath: string;
@@ -66,11 +66,13 @@ interface ProjectEdge {
 
 export interface ProjectsResponse {
   data?: {
-    projects: {
-      count: number;
-      pageInfo: PageInfo;
-      edges: ProjectEdge[] | null;
-    };
+    group: {
+      projects: {
+        count: number;
+        pageInfo: PageInfo;
+        edges: ProjectEdge[] | null;
+      };
+    }
   };
   errors?: { message: string }[];
 }

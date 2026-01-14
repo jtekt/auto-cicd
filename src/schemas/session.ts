@@ -8,7 +8,6 @@ export const SessionSchema = z.object({
     refresh_token: true,
   }).extend({
     expires_at: z.number(),
-    code: z.string(),
   }),
   user: UserSchema.pick({
     sub: true,
@@ -16,6 +15,5 @@ export const SessionSchema = z.object({
     nickname: true,
     name: true,
     picture: true,
-  }),
-  groupUrl: z.string().optional()
+  })
 });
