@@ -19,12 +19,14 @@ export const generateFiles = async (
       project,
       username
     );
-    const filesPaths = DEFAULT_FILES
+    const filesPaths = [...DEFAULT_FILES]
 
     // Add additional files from config
     config.files.forEach((file) => {
       filesPaths.push(`/templates/${config.framework}/${file}`);
     });
+
+    console.log(filesPaths, DEFAULT_FILES)
 
     const result: GenerateFile[] = [];
 
