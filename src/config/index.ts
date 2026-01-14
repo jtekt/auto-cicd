@@ -71,37 +71,38 @@ const ConfigSchema = z.object({
 
 const parsedConfig = ConfigSchema.parse(configYaml);
 
-// Validate that all template files exist
-export const templates = import.meta.glob(
-  ["/templates/**", "/templates/**/.*"],
-  {
-    query: "?raw",
-    eager: true,
-    import: "default",
-  }
-) as Record<string, string>;
+export const DEFAULT_FILES = ["/templates/common/.gitlab-ci.yml", "/templates/common/kubernetes_manifest.yml"];
 
-// Check that all framework files exist in the templates
-Object.values(parsedConfig.frameworks).forEach((framework) => {
-  framework.files?.forEach((file) => {
-    const expectedPath = `/templates/${framework.name.toLowerCase()}/${file}`;
+const filesToFetch = new Set<string>(DEFAULT_FILES);
 
-    if (!templates[expectedPath]) {
-      // Check if the file exists in the common folder
-      const commonFile = templates[`/templates/common/${file}`];
-
-      if (commonFile) {
-        // Set the path to the common template
-        templates[expectedPath] = commonFile;
-        return;
-      }
-
-      throw new Error(
-        `Template file "${file}" for framework "${framework.name}" is missing at path: ${expectedPath}`
-      );
-    }
+Object.entries(parsedConfig.frameworks).forEach(([key, framework]) => {
+  if (!framework.files) return;
+  framework.files.forEach(fileName => {
+    // If you have specific folders for frameworks, add them to the fetch set
+    filesToFetch.add(`/templates/${key.toLowerCase()}/${fileName}`);
   });
 });
+
+export const loadAllTemplates = async (): Promise<Record<string, string>> => {
+  const files: Record<string, string> = {};
+  
+  const requests = Array.from(filesToFetch).map(async (fullPath) => {
+    try {
+      const response = await fetch(fullPath);
+      // If a framework-specific override doesn't exist (404), we just skip it
+      if (response.ok) {
+        files[fullPath] = await response.text();
+      }
+    } catch (err) {
+      console.error(`Network error for ${fullPath}:`, err);
+    }
+  });
+
+  await Promise.all(requests);
+  return files;
+};
+
+export const templates = await loadAllTemplates()
 
 export default parsedConfig;
 

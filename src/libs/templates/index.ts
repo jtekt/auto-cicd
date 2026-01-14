@@ -1,7 +1,7 @@
 import type { ProjectConfig } from "@/types/app-config";
 import type { ProjectNode } from "@/types/project";
 import type { Result } from "@/types/result";
-import { templates } from "@/config";
+import { DEFAULT_FILES, templates } from "@/config";
 import { templateDataBuilder } from "./data-builder";
 import { parseTemplate } from "../mustache";
 
@@ -19,7 +19,7 @@ export const generateFiles = async (
       project,
       username
     );
-    const filesPaths: string[] = []
+    const filesPaths = DEFAULT_FILES
 
     // Add additional files from config
     config.files.forEach((file) => {
