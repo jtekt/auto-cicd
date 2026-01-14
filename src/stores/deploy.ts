@@ -20,7 +20,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@/stores/toast";
 import { useI18n } from "vue-i18n";
 import type { ProjectConfig } from "@/types/app-config";
-import type { FrameworkConfigType } from "@/config";
+import { DEFAULT_FILES, type FrameworkConfigType } from "@/config";
 
 type Env = {
   key: string;
@@ -478,12 +478,21 @@ export const useDeployStore = defineStore("deploy", () => {
     const configFiles = getConfigFiles(mainLang.name);
     if (!configFiles.length) return;
 
+    const paths = configFiles.map((cf) => ({
+      ...cf,
+      project: project.value!,
+    }));
+
+    DEFAULT_FILES.forEach((df) => {
+      paths.push({
+        file: df,
+        project: project.value!,
+      });
+    });
+
     const filesResponse = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: configFiles.map((cf) => ({
-        ...cf,
-        project: project.value!,
-      })),
+      paths,
     });
 
     if (!filesResponse.success) {

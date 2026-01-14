@@ -1,7 +1,7 @@
 import type { ProjectConfig } from "@/types/app-config";
 import type { ProjectNode } from "@/types/project";
 import type { Result } from "@/types/result";
-import { DEFAULT_FILES, templates } from "@/config";
+import { DEFAULT_PATHS, templates } from "@/config";
 import { templateDataBuilder } from "./data-builder";
 import { parseTemplate } from "../mustache";
 
@@ -19,14 +19,12 @@ export const generateFiles = async (
       project,
       username
     );
-    const filesPaths = [...DEFAULT_FILES]
+    const filesPaths = [...DEFAULT_PATHS]
 
     // Add additional files from config
     config.files.forEach((file) => {
       filesPaths.push(`/templates/${config.framework}/${file}`);
     });
-
-    console.log(filesPaths, DEFAULT_FILES)
 
     const result: GenerateFile[] = [];
 

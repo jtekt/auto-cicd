@@ -71,9 +71,10 @@ const ConfigSchema = z.object({
 
 const parsedConfig = ConfigSchema.parse(configYaml);
 
-export const DEFAULT_FILES = ["/templates/common/.gitlab-ci.yml", "/templates/common/kubernetes_manifest.yml"];
+export const DEFAULT_FILES = [".gitlab-ci.yml", "kubernetes_manifest.yml"];
+export const DEFAULT_PATHS = DEFAULT_FILES.map(f=>"/templates/common/" + f);
 
-const filesToFetch = new Set<string>(DEFAULT_FILES);
+const filesToFetch = new Set<string>(DEFAULT_PATHS);
 
 Object.entries(parsedConfig.frameworks).forEach(([key, framework]) => {
   if (!framework.files) return;
