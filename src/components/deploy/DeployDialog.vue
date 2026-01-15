@@ -107,7 +107,7 @@
               t("components.deployHandler.confirmDialog.missingOutputFile", {
                 framework: deployStore.projectConfig.framework,
                 defaultFilename:
-                  frameworksConfig[deployStore.projectConfig.framework]?.outputFile,
+                  config?.frameworks[deployStore.projectConfig.framework]?.outputFile,
               })
             }}
           </v-alert>
@@ -115,7 +115,7 @@
           <v-expansion-panels v-if="deployStore.projectConfig">
             <DeployBuildSettings
               v-if="
-                frameworksConfig[deployStore.projectConfig.framework]?.userConfigurable
+                config?.frameworks[deployStore.projectConfig.framework]?.userConfigurable
               "
             />
             <DeployEnvironmentSettings />
@@ -150,8 +150,10 @@ import DeployFrameworkSelector from "./DeployFrameworkSelector.vue";
 import DeployEnvironmentSettings from "./DeployEnvironmentSettings.vue";
 import { useDeployStore } from "@/stores/deploy";
 import DeployBuildSettings from "./DeployBuildSettings.vue";
-import { frameworksConfig } from "@/config/frameworks-config";
 import { useI18n } from "vue-i18n";
+import { getConfig } from "@/config";
+
+const config = getConfig();
 
 const { t } = useI18n();
 const deployStore = useDeployStore();

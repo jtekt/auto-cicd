@@ -1,60 +1,69 @@
-import type { ProjectConfig } from "@/types/app-config";
 import type { ProjectNode } from "@/types/project";
 import type { Result } from "@/types/result";
-import { DEFAULT_PATHS, templates } from "@/config";
+import { DEFAULT_PATHS, templates, loadTemplates } from "@/config";
 import { templateDataBuilder } from "./data-builder";
 import { parseTemplate } from "../mustache";
-
-type GenerateFile = { fileName: string; content: string };
+import type { ProjectConfig } from "@/types/app-config";
+import type { TemplateSource } from "@/types/config";
+import type { GitLabFile } from "../gitlab";
+import { getCacheKey } from "@/utils/cache";
+import { resolveOutputFileName } from "@/utils/file";
 
 export const generateFiles = async (
+  access_token: string,
   config: ProjectConfig,
   project: ProjectNode,
   username: string
-): Promise<Result<GenerateFile[]>> => {
+): Promise<Result<GitLabFile[]>> => {
   try {
-    // Build template data
-    const templateData = templateDataBuilder(
-      config,
-      project,
-      username
-    );
-    const filesPaths = [...DEFAULT_PATHS]
+    // Load and cache templates for this framework
+    await loadTemplates(access_token, config.framework);
 
-    // Add additional files from config
-    config.files.forEach((file) => {
-      filesPaths.push(`/templates/${config.framework}/${file}`);
-    });
+    // Build mustache template data
+    const templateData = templateDataBuilder(config, project, username);
 
-    const result: GenerateFile[] = [];
+    // Start with defaults (TemplateSource[])
+    const filesToRender: TemplateSource[] = [...DEFAULT_PATHS];
 
-    // Process each template
-    for (const path of filesPaths) {
-      const template = templates[path];
+    // Add user-defined files (TemplateSource[])
+    if (config.files) {
+      filesToRender.push(...config.files);
+    }
+
+    const results: GitLabFile[] = [];
+
+    for (const file of filesToRender) {
+      const key = getCacheKey(file);
+      const template = templates[key];
+
       if (!template) {
         return {
           success: false,
-          error: `Template not found for ${path}`,
+          error: `Template not found for source: ${JSON.stringify(file)}`,
         };
       }
 
-      // Replace placeholders in template
+      // Render via mustache
       const content = parseTemplate(template, templateData);
 
-      const fileName = path.split("/").pop();
+      // Generate output file name
+      const fileName = resolveOutputFileName(file);
+
       if (!fileName) {
         return {
           success: false,
-          error: `Invalid file name for template ${path}`,
+          error: `Unable to determine output filename for: ${JSON.stringify(
+            file
+          )}`,
         };
       }
 
-      result.push({ fileName, content });
+      results.push({ fileName, content });
     }
 
-    return { success: true, content: result };
-  } catch (error) {
-    console.error("Error generating files:", error);
+    return { success: true, content: results };
+  } catch (err) {
+    console.error("Error generating files:", err);
     return {
       success: false,
       error: "Error generating files",

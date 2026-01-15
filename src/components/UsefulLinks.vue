@@ -24,7 +24,7 @@
         </p>
 
         <!-- List of useful links -->
-        <v-list>
+        <v-list v-if="config">
           <v-list-item
             v-for="(link, index) in config.usefulLinks"
             :key="index"
@@ -70,8 +70,10 @@
 <script setup lang="ts">
 import { useLocale } from "vuetify";
 import { onMounted, ref } from "vue";
-import config from "@/config";
 import MoreInformationsSection from "./MoreInformationsSection.vue";
+import { getConfig } from "@/config";
+
+const config = getConfig();
 
 const { t, current } = useLocale();
 

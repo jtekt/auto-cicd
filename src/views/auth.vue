@@ -79,14 +79,11 @@ onMounted(async () => {
       return toast.error(t("views.auth.errors.token"));
     }
 
-    console.log({tokens})
-    
     const profile = await getGitlabProfile(tokens.access_token);
     if (!profile) {
       isLoading.value = false;
       return toast.error(t("views.auth.errors.profile"));
     }
-    console.log({profile})
 
     // Save session
     authStore.setSession({

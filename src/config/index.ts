@@ -1,110 +1,87 @@
-import z from "zod";
-import configYaml from "../../config.yml";
+import { getCacheKey } from "@/utils/cache";
+import { graphqlFetchFile } from "@/libs/gitlab";
+import { ConfigSchema } from "@/schemas/config";
+import type { Config, TemplateSource } from "@/types/config";
+import YAML from "yaml";
 
-const UserConfigSchema = z.object({ defaultEmpty: z.boolean() });
+let parsedConfig: Config | null = null;
 
-const FrameworkConfigSchema = z.object({
-  name: z.string(),
-  image: z.string(),
-  languages: z.array(z.string()),
-  userConfigurable: z
-    .object({
-      installCommand: UserConfigSchema.optional(),
-      buildCommand: UserConfigSchema.optional(),
-      outputFile: UserConfigSchema.optional(),
-      port: UserConfigSchema.optional(),
-    })
-    .optional(),
-  outputFile: z.string(),
-  port: z.int().optional(),
-  files: z.array(z.string()).optional(),
-  configFiles: z
-    .array(
-      z.object({ file: z.array(z.string()), checkFor: z.array(z.string()) })
-    )
-    .optional(), // What files and variations to check and what key words to look for
-  supportedManagers: z
-    .array(
-      z.object({
-        manager: z.string(),
-        requiredFiles: z.array(z.string()),
-      })
-    )
-    .min(1),
-  defaultManager: z.string(),
-  requiredFiles: z.array(z.union([z.string(), z.array(z.string())])).optional(),
-  tips: z
-    .array(z.object({ text: z.string(), link: z.string().optional() }))
-    .optional(),
-});
+export const loadConfig = async () => {
+  const res = await fetch("/config.yml");
 
-const PackageManagerSchema = z.object({
-  name: z.string(),
-  commands: z.object({
-    install: z.string(),
-    build: z.string().optional(),
-  }),
-  detectionFiles: z.array(
-    z.object({
-      file: z.string(),
-      checkFor: z.array(z.string()).optional(),
-    })
-  ),
-  languages: z.array(z.string()),
-});
+  if (!res.ok) {
+    throw new Error("Error loading config.yml");
+  }
 
-const UsefulLinkSchema = z.object({
-  name: z.string(),
-  icon: z.url(),
-  url: z.url(),
-  description: z.object({
-    en: z.string().optional(),
-    ja: z.string().optional(),
-  }),
-});
+  // Read as text (YAML)
+  const text = await res.text();
 
-const ConfigSchema = z.object({
-  packageManagers: z.record(z.string(), PackageManagerSchema),
-  frameworks: z.record(z.string(), FrameworkConfigSchema),
-  usefulLinks: z.array(UsefulLinkSchema),
-});
+  // Parse YAML → JS object
+  const content = YAML.parse(text);
 
-const parsedConfig = ConfigSchema.parse(configYaml);
+  // Validate with Zod
+  parsedConfig = ConfigSchema.parse(content);
+};
+
+export const getConfig = () => parsedConfig;
 
 export const DEFAULT_FILES = [".gitlab-ci.yml", "kubernetes_manifest.yml"];
-export const DEFAULT_PATHS = DEFAULT_FILES.map(f=>"/templates/common/" + f);
+export const DEFAULT_PATHS = DEFAULT_FILES.map((f) => ({
+  type: "local" as const,
+  path: `/templates/common/${f}`,
+}));
 
-const filesToFetch = new Set<string>(DEFAULT_PATHS);
+export const templates: Record<string, string> = {};
 
-Object.entries(parsedConfig.frameworks).forEach(([key, framework]) => {
-  if (!framework.files) return;
-  framework.files.forEach(fileName => {
-    // If you have specific folders for frameworks, add them to the fetch set
-    filesToFetch.add(`/templates/${key.toLowerCase()}/${fileName}`);
+export const loadTemplates = async (
+  access_token: string,
+  framework: string
+) => {
+  if (!parsedConfig) return;
+  const frameworkFiles = parsedConfig.frameworks[framework]?.files || [];
+
+  // Create a local copy to prevent mutating the config
+  const filesToFetch = [...frameworkFiles];
+
+  // Add default files only if not already included and not already loaded
+  DEFAULT_PATHS.forEach((defaultPath) => {
+    if (!filesToFetch.includes(defaultPath)) {
+      filesToFetch.push(defaultPath);
+    }
   });
-});
 
-export const loadAllTemplates = async (): Promise<Record<string, string>> => {
-  const files: Record<string, string> = {};
-  
-  const requests = Array.from(filesToFetch).map(async (fullPath) => {
+  const requests = filesToFetch.map(async (file) => {
+    const cacheKey = getCacheKey(file);
+
+    if (templates[cacheKey]) return;
+
     try {
-      const response = await fetch(fullPath);
-      // If a framework-specific override doesn't exist (404), we just skip it
-      if (response.ok) {
-        files[fullPath] = await response.text();
-      }
+      const content = await fetchTemplateSource(file, access_token);
+      if (content) templates[cacheKey] = content;
     } catch (err) {
-      console.error(`Network error for ${fullPath}:`, err);
+      console.error(`Error fetching template for ${cacheKey}:`, err);
     }
   });
 
   await Promise.all(requests);
-  return files;
 };
 
-export const templates = await loadAllTemplates()
+async function fetchTemplateSource(
+  file: TemplateSource,
+  token: string
+): Promise<string | null> {
+  switch (file.type) {
+    case "local":
+      const localRes = await fetch(file.path);
+      return localRes.ok ? localRes.text() : null;
+    case "url":
+      const urlRes = await fetch(file.url);
+      return urlRes.ok ? urlRes.text() : null;
 
-export default parsedConfig;
+    case "gitlab":
+      return graphqlFetchFile(file.project, file.ref, file.path, token);
 
-export type FrameworkConfigType = z.infer<typeof FrameworkConfigSchema>;
+    default:
+      return null;
+  }
+}
