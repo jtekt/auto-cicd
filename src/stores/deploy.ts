@@ -291,8 +291,6 @@ export const useDeployStore = defineStore("deploy", () => {
     // Compute commit actions
     const repo = repositoryFiles.value;
 
-    console.log(repo)
-
     injectFiles.value = generated.content
       .map<InjectFile | null>((file) => {
         const existing = repo.find((r) => r.fileName === file.fileName);
@@ -560,7 +558,6 @@ export const useDeployStore = defineStore("deploy", () => {
 
       const content = fileContents.get(info.file);
       if (!content) {
-        console.warn(`Missing content for detection file: ${info.file}`);
         return;
       }
 
