@@ -9,7 +9,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppLoader: typeof import('./src/components/AppLoader.vue')['default']
-    CodeDisplay: typeof import('./src/components/deploy/CodeDisplay.vue')['default']
     CodeEditor: typeof import('./src/components/CodeEditor.vue')['default']
     DefaultLayout: typeof import('./src/components/DefaultLayout.vue')['default']
     DeployBuildSettings: typeof import('./src/components/deploy/DeployBuildSettings.vue')['default']
@@ -22,13 +21,10 @@ declare module 'vue' {
     DeployHandler: typeof import('./src/components/deploy/DeployHandler.vue')['default']
     DeployNextStepsDialog: typeof import('./src/components/deploy/DeployNextStepsDialog.vue')['default']
     MoreInformationsSection: typeof import('./src/components/MoreInformationsSection.vue')['default']
-    ProjectAvatar: typeof import('./src/components/ProjectAvatar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    SupportContact: typeof import('./src/components/SupportContact.vue')['default']
     Toaster: typeof import('./src/components/Toaster.vue')['default']
     TutorialDialog: typeof import('./src/components/TutorialDialog.vue')['default']
-    UndeployHandler: typeof import('./src/components/undeploy/UndeployHandler.vue')['default']
     UsefulLinks: typeof import('./src/components/UsefulLinks.vue')['default']
   }
 }

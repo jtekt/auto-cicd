@@ -1,5 +1,6 @@
 import type { TemplateSource } from "@/types/config";
 import { getConfig } from ".";
+import { resolveOutputFileName } from "@/utils/file";
 
 export const envKey = "ENV"; // Environment file name
 
@@ -13,25 +14,6 @@ export type ConfigFileInfo = {
   requiredFor?: Set<string>;
   alwaysFetch?: boolean;
 };
-
-/**
- * Extract a usable filename from TemplateSource
- */
-export function fileNameFromSource(src: TemplateSource): string {
-  switch (src.type) {
-    case "local":
-      return src.path.split("/").pop() || src.path;
-
-    case "url":
-      return src.url.split("/").pop() || src.url;
-
-    case "gitlab":
-      return src.path.split("/").pop() || src.path;
-
-    default:
-      return "";
-  }
-}
 
 /**
  * Returns a merged list of all config files relevant to the language/framework.
@@ -110,7 +92,7 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
       // ----------------------------------------
       if (frameworkConfig.files) {
         frameworkConfig.files.forEach((source: TemplateSource) => {
-          const fileName = fileNameFromSource(source);
+          const fileName = resolveOutputFileName(source);
           if (!fileName) return;
 
           if (!fileMap.has(fileName)) {
@@ -149,11 +131,11 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
           }
         });
       });
-    }
+    },
   );
 
   // Convert to array and sort for consistency
   return Array.from(fileMap.values()).sort((a, b) =>
-    a.file.localeCompare(b.file)
+    a.file.localeCompare(b.file),
   );
 };

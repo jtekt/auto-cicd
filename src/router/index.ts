@@ -18,12 +18,6 @@ const routes: RouteRecordRaw[] = [
         meta: { protected: true },
       },
       {
-        path: "/faq",
-        name: "FAQ",
-        component: () => import("@/views/faq.vue"),
-        meta: { protected: false },
-      },
-      {
         path: "/auth",
         name: "Auth",
         component: () => import("@/views/auth.vue"),
