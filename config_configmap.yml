@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: auto-cicd-config
+  name: auto-cicd
 data:
   .gitlab-ci.yml: |
     # Define the pipeline stages
