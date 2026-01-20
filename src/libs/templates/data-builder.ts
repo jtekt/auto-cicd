@@ -22,11 +22,6 @@ export const templateDataBuilder = (
     APPLICATION_NAME: project.projectName,
     ROOT_REF: project.repository.rootRef, // Set application main branch
 
-    // Set kubernetes context
-    IMAGE_PULL_SECRET_NAME:
-      import.meta.env.VITE_APP_IMAGE_PULL_SECRET_NAME ||
-      "auto-cicd-pull-secret",
-
     // Commands
     INSTALL_COMMAND: config.installCommand,
     BUILD_COMMAND: config.buildCommand || "echo 'Skipping build'",

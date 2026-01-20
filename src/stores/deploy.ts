@@ -9,18 +9,17 @@ import {
   updateEnvs,
   type CommitAction,
   type CommitActionObject,
+  type GitLabFile,
 } from "@/libs/gitlab";
-import {
-  frameworksConfig,
-  getConfigFiles,
-  acceptedFrameworks,
-} from "@/config/frameworks-config";
+import { getConfigFiles } from "@/config/frameworks-config";
 import { getDefaultProjectConfig } from "@/libs/deploy/config";
 import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@/stores/toast";
 import { useI18n } from "vue-i18n";
 import type { ProjectConfig } from "@/types/app-config";
-import { DEFAULT_FILES, type FrameworkConfigType } from "@/config";
+import { DEFAULT_FILES, getConfig } from "@/config";
+import type { FrameworkConfigType } from "@/types/config";
+import { normalizeContent } from "@/utils/file";
 
 type Env = {
   key: string;
@@ -30,6 +29,7 @@ type Env = {
 };
 
 export const useDeployStore = defineStore("deploy", () => {
+  const config = getConfig();
   const authStore = useAuthStore();
   const toast = useToast();
   const { t } = useI18n();
@@ -56,17 +56,17 @@ export const useDeployStore = defineStore("deploy", () => {
   const originalEnvironmentVariables = ref<Env[]>([]);
 
   // Files to be committed
-  const injectFiles = ref<
-    {
-      fileName: string;
-      content: string;
-      action: CommitAction;
-      isChecked: boolean;
-    }[]
-  >([]);
+  type InjectFile = {
+    fileName: string;
+    content: string;
+    action: CommitAction;
+    isChecked: boolean;
+  };
+
+  const injectFiles = ref<InjectFile[]>([]);
 
   // Files in the repository
-  const repositoryFiles = ref<{ fileName: string; content?: string }[]>([]);
+  const repositoryFiles = ref<GitLabFile[]>([]);
 
   // Error messages and deployment info
   const deploymentInfo = ref<{
@@ -78,7 +78,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
   // Computed properties
   const frameworks = computed(() =>
-    Object.entries(frameworksConfig).map(([id, value]) => ({
+    Object.entries(config ? config.frameworks : {}).map(([id, value]) => ({
       id,
       ...value,
     }))
@@ -86,7 +86,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
   const currentProjectFrameworkConfig = computed(() => {
     if (!projectConfig.value) return;
-    return frameworksConfig[projectConfig.value.framework];
+    return config?.frameworks[projectConfig.value.framework];
   });
 
   const packageManagersOptions = computed(() => {
@@ -156,7 +156,7 @@ export const useDeployStore = defineStore("deploy", () => {
   watch(
     () => frameworkSelector.value,
     (newFramework) => {
-      if (newFramework === projectConfig.value?.framework) {
+      if (!config || newFramework === projectConfig.value?.framework) {
         return;
       } else if (!newFramework) {
         reset();
@@ -164,7 +164,7 @@ export const useDeployStore = defineStore("deploy", () => {
         return;
       }
 
-      const newFrameworkConfig = frameworksConfig[newFramework];
+      const newFrameworkConfig = config.frameworks[newFramework];
 
       if (!newFrameworkConfig) throw new Error("No framework set");
 
@@ -250,10 +250,15 @@ export const useDeployStore = defineStore("deploy", () => {
       return;
     }
 
+    if (!projectConfig.value) {
+      toast.error(t("components.deployHandler.script.errors.missingConfig"));
+      return;
+    }
+
+    // Validate envs
     const invalidEnvs = environmentVariables.value.filter(
       (e) => !e.key || !e.value
     );
-
     if (invalidEnvs.length) {
       toast.error(
         t("components.deployHandler.script.errors.invalidEnvs", {
@@ -263,43 +268,60 @@ export const useDeployStore = defineStore("deploy", () => {
       return;
     }
 
-    if (!projectConfig.value) {
-      toast.error(t("components.deployHandler.script.errors.missingConfig"));
-      return;
-    }
-
     isLoading.value = true;
     injectFiles.value = [];
 
-    const generatedFiles = await generateFiles(
+    const generated = await generateFiles(
+      authStore.session.auth_token.access_token,
       projectConfig.value,
       project.value,
       authStore.session.user.nickname
     );
 
-    if (!generatedFiles.success) {
-      console.error("File generation error:", generatedFiles.error);
+    if (!generated.success) {
       toast.error(
         t("components.deployHandler.script.errors.fileGenerationFailed", {
-          error: generatedFiles.error,
+          error: generated.error,
         })
       );
       isLoading.value = false;
       return;
     }
 
-    injectFiles.value = generatedFiles.content.reduce((fs, file) => {
-      const originalFile = repositoryFiles.value.find(
-        (original) => original.fileName === file.fileName
-      );
+    // Compute commit actions
+    const repo = repositoryFiles.value;
 
-      if (!originalFile) {
-        fs.push({ ...file, action: "create", isChecked: true });
-      } else if (originalFile.content !== file.content) {
-        fs.push({ ...file, action: "update", isChecked: true });
-      }
-      return fs;
-    }, [] as { fileName: string; content: string; action: CommitAction; isChecked: boolean }[]);
+    console.log(repo)
+
+    injectFiles.value = generated.content
+      .map<InjectFile | null>((file) => {
+        const existing = repo.find((r) => r.fileName === file.fileName);
+
+        if (!existing) {
+          return {
+            fileName: file.fileName,
+            content: file.content,
+            action: "create",
+            isChecked: true,
+          } as InjectFile;
+        }
+
+        const existingContent = normalizeContent(existing.content);
+        const newContent = normalizeContent(file.content);
+
+        const isMatch = existingContent === newContent
+        if (!isMatch) {
+          return {
+            fileName: file.fileName,
+            content: file.content,
+            action: "update",
+            isChecked: true,
+          } as InjectFile;
+        }
+
+        return null;
+      })
+      .filter((v): v is InjectFile => v !== null); // Remove nulls correctly
 
     isLoading.value = false;
     confirmDeployDialog.value = true;
@@ -467,7 +489,7 @@ export const useDeployStore = defineStore("deploy", () => {
   }
 
   async function identifyProject(): Promise<ProjectConfig | undefined> {
-    if (!project.value?.languages.length || !authStore.session) {
+    if (!config || !project.value?.languages.length || !authStore.session) {
       return;
     }
 
@@ -483,10 +505,12 @@ export const useDeployStore = defineStore("deploy", () => {
       project: project.value!,
     }));
 
-    DEFAULT_FILES.forEach((df) => {
+    // Search for default files and dockerfile
+    [...DEFAULT_FILES, "Dockerfile"].forEach((df) => {
       paths.push({
         file: df,
         project: project.value!,
+        alwaysFetch: true
       });
     });
 
@@ -512,7 +536,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     // Detection using structured checks
     const frameworkMatches: Map<string, number> = new Map(
-      acceptedFrameworks.map((framework) => [framework, 0]) // Key: framework, Value: initial score 0
+      Object.keys(config.frameworks).map((framework) => [framework, 0]) // Key: framework, Value: initial score 0
     );
 
     configFiles.forEach((info) => {
@@ -565,7 +589,7 @@ export const useDeployStore = defineStore("deploy", () => {
       return;
     }
 
-    const bestConfig = frameworksConfig[bestFramework];
+    const bestConfig = config.frameworks[bestFramework];
 
     if (!bestConfig) {
       console.debug("No framework matched; defaulting to unknown");

@@ -1,9 +1,12 @@
 <template>
+  <!-- Show loader during code->token exchange -->
   <v-row v-if="isLoading">
     <v-col cols="12" class="text-center">
       <AppLoader />
     </v-col>
   </v-row>
+
+  <!-- Login screen -->
   <v-container v-else class="fill-height" fluid>
     <v-row align="center" justify="center">
       <v-col cols="12" sm="8" md="6" lg="4">
@@ -11,27 +14,22 @@
           <v-card-text class="text-center pa-8">
             <v-img
               src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/gitlab/gitlab-original.svg"
-              alt="GitLab Logo"
-              contain
               height="100"
+              contain
               class="mb-6"
             />
             <h1 class="text-h4 font-weight-bold mb-6">
               JTEKT GitLab Auto CI&CD
             </h1>
-            <p class="mb-6">
-              {{ t("views.auth.signInMessage") }}
-            </p>
+            <p class="mb-6">{{ t("views.auth.signInMessage") }}</p>
             <v-btn
               :href="url"
               color="primary"
               size="x-large"
               block
-              class="mt-6"
               elevation="2"
-              :ripple="false"
             >
-              <v-icon left class="mr-4"> mdi-gitlab </v-icon>
+              <v-icon left class="mr-4">mdi-gitlab</v-icon>
               Login with GitLab
             </v-btn>
           </v-card-text>
@@ -43,8 +41,8 @@
 
 <script setup lang="ts">
 import {
-  createAccessToken,
   createGitlabAuthUrl,
+  exchangeCodeForTokens,
   getGitlabProfile,
 } from "@/libs/gitlab";
 import { useAuthStore } from "@/stores/auth";
@@ -54,78 +52,61 @@ import { useRoute, useRouter } from "vue-router";
 import { useLocale } from "vuetify";
 
 const { t } = useLocale();
+const route = useRoute();
+const router = useRouter();
+const toast = useToast();
+const authStore = useAuthStore();
 
+// The login URL for users when no ?code= is present
 const url = createGitlabAuthUrl();
 
 const isLoading = ref(true);
 
-const authStore = useAuthStore();
-const router = useRouter();
-const route = useRoute();
-const toast = useToast();
-
 onMounted(async () => {
-  if (
-    typeof route.query.code !== "string" ||
-    route.query.state !== import.meta.env.VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR
-  ) {
+  const code = route.query.code;
+
+  // No code: user is just visiting /auth → show login UI
+  if (typeof code !== "string") {
     isLoading.value = false;
     return;
   }
 
-  // Create access token
-  const accessToken = await createAccessToken(route.query.code);
+  // Code present: start login
+  try {
+    const tokens = await exchangeCodeForTokens(code);
+    if (!tokens) {
+      isLoading.value = false;
+      return toast.error(t("views.auth.errors.token"));
+    }
 
-  if (!accessToken) {
+    const profile = await getGitlabProfile(tokens.access_token);
+    if (!profile) {
+      isLoading.value = false;
+      return toast.error(t("views.auth.errors.profile"));
+    }
+
+    // Save session
+    authStore.setSession({
+      auth_token: {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+      },
+      user: {
+        nickname: profile.nickname,
+        sub: profile.sub,
+        email: profile.email,
+        picture: profile.picture,
+        name: profile.name,
+      },
+    });
+
+    // Redirect to the actual application
+    router.push("/");
+  } catch (error) {
+    console.error("OAuth login error:", error);
+    toast.error("Authentication failed");
     isLoading.value = false;
-    return toast.error(t("views.auth.errors.token"));
   }
-
-  // Get user info
-  const profile = await getGitlabProfile(accessToken.access_token);
-
-  if (!profile?.user) {
-    isLoading.value = false;
-    return toast.error(t("views.auth.errors.profile"));
-  } else if (!profile.groupUrl) {
-    isLoading.value = false;
-    return toast.error(t("views.auth.errors.group"));
-  }
-
-  // Set the session state
-  authStore.setSession({
-    auth_token: {
-      access_token: accessToken.access_token,
-      code: route.query.code,
-      refresh_token: accessToken.refresh_token,
-      expires_at: Math.floor(Date.now() / 1000) + accessToken.expires_in,
-    },
-    user: {
-      nickname: profile.user.nickname,
-      sub: profile.user.sub,
-      email: profile.user.email,
-      picture: profile.user.picture,
-      name: profile.user.name,
-    },
-    groupUrl: profile.groupUrl
-  });
-
-  router.push("/");
 });
 </script>
-
-<style scoped>
-.v-btn {
-  transition: all 0.2s ease-in-out;
-}
-
-.v-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
-}
-
-.v-btn:active {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-</style>

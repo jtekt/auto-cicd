@@ -85,18 +85,10 @@ import { useI18n } from "vue-i18n";
 
 const modelValue = defineModel<boolean>("modelValue");
 
-const props = defineProps<{
-  autoCicdGroupUrl?: string;
-}>();
-
 const { t } = useI18n();
 
 const steps: { description: string; link?: string; image?: string }[] = [
   { description: "components.tutorial.steps.intro" },
-  {
-    description: "components.tutorial.steps.transferProject",
-    link: props.autoCicdGroupUrl,
-  },
   { description: "components.tutorial.steps.findProject" },
   { description: "components.tutorial.steps.deployButton" },
   {

@@ -22,7 +22,7 @@
         variant="outlined"
         :class="
           deployStore.projectConfig.installCommand ===
-          packageManagers[deployStore.projectConfig.manager]?.commands.install
+          config?.packageManagers[deployStore.projectConfig.manager]?.commands.install
             ? ''
             : 'text-warning'
         "
@@ -37,7 +37,7 @@
         :class="
           selectedFramework.userConfigurable?.buildCommand.defaultEmpty ||
           deployStore.projectConfig.buildCommand ===
-            packageManagers[deployStore.projectConfig.manager]?.commands.build
+            config?.packageManagers[deployStore.projectConfig.manager]?.commands.build
             ? ''
             : 'text-warning'
         "
@@ -80,15 +80,17 @@
 
 <script setup lang="ts">
 import { useLocale } from "vuetify";
-import { frameworksConfig, packageManagers } from "@/config/frameworks-config";
 import { useDeployStore } from "@/stores/deploy";
 import { computed, ref, watch } from "vue";
+import { getConfig } from "@/config";
+
+const config = getConfig();
 
 const { t } = useLocale();
 const deployStore = useDeployStore();
 
 const selectedFramework = computed(
-  () => deployStore.projectConfig && frameworksConfig[deployStore.projectConfig.framework] 
+  () => deployStore.projectConfig && config?.frameworks[deployStore.projectConfig.framework] 
 );
 
 // Debounce implementation

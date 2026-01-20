@@ -1,119 +1,54 @@
 import { defineStore } from "pinia";
-import router from "@/router";
-import { SessionSchema } from "@/schemas/session";
 import type { Session } from "@/types/session";
-import CookieUtils from "@/utils/cookie";
+import { ref } from "vue";
 
-export const useAuthStore = defineStore("auth", {
-  state: () => ({
-    session: <Session | null>null,
-  }),
-  actions: {
-    isAuthenticated(): boolean {
-      if (this.session) {
-        return true;
-      }
-      this.session = this.getSession();
-      return !!this.session;
-    },
+export const useAuthStore = defineStore("auth", () => {
+  const session = ref<Session | null>(null);
 
-    getSession(): Session | null {
-      let session: Session | null = null;
-      const cookieSession = CookieUtils.get("auth");
+  function loadSession(): Session | null {
+    const raw = localStorage.getItem("session");
+    if (!raw) return null;
 
-      if (cookieSession) {
-        try {
-          const data = SessionSchema.safeParse(JSON.parse(cookieSession));
-          if (data.success) {
-            // Check if session is still valid
-            const now = Math.floor(Date.now() / 1000);
-            if (data.data.auth_token.expires_at > now) {
-              session = data.data;
-            } else {
-              // Session expired, remove cookie
-              CookieUtils.remove("auth", { path: "/" });
-            }
-          }
-        } catch (err) {
-          console.error("Invalid session cookie", err);
-          // Remove invalid cookie
-          CookieUtils.remove("auth", { path: "/" });
-        }
-      }
+    try {
+      const parsed: Session = JSON.parse(raw);
+      session.value = parsed;
+      return parsed;
+    } catch (err) {
+      console.error(err)
+      localStorage.removeItem("session");
+      return null;
+    }
+  }
 
-      return session;
-    },
+  function setSession(session: Session | null): void {
+    session = session;
+    if (session) {
+      localStorage.setItem("session", JSON.stringify(session));
+    } else {
+      localStorage.removeItem("session");
+    }
+  }
 
-    setSession(session: Session | null) {
-      this.session = session;
+  function updateTokens(
+    access_token: string,
+    refresh_token: string,
+    expires_in: number
+  ): void {
+    if (!session.value) return;
 
-      if (session) {
-        const res = SessionSchema.safeParse(session);
-        if (res.success) {
-          // Convert Unix timestamp (seconds) to Date object
-          const expirationDate = new Date(session.auth_token.expires_at * 1000);
+    session.value.auth_token.access_token = access_token;
+    session.value.auth_token.refresh_token = refresh_token;
 
-          // Ensure expiration is in the future
-          const now = new Date();
-          if (expirationDate <= now) {
-            console.error(
-              "Session expiration is in the past, not saving cookie"
-            );
-            return;
-          }
+    session.value.auth_token.expires_at =
+      Math.floor(Date.now() / 1000) + expires_in;
 
-          const cookieExpiration = new Date(
-            now.getTime() + 30 * 24 * 60 * 60 * 1000
-          );
+    setSession(session.value);
+  }
 
-          const cookieOptions = {
-            expires: cookieExpiration, // In a month
-            secure: location.protocol === "https:", // Auto-detect based on protocol
-            sameSite: "lax" as const,
-            path: "/",
-          };
+  function logout(): void {
+    session.value = null;
+    localStorage.removeItem("session");
+  }
 
-          CookieUtils.set("auth", JSON.stringify(session), cookieOptions);
-        } else {
-          console.error("Invalid session, not saving to cookie", res.error);
-        }
-      } else {
-        CookieUtils.remove("auth", { path: "/" });
-      }
-    },
-
-    setAuthToken(
-      auth_token: Pick<
-        Session["auth_token"],
-        "access_token" | "expires_at" | "refresh_token"
-      >
-    ) {
-      if (!this.session) return;
-
-      const updatedSession = {
-        ...this.session,
-        auth_token: { ...this.session.auth_token, ...auth_token },
-      };
-
-      // Use setSession to handle cookie logic properly
-      this.setSession(updatedSession);
-    },
-
-    logout() {
-      this.session = null;
-      CookieUtils.remove("auth", { path: "/" });
-      router.push("/auth");
-    },
-
-    // Helper method to check if current session is about to expire (within 2 minutes)
-    isSessionExpiringSoon(): boolean {
-      if (!this.session) return false;
-
-      const now = Math.floor(Date.now() / 1000);
-      const expiresAt = this.session.auth_token.expires_at;
-      const fiveMinutes = 2 * 60; // 2 minutes in seconds
-
-      return expiresAt - now <= fiveMinutes;
-    },
-  },
+  return { session, loadSession, setSession, updateTokens, logout };
 });

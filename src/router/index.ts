@@ -15,19 +15,19 @@ const routes: RouteRecordRaw[] = [
         path: "",
         name: "Home",
         component: () => import("@/views/index.vue"),
-        meta: {
-          protected: true,
-        },
-      },
-      {
-        path: "/auth",
-        name: "Auth",
-        component: () => import("@/views/auth.vue"),
+        meta: { protected: true },
       },
       {
         path: "/faq",
         name: "FAQ",
         component: () => import("@/views/faq.vue"),
+        meta: { protected: false },
+      },
+      {
+        path: "/auth",
+        name: "Auth",
+        component: () => import("@/views/auth.vue"),
+        meta: { protected: false },
       },
     ],
   },
@@ -38,25 +38,24 @@ const router = createRouter({
   routes,
 });
 
-const privatePages = ["Home"];
-const authPages = ["Auth", "NoGroup"];
+router.beforeEach((to) => {
+  const auth = useAuthStore();
+  const loggedIn = !!auth.session;
 
-router.beforeEach(async (to) => {
-  const authStore = useAuthStore();
+  // Always allow /auth during OAuth redirects
+  if (to.name === "Auth") {
+    if(loggedIn)  {
+      return { name: "Home" };
+    }
 
-  if (!authStore.isAuthenticated()) {
-    if (privatePages.includes(to.name?.toString() || "")) {
-      return {
-        name: "Auth",
-      };
-    }
-  } else {
-    if (authPages.includes(to.name?.toString() || "")) {
-      return {
-        name: "Home",
-      };
-    }
+    return true;
   }
+
+  if (to.meta.protected && !loggedIn) {
+    return { name: "Auth" };
+  }
+
+  return true;
 });
 
 // Workaround for https://github.com/vitejs/vite/issues/11804

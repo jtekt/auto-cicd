@@ -1,118 +1,158 @@
-import config from "./index";
+import type { TemplateSource } from "@/types/config";
+import { getConfig } from ".";
 
-export const envKey = "ENV"; // Name of the file saved in gitlab with the envs
+export const envKey = "ENV"; // Environment file name
 
-export const packageManagers = config.packageManagers;
-
-export const frameworksConfig = config.frameworks;
-
-export const acceptedFrameworks = Object.keys(frameworksConfig);
-
+/**
+ * Config file info used by detection
+ */
 export type ConfigFileInfo = {
   file: string;
   checks?: Array<{ framework: string; strings: string[] }>;
-  detectedFrameworks?: Set<string>; // Unique frameworks this file helps detect (for checks)
-  requiredFor?: Set<string>; // Frameworks that require this file's existence
-  alwaysFetch?: boolean; // e.g., for defaults like Dockerfile
+  detectedFrameworks?: Set<string>;
+  requiredFor?: Set<string>;
+  alwaysFetch?: boolean;
 };
 
+/**
+ * Extract a usable filename from TemplateSource
+ */
+export function fileNameFromSource(src: TemplateSource): string {
+  switch (src.type) {
+    case "local":
+      return src.path.split("/").pop() || src.path;
+
+    case "url":
+      return src.url.split("/").pop() || src.url;
+
+    case "gitlab":
+      return src.path.split("/").pop() || src.path;
+
+    default:
+      return "";
+  }
+}
+
+/**
+ * Returns a merged list of all config files relevant to the language/framework.
+ */
 export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
-  const fileMap = new Map<string, ConfigFileInfo>(); // Use Map for easy merging
+  const config = getConfig();
 
-  // Process frameworks
-  Object.entries(frameworksConfig).forEach(([frameworkId, frameworkConfig]) => {
-    const framework = frameworkId;
-    if (lang && !frameworkConfig.languages?.includes(lang)) return;
+  if (!config) throw new Error("Config not found");
 
-    // Track detection checks (per-file, per-framework strings)
-    if (frameworkConfig.configFiles) {
-      frameworkConfig.configFiles.forEach((configEntry) => {
-        configEntry.file.forEach((filePath) => {
-          if (!fileMap.has(filePath)) {
-            fileMap.set(filePath, { file: filePath });
-          }
+  const fileMap = new Map<string, ConfigFileInfo>();
 
-          const info = fileMap.get(filePath)!;
-          if (!info.checks) info.checks = [];
-          info.checks!.push({ framework, strings: configEntry.checkFor });
+  Object.entries(config.frameworks).forEach(
+    ([frameworkId, frameworkConfig]) => {
+      const framework = frameworkId;
 
-          // Track unique detected frameworks with Set
-          if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
-          info.detectedFrameworks.add(framework);
-        });
-      });
-    }
+      if (lang && !frameworkConfig.languages?.includes(lang)) return;
 
-    // Add output file (always include for deploy, no detection)
-    if (frameworkConfig.outputFile) {
-      if (!fileMap.has(frameworkConfig.outputFile)) {
-        fileMap.set(frameworkConfig.outputFile, {
-          file: frameworkConfig.outputFile,
+      // ----------------------------------------
+      // 1. Framework configFiles (checks)
+      // ----------------------------------------
+      if (frameworkConfig.configFiles) {
+        frameworkConfig.configFiles.forEach((configEntry) => {
+          configEntry.file.forEach((filePath) => {
+            if (!fileMap.has(filePath)) {
+              fileMap.set(filePath, { file: filePath });
+            }
+            const info = fileMap.get(filePath)!;
+
+            if (!info.checks) info.checks = [];
+            info.checks.push({
+              framework,
+              strings: configEntry.checkFor,
+            });
+
+            if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
+            info.detectedFrameworks.add(framework);
+          });
         });
       }
-    }
 
-    // Add required files (existence check, no content unless already marked)
-    if (frameworkConfig.requiredFiles) {
-      frameworkConfig.requiredFiles.forEach((requiredFile) => {
-        const filesToAdd = Array.isArray(requiredFile)
-          ? requiredFile
-          : [requiredFile];
-        filesToAdd.forEach((filePath) => {
-          if (!fileMap.has(filePath)) {
-            fileMap.set(filePath, { file: filePath });
-          }
-          const info = fileMap.get(filePath)!;
-          if (!info.requiredFor) info.requiredFor = new Set();
-          info.requiredFor.add(framework);
-        });
-      });
-    }
-
-    // Add complementary files (no detection)
-    if (frameworkConfig.files) {
-      frameworkConfig.files.forEach((f) => {
-        if (!fileMap.has(f)) {
-          fileMap.set(f, { file: f, alwaysFetch: true });
+      // ----------------------------------------
+      // 2. Add output file (always relevant)
+      // ----------------------------------------
+      if (frameworkConfig.outputFile) {
+        const path = frameworkConfig.outputFile;
+        if (!fileMap.has(path)) {
+          fileMap.set(path, { file: path });
         }
-      });
-    }
+      }
 
-    // Add manager detection files (existence primarily; content if checkFor)
-    frameworkConfig.supportedManagers.forEach((manager) => {
-      const pmConfig = packageManagers[manager.manager];
+      // ----------------------------------------
+      // 3. Add required files
+      // ----------------------------------------
+      if (frameworkConfig.requiredFiles) {
+        frameworkConfig.requiredFiles.forEach((requiredFile) => {
+          const arr = Array.isArray(requiredFile)
+            ? requiredFile
+            : [requiredFile];
 
-      if (pmConfig) {
-        pmConfig.detectionFiles.forEach((df) => {
-          if (!fileMap.has(df.file)) {
-            fileMap.set(df.file, {
-              file: df.file,
-              // For PM, checks only if df.checkFor (rare, e.g., for poetry sections)
+          arr.forEach((filePath) => {
+            if (!fileMap.has(filePath)) {
+              fileMap.set(filePath, { file: filePath });
+            }
+
+            const info = fileMap.get(filePath)!;
+
+            if (!info.requiredFor) info.requiredFor = new Set();
+            info.requiredFor.add(framework);
+          });
+        });
+      }
+
+      // ----------------------------------------
+      // 4. Add complementary template files (NEW BEHAVIOR)
+      //    Convert TemplateSource → filename
+      // ----------------------------------------
+      if (frameworkConfig.files) {
+        frameworkConfig.files.forEach((source: TemplateSource) => {
+          const fileName = fileNameFromSource(source);
+          if (!fileName) return;
+
+          if (!fileMap.has(fileName)) {
+            fileMap.set(fileName, {
+              file: fileName,
+              alwaysFetch: true,
             });
           }
-          const info = fileMap.get(df.file)!;
-          if (df.checkFor && !info.checks) {
-            info.checks = []; // Initialize if needed
-          }
-          if (df.checkFor) {
-            // Add PM-specific check (use a special framework like 'pm-detection' or integrate into detection flow)
-            // For now, add as generic check; adjust detection logic to handle PM separately
-            if (info.checks) {
-              info.checks.push({
-                framework: framework, // Or a placeholder; PM is post-framework detection
-                strings: df.checkFor,
-              });
-
-              if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
-              info.detectedFrameworks.add(framework); // Tie to framework for simplicity
-            }
-          }
         });
       }
-    });
-  });
 
-  // Convert to array, sorted for consistency
+      // ----------------------------------------
+      // 5. Add package manager detection files
+      // ----------------------------------------
+      frameworkConfig.supportedManagers.forEach((manager) => {
+        const pmConfig = config?.packageManagers[manager.manager];
+        if (!pmConfig) return;
+
+        pmConfig.detectionFiles.forEach((df) => {
+          if (!fileMap.has(df.file)) {
+            fileMap.set(df.file, { file: df.file });
+          }
+
+          const info = fileMap.get(df.file)!;
+
+          if (df.checkFor) {
+            if (!info.checks) info.checks = [];
+
+            info.checks.push({
+              framework, // PM checks count toward framework scoring
+              strings: df.checkFor,
+            });
+
+            if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
+            info.detectedFrameworks.add(framework);
+          }
+        });
+      });
+    }
+  );
+
+  // Convert to array and sort for consistency
   return Array.from(fileMap.values()).sort((a, b) =>
     a.file.localeCompare(b.file)
   );

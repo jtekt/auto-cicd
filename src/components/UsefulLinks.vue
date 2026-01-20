@@ -24,29 +24,7 @@
         </p>
 
         <!-- List of useful links -->
-        <v-list>
-          <v-list-item v-if="authStore.session?.groupUrl" class="mb-2">
-            <template #prepend>
-              <v-img
-                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/gitlab/gitlab-original.svg"
-                alt="GitLab Logo"
-                contain
-                style="
-                  width: 40px;
-                  height: 40px;
-                  margin-right: 16px;
-                "
-              />
-            </template>
-            <v-list-item-title>
-              <a :href="authStore.session.groupUrl" target="_blank">
-                My Group
-              </a>
-            </v-list-item-title>
-            <p class="text-body-2">
-              {{ t("components.usefulLinks.gitlabGroupDescription") }}
-            </p>
-          </v-list-item>
+        <v-list v-if="config">
           <v-list-item
             v-for="(link, index) in config.usefulLinks"
             :key="index"
@@ -76,7 +54,7 @@
             </p>
           </v-list-item>
         </v-list>
-        <SupportContact />
+        <MoreInformationsSection />
       </v-card-text>
 
       <v-card-actions class="pa-4">
@@ -92,12 +70,12 @@
 <script setup lang="ts">
 import { useLocale } from "vuetify";
 import { onMounted, ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import config from "@/config";
-import SupportContact from "./SupportContact.vue";
+import MoreInformationsSection from "./MoreInformationsSection.vue";
+import { getConfig } from "@/config";
+
+const config = getConfig();
 
 const { t, current } = useLocale();
-const authStore = useAuthStore();
 
 // State for dialog
 const dialog = ref(false);

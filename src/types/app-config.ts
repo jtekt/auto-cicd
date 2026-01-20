@@ -1,10 +1,12 @@
+import type { TemplateSource } from "./config";
+
 export type FileAction = "create" | "update";
 
 export type ProjectConfig = {
   language: string;
   framework: string;
   manager: string;
-  files: string[]; // Optional files to generate
+  files: TemplateSource[]; // Optional files to generate
   runtimeDependencies?: string[]; // For Python frameworks
 
   // User configurable commands

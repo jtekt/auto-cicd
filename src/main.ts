@@ -13,6 +13,10 @@ import App from "./App.vue";
 // Composables
 import { createApp } from "vue";
 import { createPinia } from "pinia";
+import { loadConfig } from "./config";
+
+// Load app config
+await loadConfig()
 
 const app = createApp(App);
 
@@ -22,3 +26,4 @@ const pinia = createPinia();
 
 app.use(pinia);
 app.mount("#app");
+

@@ -4,8 +4,11 @@
       {{ t("components.deployHandler.deployDialog.envSettings.title") }}
     </v-expansion-panel-title>
     <v-expansion-panel-text>
-      <p class="mb-4 text-subtitle-2 font-weight-light">
+      <p class="mb-4 text-subtitle-1">
         {{ t("components.deployHandler.deployDialog.envSettings.description") }}
+      </p>
+      <p class="mb-4 text-subtitle-2 font-weight-light">
+        {{ t("components.deployHandler.deployDialog.envSettings.pasteHint") }}
       </p>
       <div
         v-for="(env, index) in deployStore.environmentVariables"

@@ -1,16 +1,18 @@
-import { frameworksConfig, packageManagers } from "@/config/frameworks-config";
-import type {
-  ProjectConfig,
-} from "@/types/app-config";
+import type { ProjectConfig } from "@/types/app-config";
+import { getConfig } from "@/config";
+
+const config = getConfig();
 
 // Helper to get default ProjectConfig
 export const getDefaultProjectConfig = (
   frameworkId: string,
   managerName?: string
 ): ProjectConfig => {
-  const framework = frameworksConfig[frameworkId];
+  if (!config) throw new Error("No APP config found");
 
-  if(!framework) throw new Error("No framework found")
+  const framework = config.frameworks[frameworkId];
+
+  if (!framework) throw new Error("No framework found");
 
   const manager =
     managerName &&
@@ -18,9 +20,9 @@ export const getDefaultProjectConfig = (
       ? managerName
       : framework.defaultManager;
 
-  const managerConfig = packageManagers[manager];
+  const managerConfig = config.packageManagers[manager];
 
-  if(!managerConfig) throw new Error("No manager found")
+  if (!managerConfig) throw new Error("No manager found");
 
   return {
     language: framework.languages[0]!,

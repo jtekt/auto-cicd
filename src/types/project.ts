@@ -1,5 +1,3 @@
-import type { GitLabFile } from "@/libs/gitlab";
-
 // Define the enum for access levels
 export enum AccessLevel {
   NO_ACCESS = "NO_ACCESS",
@@ -29,12 +27,13 @@ interface Namespace {
 export interface MaxAccessLevel {
   humanAccess: string; // Using the AccessLevel enum here
   stringValue: AccessLevel; // Using the AccessLevel enum here
+  integerValue: number; // Using the number 10 | 20 | 30 | 40 | 50
 }
 
 export interface ProjectNode {
   id: string;
-  description: string | null;
   name: string;
+  description: string | null;
   projectName: string;
   webUrl: string;
   fullPath: string;
@@ -66,11 +65,13 @@ interface ProjectEdge {
 
 export interface ProjectsResponse {
   data?: {
-    projects: {
-      count: number;
-      pageInfo: PageInfo;
-      edges: ProjectEdge[] | null;
-    };
+    group: {
+      projects: {
+        count: number;
+        pageInfo: PageInfo;
+        edges: ProjectEdge[] | null;
+      };
+    }
   };
   errors?: { message: string }[];
 }

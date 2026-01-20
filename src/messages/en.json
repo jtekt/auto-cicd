@@ -68,13 +68,7 @@
                 },
                 "close": "Close",
                 "closeReview": "Close and Review",
-                "debugSection": "Next Steps and Debugging",
-                "debugIntro": "If you encounter issues during deployment:",
-                "buildLogs": "Build Logs",
-                "buildLogsDescription": "In case of an error, review the logs in GitLab under the build jobs for detailed error messages:",
-                "appStatus": "App Status",
-                "appStatusDescription": "If no error messages appear and the app is not working, verify its status in:",
-                "appStatusPattern": "Search for your project, the names follow the pattern:"
+                "debugSection": "Next Steps and Debugging"
             },
             "envStatus": {
                 "title": "Environment Variables",
@@ -101,49 +95,37 @@
                         "firstDeploy": "If this is your first auto deployment, you will receive an email with the URL of your application.",
                         "trackProgress": "You can track the progress of your build by accessing the GitLab project under Build > Pipelines."
                     }
-                },
-                "actions": {
-                    "allowedGroup": "Allowed Group",
-                    "moveInstruction": ", then move your project to the new group"
                 }
+            },
+            "errors": {
+                "insufficientPermissions": "You don't have write access to commit to the head branch"
             }
-        },
-        "undeployHandler": {
-            "undeploy": "Undeploy",
-            "confirmUndeployTitle": "Confirm Undeploy",
-            "confirmUndeployMessage": "Are you sure you want to undeploy '{projectName}'?",
-            "cancel": "Cancel",
-            "confirm": "Confirm",
-            "loading": "Loading...",
-            "success": "Undeployment Successful",
-            "error": "Undeployment Failed"
         },
         "usefulLinks": {
             "buttonText": "Useful Links",
             "dialogTitle": "Useful Links for Auto Deployment",
             "dialogDescription": "Here are some resources to assist you during deployment:",
-            "closeButton": "Close",
-            "gitlabGroupDescription": "Group where the projects can be deployed using Auto CI&CD"
+            "closeButton": "Close"
         },
-        "support": {
-            "needHelp": "If you need help or have questions, please contact:",
-            "contactSupport": "Contact Support"
+        "information": {
+            "moreInformation": "If you need more information, please access:",
+            "accessMoreInformation": "Access information"
         },
         "tutorial": {
-            "title": "Welcome to Auto-CiCd",
-            "openGroup": "Open Auto-CiCd GitLab Group",
+            "title": "Welcome to Auto-CICD",
+            "openGroup": "Open Auto-CICD GitLab Group",
             "previous": "Previous",
             "next": "Next",
             "finish": "Finish",
             "steps": {
-                "intro": "To begin using Auto-CiCd, you need at least one project inside your Auto-CiCd GitLab group. This tutorial will guide you through adding your first project and deploying it.",
-                "transferProject": "Move or create the project inside your Auto-CiCd GitLab group. Only projects located in this group can be used in the Auto-CiCd application. Use the button above to open the group.",
-                "findProject": "After transferring or creating the project, return to the Auto-CiCd home page. Your project will now appear in the list.",
+                "intro": "To begin using Auto-CICD, you need at least one project inside of the Auto-CICD GitLab group where you have MAINTAINER permissions. This tutorial will guide you through adding your first project and deploying it.",
+                "transferProject": "Move or create the project inside your Auto-CICD GitLab group. Only projects located in this group can be used in the Auto-CICD application.",
+                "findProject": "After transferring or creating the project, return to the Auto-CICD home page. Your project will now appear in the list.",
                 "deployButton": "Click the Deploy button on your project to begin the deployment setup.",
-                "frameworkInference": "Auto-CiCd will try to automatically detect your framework. If detection is not possible, choose the appropriate framework manually.",
+                "frameworkInference": "Auto-CICD will try to automatically detect your framework. If detection is not possible, choose the appropriate framework manually.",
                 "configDocker": "Configure your Docker settings: build command, start command, main file path, and port. If you are using a common framework, the default configuration usually works without changes.",
                 "envVariables": "If your project uses environment variables, you can copy your entire .env file and paste it here.",
-                "reviewCommit": "When you click Deploy, you will be shown the list of files that will be added or updated in your repository, you can select what files do you want to commit by selecting the checkboxes. If you confirm, Auto-CiCd will commit those files to the main branch of your project."
+                "reviewCommit": "When you click Deploy, you will be shown the list of files that will be added or updated in your repository, you can select what files do you want to commit by selecting the checkboxes. If you confirm, Auto-CICD will commit those files to the main branch of your project."
             }
         }
     },
@@ -152,12 +134,12 @@
             "signInMessage": "Sign in to your account to access your projects and deploy them.",
             "errors": {
                 "token": "Error creating GitLab access token.",
-                "profile": "Error retrieving user profile from GitLab.",
-                "group": "Error retrieving user group from GitLab."
+                "profile": "Error retrieving user profile from GitLab."
             }
         },
         "index": {
-            "searchLabel": "Search by name or namespace",
+            "searchLabel": "Search by project name",
+            "subgroupLabel": "Search by subgroup",
             "sortLabel": "Sort by",
             "projects": {
                 "noFound": "No projects found",
@@ -172,31 +154,9 @@
                 "errors": {
                     "fetchProjects": "Failed to fetch projects. Please try again."
                 },
-                "startTutorial": "Start Tutorial"
-            },
-            "footerMessage": "If your project is not listed, please ensure it in your auto-cicd sub-group in GitLab.",
-            "transferProject": "How to transfer your project"
-        },
-        "faq": {
-            "moveProject": "How to Move a Repository to Another Namespace in GitLab",
-            "steps": {
-                "1": "Log in to GitLab: Open your GitLab instance and log in to your account.",
-                "2": "Navigate to the Project: Go to the project you want to move.",
-                "3": "Go to Project Settings: In the left sidebar of your project, click on Settings, then General to open the general settings of the project.",
-                "4": "Expand the 'Advanced' Section: Scroll down to find the Advanced section, and click on it to expand the options.",
-                "5": "Change Namespace: In the Advanced section, you should see a field called 'Transfer project'. Click on the 'Transfer project' button.",
-                "6": "Choose the New Namespace: A dialog will pop up asking you to select the target namespace. You can select either a Group or another user namespace. Select the appropriate namespace (auto-cicd or a subgroup) and click Transfer project.",
-                "7": "Confirmation: GitLab will ask you to confirm the move. Once confirmed, the repository will be transferred to the new namespace."
+                "startTutorial": "Start Tutorial",
+                "moreInformation": "More information"
             }
-        },
-        "noGroup": {
-            "title": "Group Membership Required",
-            "alert": "You need to be a member of an Auto CI/CD subgroup to use this application.",
-            "instructions": "To gain access, please follow these steps:",
-            "step1": "Visit our group management app to create your subgroup",
-            "step2": "Return here and log in again after creating your subgroup",
-            "createButton": "Create Subgroup in GitLab",
-            "backButton": "Back to Login"
         }
     }
 }

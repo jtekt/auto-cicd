@@ -97,12 +97,16 @@
                 />
               </template>
               <v-list-item-title>
-                <a :href="`${deployStore.project?.webUrl}/-/pipelines/latest`" target="_blank">
+                <a
+                  :href="`${deployStore.project?.webUrl}/-/pipelines/latest`"
+                  target="_blank"
+                >
                   GitLab pipeline
                 </a>
               </v-list-item-title>
             </v-list-item>
             <v-list-item
+              v-if="config"
               v-for="(link, index) in config.usefulLinks"
               :key="index"
               class="mb-2"
@@ -170,7 +174,9 @@ import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
 import { computed } from "vue";
 import DeployEnvStatus from "./DeployEnvStatus.vue";
-import config from "@/config";
+import { getConfig } from "@/config";
+
+const config = getConfig();
 
 const { t, current } = useLocale();
 const deployStore = useDeployStore();
