@@ -291,6 +291,8 @@ export const useDeployStore = defineStore("deploy", () => {
     // Compute commit actions
     const repo = repositoryFiles.value;
 
+    console.log(repo)
+
     injectFiles.value = generated.content
       .map<InjectFile | null>((file) => {
         const existing = repo.find((r) => r.fileName === file.fileName);
@@ -503,7 +505,8 @@ export const useDeployStore = defineStore("deploy", () => {
       project: project.value!,
     }));
 
-    DEFAULT_FILES.forEach((df) => {
+    // Search for default files and dockerfile
+    [...DEFAULT_FILES, "Dockerfile"].forEach((df) => {
       paths.push({
         file: df,
         project: project.value!,
