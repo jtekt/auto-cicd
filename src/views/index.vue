@@ -304,7 +304,6 @@ const projects = ref<(ProjectNode & { mightBeUpdated?: boolean })[]>([]);
 const fetchProjects = async (clear?: boolean) => {
   try {
     if (isLoadingGroups.value) {
-      console.log("Waiting for groups to initialize before fetching projects");
       return;
     }
 
@@ -570,7 +569,6 @@ onMounted(async () => {
 
       if (userSubGroup) {
         initialSubgroup = userSubGroup.fullPath;
-        console.log("User subgroup found:", initialSubgroup);
       }
     }
   }
