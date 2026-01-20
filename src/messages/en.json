@@ -68,13 +68,7 @@
                 },
                 "close": "Close",
                 "closeReview": "Close and Review",
-                "debugSection": "Next Steps and Debugging",
-                "debugIntro": "If you encounter issues during deployment:",
-                "buildLogs": "Build Logs",
-                "buildLogsDescription": "In case of an error, review the logs in GitLab under the build jobs for detailed error messages:",
-                "appStatus": "App Status",
-                "appStatusDescription": "If no error messages appear and the app is not working, verify its status in:",
-                "appStatusPattern": "Search for your project, the names follow the pattern:"
+                "debugSection": "Next Steps and Debugging"
             },
             "envStatus": {
                 "title": "Environment Variables",
@@ -101,11 +95,10 @@
                         "firstDeploy": "If this is your first auto deployment, you will receive an email with the URL of your application.",
                         "trackProgress": "You can track the progress of your build by accessing the GitLab project under Build > Pipelines."
                     }
-                },
-                "actions": {
-                    "allowedGroup": "Allowed Group",
-                    "moveInstruction": ", then move your project to the new group"
                 }
+            },
+            "errors": {
+                "insufficientPermissions": "You don't have write access to commit to the head branch"
             }
         },
         "usefulLinks": {
@@ -145,7 +138,8 @@
             }
         },
         "index": {
-            "searchLabel": "Search by name or group",
+            "searchLabel": "Search by project name",
+            "subgroupLabel": "Search by subgroup",
             "sortLabel": "Sort by",
             "projects": {
                 "noFound": "No projects found",

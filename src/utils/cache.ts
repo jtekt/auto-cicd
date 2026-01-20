@@ -1,12 +1,13 @@
 import type { TemplateSource } from "@/types/config";
 
 export function getCacheKey(file: TemplateSource): string {
-  switch (file.type) {
-    case "local":
-      return `local:${file.path}`;
-    case "url":
-      return `url:${file.url}`;
-    case "gitlab":
-      return `gitlab:${file.project}:${file.ref}:${file.path}`;
+  if (typeof file === "string") {
+    return `local:${file}`;
+  } else if (file.type === "url") {
+    return `url:${file.url}`;
+  } else if (file.type === "gitlab") {
+    return `gitlab:${file.project}:${file.ref}:${file.path}`;
   }
+
+  return ""
 }

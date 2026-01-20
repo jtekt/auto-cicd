@@ -56,11 +56,7 @@ frameworks:
     outputFile: app.js
     port: 3000
     files: 
-      # GitLab file (using GraphQL)
-      - type: gitlab
-        project: on-premise-k8s-cluster/fabel/auto-cicd-templates
-        ref: main
-        path: express/Dockerfile
+      - /templates/express/Dockerfile
     configFiles:
       - file:
           - package.json
@@ -94,11 +90,7 @@ frameworks:
     outputFile: main.py
     port: 8000
     files: 
-      # GitLab file (using GraphQL)
-      - type: gitlab
-        project: on-premise-k8s-cluster/fabel/auto-cicd-templates
-        ref: main
-        path: fastapi/Dockerfile
+      - /templates/fastapi/Dockerfile
     configFiles:
       - file:
           - requirements.txt
@@ -125,11 +117,7 @@ frameworks:
     outputFile: .next/server.js
     port: 3000
     files: 
-      # GitLab file (using GraphQL)
-      - type: gitlab
-        project: on-premise-k8s-cluster/fabel/auto-cicd-templates
-        ref: main
-        path: nextjs/Dockerfile
+      - /templates/nextjs/Dockerfile
     configFiles:
       - file:
           - next.config.ts
@@ -176,11 +164,7 @@ frameworks:
     outputFile: /app/server/index.mjs
     port: 3000
     files: 
-      # GitLab file (using GraphQL)
-      - type: gitlab
-        project: on-premise-k8s-cluster/fabel/auto-cicd-templates
-        ref: main
-        path: nuxt/Dockerfile
+      - /templates/nuxt/Dockerfile
     configFiles:
       - file:
           - nuxt.config.ts
@@ -221,11 +205,7 @@ frameworks:
     outputFile: app.py
     port: 8501
     files: 
-      # GitLab file (using GraphQL)
-      - type: gitlab
-        project: on-premise-k8s-cluster/fabel/auto-cicd-templates
-        ref: main
-        path: streamlit/Dockerfile
+      - /templates/streamlit/Dockerfile
     configFiles:
       - file:
           - requirements.txt
@@ -253,16 +233,8 @@ frameworks:
     outputFile: dist/index.html
     port: 5173
     files:
-      # GitLab file (using GraphQL)
-      - type: gitlab
-        project: on-premise-k8s-cluster/fabel/auto-cicd-templates
-        ref: main
-        path: vite/Dockerfile
-
-      - type: gitlab
-        project: on-premise-k8s-cluster/fabel/auto-cicd-templates
-        ref: main
-        path: vite/nginx.conf
+      - /templates/vite/Dockerfile
+      - /templates/vite/nginx.conf
     configFiles:
       - file:
           - vite.config.ts

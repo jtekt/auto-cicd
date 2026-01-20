@@ -1,8 +1,8 @@
 import type { TemplateSource } from "@/types/config";
 
 export function resolveOutputFileName(file: TemplateSource): string | null {
-  if (file.type === "local") {
-    return file.path.split("/").pop() || null;
+  if (typeof file === "string") {
+    return file.split("/").pop() || null;
   }
   if (file.type === "url") {
     return file.url.split("/").pop() || null;

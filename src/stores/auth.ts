@@ -13,7 +13,8 @@ export const useAuthStore = defineStore("auth", () => {
       const parsed: Session = JSON.parse(raw);
       session.value = parsed;
       return parsed;
-    } catch {
+    } catch (err) {
+      console.error(err)
       localStorage.removeItem("session");
       return null;
     }

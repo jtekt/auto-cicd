@@ -68,13 +68,7 @@
                 },
                 "close": "閉じる",
                 "closeReview": "閉じて確認",
-                "debugSection": "次のステップとデバッグ",
-                "debugIntro": "デプロイ中に問題が発生した場合：",
-                "buildLogs": "ビルドログ",
-                "buildLogsDescription": "エラーが発生した場合、GitLabのビルドジョブの下にあるログを確認して、詳細なエラーメッセージを参照してください：",
-                "appStatus": "アプリの状態",
-                "appStatusDescription": "エラーメッセージが表示されず、アプリが動作しない場合、次の場所でその状態を確認してください：",
-                "appStatusPattern": "プロジェクトを検索してください。名前は以下の形式に従います："
+                "debugSection": "次のステップとデバッグ"
             },
             "envStatus": {
                 "title": "環境変数",
@@ -101,11 +95,10 @@
                         "firstDeploy": "これが最初の自動デプロイの場合、アプリケーションのURLが記載されたメールが届きます。",
                         "trackProgress": "GitLabプロジェクトの「ビルド > パイプライン」でビルドの進捗を確認できます。"
                     }
-                },
-                "actions": {
-                    "allowedGroup": "許可されたグループ",
-                    "moveInstruction": "、その後プロジェクトを新しいグループに移動してください"
                 }
+            },
+            "errors": {
+                "insufficientPermissions": "ヘッドブランチへのコミット権限がありません"
             }
         },
         "usefulLinks": {
@@ -145,8 +138,8 @@
             }
         },
         "index": {
-            "searchLabel": "名前またはグループで検索",
-            "sortLabel": "並べ替え",
+            "searchLabel": "プロジェクト名で検索",
+            "subgroupLabel": "サブグループで検索",
             "projects": {
                 "noFound": "プロジェクトが見つかりません",
                 "lastActivity": "最終アクティビティ：",

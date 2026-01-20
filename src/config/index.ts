@@ -26,16 +26,13 @@ export const loadConfig = async () => {
 export const getConfig = () => parsedConfig;
 
 export const DEFAULT_FILES = [".gitlab-ci.yml", "kubernetes_manifest.yml"];
-export const DEFAULT_PATHS = DEFAULT_FILES.map((f) => ({
-  type: "local" as const,
-  path: `/templates/common/${f}`,
-}));
+export const DEFAULT_PATHS = DEFAULT_FILES.map((f) => `/templates/common/${f}`);
 
 export const templates: Record<string, string> = {};
 
 export const loadTemplates = async (
   access_token: string,
-  framework: string
+  framework: string,
 ) => {
   if (!parsedConfig) return;
   const frameworkFiles = parsedConfig.frameworks[framework]?.files || [];
@@ -57,6 +54,7 @@ export const loadTemplates = async (
 
     try {
       const content = await fetchTemplateSource(file, access_token);
+
       if (content) templates[cacheKey] = content;
     } catch (err) {
       console.error(`Error fetching template for ${cacheKey}:`, err);
@@ -68,20 +66,22 @@ export const loadTemplates = async (
 
 async function fetchTemplateSource(
   file: TemplateSource,
-  token: string
+  token: string,
 ): Promise<string | null> {
-  switch (file.type) {
-    case "local":
-      const localRes = await fetch(file.path);
-      return localRes.ok ? localRes.text() : null;
-    case "url":
-      const urlRes = await fetch(file.url);
-      return urlRes.ok ? urlRes.text() : null;
-
-    case "gitlab":
-      return graphqlFetchFile(file.project, file.ref, file.path, token);
-
-    default:
-      return null;
+  if (typeof file === "string") {
+    const localRes = await fetch(file, {
+      method: "GET",
+      headers: {
+        Accept: "text/plain",
+      },
+    });
+    return localRes.ok ? localRes.text() : null;
+  } else if (file.type === "url") {
+    const urlRes = await fetch(file.url);
+    return urlRes.ok ? urlRes.text() : null;
+  } else if (file.type === "gitlab") {
+    return graphqlFetchFile(file.project, file.ref, file.path, token);
   }
+
+  return null;
 }

@@ -22,6 +22,7 @@ declare module 'vue' {
     DeployHandler: typeof import('./src/components/deploy/DeployHandler.vue')['default']
     DeployNextStepsDialog: typeof import('./src/components/deploy/DeployNextStepsDialog.vue')['default']
     MoreInformationsSection: typeof import('./src/components/MoreInformationsSection.vue')['default']
+    ProjectAvatar: typeof import('./src/components/ProjectAvatar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SupportContact: typeof import('./src/components/SupportContact.vue')['default']

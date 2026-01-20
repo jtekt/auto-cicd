@@ -10,7 +10,6 @@ variables:
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
   K8S_NAMESPACE: fabel
   K8S_NODEPORT: 30174
-  K8S_ECR_SECRET_NAME: ecr-credentials
 
 # Build the Docker container image
 build-job:
@@ -41,19 +40,15 @@ deploy-job:
   only:
     - master
     - main
-  before_script:
-    # Create Kubernetes secret for accessing ECR
-    - >
-      kubectl create secret docker-registry ${K8S_ECR_SECRET_NAME}
-      --docker-server=${AWS_ECR_URL}
-      --docker-username=AWS
-      --docker-password $(aws ecr get-login-password)
-      --dry-run=client -o yaml
-      | kubectl apply -f -
   script:
+    # Create secret for env
+    - kubectl create secret generic auto-cicd-env --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
+    # Apply the Config
+    - kubectl apply -f config_configmap.yml
     # Apply the Deployment
     - envsubst < kubernetes_manifest.yml | kubectl apply -f -
-
+    # Wait for rollout to complete
+    - kubectl rollout status deployment/${APPLICATION_NAME} --timeout=5m
   environment:
     name: production
     kubernetes:

@@ -1,0 +1,445 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auto-cicd-config
+data:
+  .gitlab-ci.yml: |
+    # Define the pipeline stages
+    stages:
+      - build # Stage responsible for building the Docker image
+      - deploy # Stage responsible for deploying the application to Kubernetes
+
+    variables:
+      APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
+      CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{{USERNAME}}/${APPLICATION_NAME}
+      CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
+      CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
+      K8S_IMAGE_PULL_SECRET_NAME: {{ IMAGE_PULL_SECRET_NAME }}
+      K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
+      DEPLOYMENT_SUB_DOMAIN: ${APPLICATION_NAME}.${DEPLOYMENT_DOMAIN}
+      PORT: {{ PORT }}
+
+    # Build the Docker container image
+    build-job:
+      stage: build
+      tags:
+        # optional: Docker is the default runner
+        - docker
+      only:
+        # Branches to run the Build stage
+        - {{ ROOT_REF }}
+      before_script:
+        # Create repository if needed
+        # The repository might already exist if the pipeline have already run
+        - >
+          aws ecr create-repository --repository-name ${CONTAINER_IMAGE_NAME}
+          || echo "Repository might have already existed"
+      script:
+        # Build the container image
+        - docker build -t ${CONTAINER_IMAGE_TAGGED} .
+        # Push container images to registry
+        - docker push ${CONTAINER_IMAGE_TAGGED}
+
+    # Deploy to Kubernetes
+    deploy-job:
+      stage: deploy
+      tags:
+        # optional: Docker is the default runner
+        - docker
+      only:
+        # Branches to run the Deploy stage
+        - {{ ROOT_REF }}
+      before_script:
+        # Uses the correct Kubernetes context
+        - kubectl config use-context ${K8S_CONTEXT}
+
+        # Uses the correct Kubernetes namespace
+        - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
+      script:
+        # Create an environment secret containing necessary variables
+        # The ENV file is saved as a CI/CD variable in GitLab under Settings -> CI/CD -> Variables with the key `ENV` and the type set to `File`.
+        # This file contains key-value pairs of environment variables needed for the application.
+
+        # First delete any existing secret to ensure it is updated
+        - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
+
+        # Apply the Kubernetes manifest
+        - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
+
+        # Get the Kubernetes service details
+        - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
+
+        # Ensure the service exists and extract the exposed port
+        - |
+          if [[ -z "$KUBECTL_GET_SVC" ]]; then
+            echo "Error: Could not find service port for $APPLICATION_NAME"
+            exit 1
+          fi
+
+        # The IP address is the static IP of one node from the Kubernetes cluster or a load balancer
+        - echo "The APP is available at https://$DEPLOYMENT_SUB_DOMAIN"
+
+        # Send an email notification if the deployment was newly created
+        - |
+          if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
+            docker run \
+              -e SMTP_PORT=$AWS_SES_PORT \
+              -e SMTP_HOST=$AWS_SES_HOST \
+              -e SMTP_USERNAME=$AWS_SES_USERNAME \
+              -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
+              -e SMTP_TO=$GITLAB_USER_EMAIL \
+              -e SMTP_FROM=$AWS_SES_FROM \
+              -e SMTP_SUBJECT="Auto CICD" \
+              -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to https://$DEPLOYMENT_SUB_DOMAIN. Please note that it might take a few minutes for the application to start." \
+              moreillon/sendemail
+
+            echo "Email was sent to: $GITLAB_USER_EMAIL"
+          else
+            echo "Please note that it might take a few minutes for the application to update."
+          fi
+
+        # Validate deployment rollout status
+        - kubectl rollout status deployment/$APPLICATION_NAME --timeout=600s;
+  
+  kubernetes_manifest.yml: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ${APPLICATION_NAME}
+      labels:
+        app.kubernetes.io/name: ${APPLICATION_NAME}
+      annotations:
+        users: ${GITLAB_USER_EMAIL}
+        repository.url: ${CI_PROJECT_URL}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: ${APPLICATION_NAME}
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ${APPLICATION_NAME}
+        spec:
+          containers:
+            - name: ${APPLICATION_NAME}
+              image: ${CONTAINER_IMAGE_TAGGED}
+              envFrom:
+                - secretRef:
+                    name: ${K8S_ENV_SECRET_NAME}
+                    optional: true
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "600m"
+          imagePullSecrets:
+            - name: ${K8S_IMAGE_PULL_SECRET_NAME}
+    ---      
+
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${APPLICATION_NAME}
+      labels:
+        app.kubernetes.io/name: ${APPLICATION_NAME}
+    spec:
+      type: ClusterIP
+      selector:
+        app.kubernetes.io/name: ${APPLICATION_NAME}
+      ports:
+        - port: ${PORT}
+    ---
+
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: ${APPLICATION_NAME}
+    spec:
+      # ingressClassName: # Use the default so it is not needed
+      rules:
+        - host: ${DEPLOYMENT_SUB_DOMAIN}
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: ${APPLICATION_NAME}
+                    port:
+                      number: ${PORT}
+
+  config.yml: |
+    packageManagers:
+      npm:
+        name: npm
+        commands:
+          install: npm install
+          build: npm run build
+        detectionFiles:
+          - file: package-lock.json
+        languages:
+          - javascript
+          - typescript
+      yarn:
+        name: yarn
+        commands:
+          install: yarn install
+          build: yarn build
+        detectionFiles:
+          - file: yarn.lock
+        languages:
+          - javascript
+          - typescript
+      pnpm:
+        name: pnpm
+        commands:
+          install: corepack enable pnpm && pnpm i
+          build: corepack enable pnpm && pnpm run build
+        detectionFiles:
+          - file: pnpm-lock.yaml
+        languages:
+          - javascript
+          - typescript
+      pip:
+        name: pip
+        commands:
+          install: pip install --no-cache-dir -r requirements.txt
+        detectionFiles:
+          - file: requirements.txt
+        languages:
+        - python
+    frameworks:
+      express:
+        name: Express
+        image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg"
+        languages:
+          - javascript
+          - typescript
+        userConfigurable:
+          buildCommand:
+            defaultEmpty: true
+          installCommand:
+            defaultEmpty: false
+          outputFile:
+            defaultEmpty: false
+          port:
+            defaultEmpty: false
+        outputFile: app.js
+        port: 3000
+        files:
+          - /templates/express/Dockerfile
+        configFiles:
+          - file:
+              - package.json
+            checkFor:
+              - express
+        supportedManagers:
+          - manager: npm
+            requiredFiles:
+              - package-lock.json
+          - manager: yarn
+            requiredFiles:
+              - yarn.lock
+          - manager: pnpm
+            requiredFiles:
+              - pnpm-lock.yaml
+        defaultManager: npm
+        requiredFiles:
+          - package.json
+      fastapi:
+        name: FastAPI
+        image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/fastapi/fastapi-original.svg"
+        languages:
+          - python
+        userConfigurable:
+          installCommand:
+            defaultEmpty: false
+          outputFile:
+            defaultEmpty: false
+          port:
+            defaultEmpty: false
+        outputFile: main.py
+        port: 8000
+        files:
+          - /templates/fastapi/Dockerfile
+        configFiles:
+          - file:
+              - requirements.txt
+            checkFor:
+              - fastapi
+        supportedManagers:
+          - manager: pip
+            requiredFiles:
+              - requirements.txt
+        defaultManager: pip
+      nextjs:
+        name: NextJs
+        image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg"
+        languages:
+          - tsx
+          - jsx
+          - typescript
+          - javascript
+        userConfigurable:
+          buildCommand:
+            defaultEmpty: false
+          installCommand:
+            defaultEmpty: false
+        outputFile: .next/server.js
+        port: 3000
+        files:
+          - /templates/nextjs/Dockerfile
+        configFiles:
+          - file:
+              - next.config.ts
+              - next.config.mts
+              - next.config.js
+              - next.config.mjs
+            checkFor:
+              - NextConfig
+        supportedManagers:
+          - manager: npm
+            requiredFiles:
+              - package-lock.json
+          - manager: yarn
+            requiredFiles:
+              - yarn.lock
+          - manager: pnpm
+            requiredFiles:
+              - pnpm-lock.yaml
+        defaultManager: npm
+        requiredFiles:
+          - - next.config.ts
+            - next.config.mts
+            - next.config.js
+            - next.config.mjs
+          - package.json
+        tips:
+          - text: >-
+              To deploy you need to add the config "output: 'standalone'" in your
+              next.config.js
+            link: >-
+              https://nextjs.org/docs/pages/api-reference/config/next-config-js/output#automatically-copying-traced-files
+      nuxt:
+        name: Nuxt
+        image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nuxt/nuxt-original.svg"
+        languages:
+          - vue
+          - typescript
+          - javascript
+        userConfigurable:
+          buildCommand:
+            defaultEmpty: false
+          installCommand:
+            defaultEmpty: false
+        outputFile: /app/server/index.mjs
+        port: 3000
+        files:
+          - /templates/nuxt/Dockerfile
+        configFiles:
+          - file:
+              - nuxt.config.ts
+              - nuxt.config.mts
+              - nuxt.config.js
+              - nuxt.config.mjs
+            checkFor:
+              - defineNuxtConfig
+        supportedManagers:
+          - manager: npm
+            requiredFiles:
+              - package-lock.json
+          - manager: yarn
+            requiredFiles:
+              - yarn.lock
+          - manager: pnpm
+            requiredFiles:
+              - pnpm-lock.yaml
+        defaultManager: npm
+        requiredFiles:
+          - - nuxt.config.ts
+            - nuxt.config.mts
+            - nuxt.config.js
+            - nuxt.config.mjs
+          - package.json
+      streamlit:
+        name: Streamlit
+        image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/streamlit/streamlit-original.svg"
+        languages:
+          - python
+        userConfigurable:
+          installCommand:
+            defaultEmpty: false
+          outputFile:
+            defaultEmpty: false
+          port:
+            defaultEmpty: false
+        outputFile: app.py
+        port: 8501
+        files:
+          - /templates/streamlit/Dockerfile
+        configFiles:
+          - file:
+              - requirements.txt
+            checkFor:
+              - streamlit
+        supportedManagers:
+          - manager: pip
+            requiredFiles:
+              - requirements.txt
+        defaultManager: pip
+      vite:
+        name: Vite
+        image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitejs/vitejs-original.svg"
+        languages:
+          - vue
+          - typescript
+          - javascript
+          - tsx
+          - jsx
+        userConfigurable:
+          buildCommand:
+            defaultEmpty: false
+          installCommand:
+            defaultEmpty: false
+        outputFile: dist/index.html
+        port: 5173
+        files:
+          - /templates/vite/Dockerfile
+          - /templates/vite/nginx.conf
+        configFiles:
+          - file:
+              - vite.config.ts
+              - vite.config.mts
+              - vite.config.js
+              - vite.config.mjs
+            checkFor:
+              - defineConfig
+        supportedManagers:
+          - manager: npm
+            requiredFiles:
+              - package-lock.json
+          - manager: yarn
+            requiredFiles:
+              - yarn.lock
+          - manager: pnpm
+            requiredFiles:
+              - pnpm-lock.yaml
+        defaultManager: npm
+        requiredFiles:
+          - - vite.config.ts
+            - vite.config.mts
+            - vite.config.js
+            - vite.config.mjs
+          - package.json
+    usefulLinks:
+      - name: K8s Dashboard
+        icon: "http://172.16.98.151:31030/icon.png"
+        url: "http://172.16.98.151:31389/?namespace=auto-cicd"
+        description:
+          en: >-
+            Access the Kubernetes Dashboard to monitor, manage, and undeploy your
+            running applications.
+          ja: Kubernetes ダッシュボードにアクセスして、実行中のアプリケーションの監視・管理やデプロイ解除を行うことができます。

@@ -111,7 +111,6 @@ VITE_APP_GITLAB_URL=http://gitlab.example.com
 VITE_APP_GITLAB_OAUTH_ID=xxxxxxxxxxxxxxxxxxxx
 VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR=auto-cicd-state
 VITE_APP_GITLAB_GROUP_PATH=group/auto-cicd
-VITE_APP_IMAGE_PULL_SECRET_NAME=auto-cicd-container-secret
 
 # Optional
 VITE_APP_GITLAB_GROUP_MANAGER_URL=

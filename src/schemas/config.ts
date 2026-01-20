@@ -15,10 +15,7 @@ const UrlSource = z.object({
   url: z.url(),
 });
 
-const LocalSource = z.object({
-  type: z.literal("local"),
-  path: z.string(),
-});
+const LocalSource = z.string()
 
 // Union of all template file types
 export const TemplateSourceSchema = z.union([GitLabSource, UrlSource, LocalSource]);

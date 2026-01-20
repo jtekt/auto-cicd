@@ -1,7 +1,22 @@
 <template>
-  <v-container>
+  <div>
     <v-row class="mb-2">
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="3">
+        <v-autocomplete
+          v-model="selectedSubgroup"
+          :items="subgroupOptions"
+          item-title="name"
+          item-value="fullPath"
+          :label="t('views.index.subgroupLabel')"
+          prepend-icon="mdi-folder-account"
+          variant="outlined"
+          @update:model-value="updateUrlParams"
+          hide-details
+          autocomplete="off"
+          :loading="isLoadingGroups"
+        />
+      </v-col>
+      <v-col cols="12" md="3">
         <v-text-field
           v-model="searchQuery"
           :label="t('views.index.searchLabel')"
@@ -11,7 +26,7 @@
           hide-details
         />
       </v-col>
-      <v-col cols="12" md="4">
+      <v-col cols="12" sm="6" md="3">
         <v-select
           v-model="sortBy"
           :items="sortOptions"
@@ -32,7 +47,7 @@
           </template>
         </v-select>
       </v-col>
-      <v-col cols="12" md="4" class="text-right">
+      <v-col cols="12" sm="6" md="3" class="text-right">
         <UsefulLinks />
         <v-btn color="primary" class="ml-4" icon @click="tutorialDialog = true">
           <v-icon icon="mdi-school" />
@@ -96,7 +111,7 @@
           :key="project.id"
           cols="12"
           sm="6"
-          lg="3"
+          lg="4"
           xl="3"
           class="pa-2"
         >
@@ -119,10 +134,15 @@
                     :alt="project.name"
                   >
                     <template #error>
-                      {{ project.name.charAt(0).toUpperCase() }}
+                      <span class="fallback-avatar-text">
+                        {{ project.name.charAt(0).toUpperCase() }}
+                      </span>
                     </template>
                   </v-img>
-                  <span v-else>{{ project.name.charAt(0).toUpperCase() }}</span>
+
+                  <span v-else class="fallback-avatar-text">
+                    {{ project.name.charAt(0).toUpperCase() }}
+                  </span>
                 </v-avatar>
                 <div>
                   <v-card-title style="text-transform: capitalize">
@@ -162,7 +182,7 @@
         </v-col>
       </v-row>
     </template>
-  </v-container>
+  </div>
 
   <TutorialDialog v-model="tutorialDialog" />
   <DeployHandler />
@@ -183,21 +203,34 @@ import UsefulLinks from "@/components/UsefulLinks.vue";
 import TutorialDialog from "@/components/TutorialDialog.vue";
 
 const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
-
 const { t } = useLocale();
-
 const router = useRouter();
 const route = useRoute();
-
 const authStore = useAuthStore();
 const toast = useToast();
 
 const isLoading = ref(true);
+const isLoadingGroups = ref(false);
 const error = ref<string | null>(null);
 const searchQuery = ref(
-  typeof route.query.search === "string" ? route.query.search : ""
+  typeof route.query.search === "string" ? route.query.search : "",
 );
 const tutorialDialog = ref(false);
+
+const isInitialLoad = ref(true);
+
+const selectedSubgroup = ref(
+  typeof route.query.subgroup === "string" ? route.query.subgroup : "ALL",
+);
+
+const subgroups = ref<
+  Array<{
+    id: string;
+    name: string;
+    fullPath: string;
+    avatarUrl: string | null;
+  }>
+>([]);
 
 enum SortOptions {
   ACTIVITY_DESC = "ACTIVITY_DESC",
@@ -209,7 +242,7 @@ enum SortOptions {
 const sortBy = ref(
   typeof route.query.sort === "string" && route.query.sort in SortOptions
     ? route.query.sort
-    : SortOptions.ACTIVITY_DESC
+    : SortOptions.ACTIVITY_DESC,
 );
 
 const lastCursor = ref<string | null>(null);
@@ -220,16 +253,16 @@ const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting && hasNextPage.value && !isLoading.value) {
-        fetchProjects(); // Trigger the fetch when the trigger element is visible
+        fetchProjects();
       }
     });
   },
-  { threshold: 1.0 } // 100% of the element must be visible
+  { threshold: 1.0 },
 );
 
 onMounted(() => {
   if (loadMoreTrigger.value) {
-    observer.observe(loadMoreTrigger.value); // Start observing the trigger element
+    observer.observe(loadMoreTrigger.value);
   }
 });
 
@@ -251,11 +284,32 @@ const sortOptions = computed(() => [
   },
 ]);
 
+const subgroupOptions = computed(() => [
+  { name: "All Groups", fullPath: "ALL" },
+  ...subgroups.value.map((sg) => ({
+    name: sg.name,
+    fullPath: sg.fullPath,
+  })),
+]);
+
+const queryGroupPath = computed(() => {
+  if (selectedSubgroup.value === "ALL") {
+    return import.meta.env.VITE_APP_GITLAB_GROUP_PATH;
+  }
+  return selectedSubgroup.value;
+});
+
 const projects = ref<(ProjectNode & { mightBeUpdated?: boolean })[]>([]);
 
 const fetchProjects = async (clear?: boolean) => {
   try {
+    if (isLoadingGroups.value) {
+      console.log("Waiting for groups to initialize before fetching projects");
+      return;
+    }
+
     if (!authStore.session || (hasNextPage.value === false && !clear)) return;
+
     isLoading.value = true;
 
     if (clear) {
@@ -263,27 +317,10 @@ const fetchProjects = async (clear?: boolean) => {
       lastCursor.value = null;
     }
 
-    // Step 1: Fetch projects without file contents
-    const projectsData = await fetchProjectsMetadata();
-    if (!projectsData) return;
-
-    projects.value.push(...projectsData);
-  } catch (error) {
-    toast.error(t("views.index.projects.errors.fetchProjects"));
-    console.error("Error fetching projects:", error);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const fetchProjectsMetadata = async () => {
-  if (!authStore.session) return null;
-
-  const pageSize = 16;
-
-  const query = `
+    const pageSize = 24;
+    const query = `
   {
-    group(fullPath: "${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}") {
+    group(fullPath: "${queryGroupPath.value}") {
       projects(
         includeSubgroups: true,
         includeArchived: false,
@@ -323,6 +360,7 @@ const fetchProjectsMetadata = async () => {
             maxAccessLevel {
               humanAccess
               stringValue
+              integerValue
             }
             repository {
               rootRef
@@ -334,77 +372,131 @@ const fetchProjectsMetadata = async () => {
   }
   `;
 
-  const res = await axios.post<ProjectsResponse>(
-    `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
-    {
-      query,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${authStore.session!.auth_token.access_token}`,
-        "Content-Type": "application/json",
+    const res = await axios.post<ProjectsResponse>(
+      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
+      {
+        query,
       },
-    }
-  );
-
-  if (res.data.errors || !res.data.data) {
-    toast.error(
-      t("views.index.projects.errors.fetchProjects") +
-        ": " +
-        res.data.errors?.map((e) => e.message).join(", ")
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session!.auth_token.access_token}`,
+          "Content-Type": "application/json",
+        },
+      },
     );
-    return null;
+
+    if (res.data.errors || !res.data.data) {
+      toast.error(
+        t("views.index.projects.errors.fetchProjects") +
+          ": " +
+          res.data.errors?.map((e) => e.message).join(", "),
+      );
+      return null;
+    }
+
+    const { edges, pageInfo } = res.data.data.group.projects;
+    lastCursor.value = pageInfo.endCursor;
+    hasNextPage.value = pageInfo.hasNextPage;
+
+    const projectsData = edges?.map((project) => {
+      const id = project.node.id.split("/").pop()!;
+      const languages = project.node.languages
+        .filter(
+          (l) =>
+            !["dockerfile", "html", "css", "scss"].includes(
+              l.name.toLowerCase(),
+            ),
+        )
+        .map((l) => ({ name: l.name.toLowerCase(), share: l.share }))
+        .sort((a, b) => b.share - a.share);
+      const projectPath = project.node.fullPath.split("/").pop()!;
+      const projectName = projectPath
+        .replace(/_/g, "-")
+        .replace(/\./g, "-")
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "");
+      return {
+        ...project.node,
+        id,
+        projectName,
+        languages,
+        deploymentFiles: [],
+      } satisfies ProjectNode;
+    });
+
+    if (!projectsData) return;
+    projects.value.push(...projectsData);
+  } catch (error) {
+    toast.error(t("views.index.projects.errors.fetchProjects"));
+    console.error("Error fetching projects:", error);
+  } finally {
+    isLoading.value = false;
   }
+};
 
-  const { edges, pageInfo } = res.data.data.group.projects;
-  lastCursor.value = pageInfo.endCursor;
-  hasNextPage.value = pageInfo.hasNextPage;
+const fetchGroups = async () => {
+  if (!authStore.session?.user.nickname) return null;
 
-  return edges?.map((project) => {
-    // Your existing project processing logic
-    const id = project.node.id.split("/").pop()!;
-    const languages = project.node.languages
-      .filter(
-        (l) =>
-          !["dockerfile", "html", "css", "scss"].includes(l.name.toLowerCase())
-      )
-      .map((l) => ({ name: l.name.toLowerCase(), share: l.share }))
-      .sort((a, b) => b.share - a.share);
+  isLoadingGroups.value = true;
 
-    const projectPath = project.node.fullPath.split("/").pop()!;
-    const projectName = projectPath
-      .replace(/_/g, "-")
-      .replace(/\./g, "-")
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "");
+  const query = `
+{
+  group(fullPath: "${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}") {
+    descendantGroups (includeParentDescendants: false) {
+      nodes {
+        id
+        name
+        fullPath
+        avatarUrl
+      }
+    }
+  }
+}
+`;
 
-    return {
-      ...project.node,
-      id,
-      projectName,
-      languages,
-      deploymentFiles: [],
-    } satisfies ProjectNode;
-  });
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
+      { query },
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.session!.auth_token.access_token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (res.data.errors || !res.data.data) {
+      console.error("Error fetching groups:", res.data.errors);
+      return null;
+    }
+
+    subgroups.value = res.data.data.group.descendantGroups.nodes;
+  } catch (error) {
+    console.error("Error fetching groups:", error);
+    toast.error(t("views.index.projects.errors.fetchGroups"));
+  } finally {
+    isLoadingGroups.value = false;
+  }
 };
 
 const updateUrlParams = () => {
   const newQuery: { [key: string]: string } = {};
-
   if (searchQuery.value) {
     newQuery.search = searchQuery.value;
   }
   if (sortBy.value) {
     newQuery.sort = sortBy.value;
   }
-
+  if (selectedSubgroup.value && selectedSubgroup.value !== "ALL") {
+    newQuery.subgroup = selectedSubgroup.value;
+  }
   router.push({
     query: newQuery,
   });
 };
 
 let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
-
 const debounce = (func: (...args: unknown[]) => unknown, delay: number) => {
   return (...args: unknown[]) => {
     if (debounceTimeout) clearTimeout(debounceTimeout);
@@ -412,17 +504,17 @@ const debounce = (func: (...args: unknown[]) => unknown, delay: number) => {
   };
 };
 
-// Debounced updateUrlParams
 const updateDebouncedUrlParams = debounce(() => {
   const newQuery: { [key: string]: string } = {};
-
   if (searchQuery.value) {
     newQuery.search = searchQuery.value;
   }
   if (sortBy.value) {
     newQuery.sort = sortBy.value;
   }
-
+  if (selectedSubgroup.value && selectedSubgroup.value !== "ALL") {
+    newQuery.subgroup = selectedSubgroup.value;
+  }
   router.push({
     query: newQuery,
   });
@@ -431,6 +523,14 @@ const updateDebouncedUrlParams = debounce(() => {
 watch(
   () => route.query,
   async () => {
+    // Skip during initial load to avoid double fetch
+    if (isInitialLoad.value) {
+      return;
+    }
+
+    // Only update if groups are already initialized
+    if (isLoadingGroups.value) return;
+
     searchQuery.value =
       typeof route.query.search === "string" ? route.query.search : "";
     sortBy.value =
@@ -438,10 +538,71 @@ watch(
         ? route.query.sort
         : SortOptions.ACTIVITY_DESC;
 
-    await fetchProjects(true); // Fetch the first set of projects
+    // Update selected subgroup from URL if present
+    if (typeof route.query.subgroup === "string") {
+      selectedSubgroup.value = route.query.subgroup;
+    } else {
+      selectedSubgroup.value = "ALL";
+    }
+
+    await fetchProjects(true);
   },
-  { immediate: true }
 );
+
+onMounted(async () => {
+  // Fetch groups first
+  await fetchGroups();
+
+  // Determine the initial subgroup value
+  let initialSubgroup = "ALL";
+
+  // Priority 1: Check if there's a subgroup in the URL query
+  if (typeof route.query.subgroup === "string") {
+    initialSubgroup = route.query.subgroup;
+  } else {
+    // Priority 2: Check if user's group exists in the fetched subgroups
+    const userNickname = authStore.session?.user.nickname?.toLowerCase();
+
+    if (userNickname) {
+      const userSubGroup = subgroups.value.find(
+        (sg) => sg.name.toLowerCase() === userNickname,
+      );
+
+      if (userSubGroup) {
+        initialSubgroup = userSubGroup.fullPath;
+        console.log("User subgroup found:", initialSubgroup);
+      }
+    }
+  }
+
+  // Set the selected subgroup
+  selectedSubgroup.value = initialSubgroup;
+
+  // Update URL params if a user subgroup was found and no query param exists
+  if (initialSubgroup !== "ALL" && !route.query.subgroup) {
+    // Use router.replace to avoid adding to history
+    router.replace({
+      query: {
+        ...route.query,
+        subgroup: initialSubgroup,
+      },
+    });
+  }
+
+  // Set initial query params from URL
+  searchQuery.value =
+    typeof route.query.search === "string" ? route.query.search : "";
+  sortBy.value =
+    typeof route.query.sort === "string" && route.query.sort in SortOptions
+      ? route.query.sort
+      : SortOptions.ACTIVITY_DESC;
+
+  // Fetch projects (this is the only call on mount)
+  await fetchProjects(true);
+
+  // Mark initial load as complete
+  isInitialLoad.value = false;
+});
 </script>
 
 <style scoped>
@@ -455,6 +616,18 @@ watch(
 .project-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 25px 0 rgba(0, 0, 0, 0.1);
+}
+
+.fallback-avatar-text {
+  background-color: rgb(var(--v-theme-primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-weight: bold;
+  font-size: 20px;
+  color: white;
 }
 
 .not-found-container {

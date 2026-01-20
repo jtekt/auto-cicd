@@ -44,15 +44,15 @@ router.beforeEach((to) => {
 
   // Always allow /auth during OAuth redirects
   if (to.name === "Auth") {
+    if(loggedIn)  {
+      return { name: "Home" };
+    }
+
     return true;
   }
 
   if (to.meta.protected && !loggedIn) {
     return { name: "Auth" };
-  }
-
-  if (loggedIn && to.name === "Auth") {
-    return { name: "Home" };
   }
 
   return true;
