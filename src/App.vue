@@ -30,7 +30,7 @@ const refreshIfNeeded = async () => {
   const now = Math.floor(Date.now() / 1000);
 
   // If there is only 2 minutes update the session
-  if (expiresAt - now > 7199) return;
+  if (expiresAt - now > 60 * 2) return;
 
   const newTokens = await refreshAccessToken(authStore.session);
   if (!newTokens) {

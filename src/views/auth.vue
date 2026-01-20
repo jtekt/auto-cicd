@@ -102,7 +102,9 @@ onMounted(async () => {
     });
 
     // Redirect to the actual application
-    router.push("/");
+    router.push({
+      name: "Home"
+    });
   } catch (error) {
     console.error("OAuth login error:", error);
     toast.error("Authentication failed");

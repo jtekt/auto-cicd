@@ -56,7 +56,7 @@
           v-if="!!authStore.session"
           size="small"
           icon="mdi-logout"
-          @click="authStore.logout"
+          @click="handleLogout"
         />
       </v-container>
     </v-app-bar>
@@ -111,11 +111,12 @@ import { useLocale, useTheme } from "vuetify";
 import { setLanguage } from "@/plugins/vuetify";
 import Toaster from "./Toaster.vue";
 import { useAuthStore } from "@/stores/auth";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
 
 const route = useRoute()
+const router = useRouter()
 
 const authStore = useAuthStore();
 
@@ -126,5 +127,11 @@ const theme = useTheme();
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";
   localStorage.setItem("theme", theme.global.name.value);
+}
+
+function handleLogout() {
+  authStore.logout()
+
+  router.push("Auth")
 }
 </script>

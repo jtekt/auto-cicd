@@ -20,10 +20,10 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  function setSession(session: Session | null): void {
-    session = session;
-    if (session) {
-      localStorage.setItem("session", JSON.stringify(session));
+  function setSession(_session: Session | null): void {
+    session.value = _session;
+    if (_session) {
+      localStorage.setItem("session", JSON.stringify(_session));
     } else {
       localStorage.removeItem("session");
     }
