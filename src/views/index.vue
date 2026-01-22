@@ -203,6 +203,8 @@ import UsefulLinks from "@/components/UsefulLinks.vue";
 import TutorialDialog from "@/components/TutorialDialog.vue";
 
 const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
+const parentGroup = import.meta.env.VITE_APP_GITLAB_GROUP_PATH;
+
 const { t } = useLocale();
 const router = useRouter();
 const route = useRoute();
@@ -220,7 +222,10 @@ const tutorialDialog = ref(false);
 const isInitialLoad = ref(true);
 
 const selectedSubgroup = ref(
-  typeof route.query.subgroup === "string" ? route.query.subgroup : "ALL",
+  typeof route.query.subgroup === "string" &&
+    route.query.subgroup.startsWith(parentGroup)
+    ? route.query.subgroup
+    : "ALL",
 );
 
 const subgroups = ref<
@@ -293,8 +298,11 @@ const subgroupOptions = computed(() => [
 ]);
 
 const queryGroupPath = computed(() => {
-  if (selectedSubgroup.value === "ALL") {
-    return import.meta.env.VITE_APP_GITLAB_GROUP_PATH;
+  if (
+    selectedSubgroup.value === "ALL" ||
+    !selectedSubgroup.value.startsWith(parentGroup)
+  ) {
+    return parentGroup;
   }
   return selectedSubgroup.value;
 });
