@@ -61,7 +61,7 @@ frameworks:
       - file:
           - package.json
         checkFor:
-          - express
+          - /"express"\s*:/
     supportedManagers:
       - manager: npm
         requiredFiles:

@@ -9,7 +9,7 @@ export const envKey = "ENV"; // Environment file name
  */
 export type ConfigFileInfo = {
   file: string;
-  checks?: Array<{ framework: string; strings: string[] }>;
+  checks?: Array<{ framework: string; patterns: (string | RegExp)[] }>;
   detectedFrameworks?: Set<string>;
   requiredFor?: Set<string>;
   alwaysFetch?: boolean;
@@ -45,7 +45,7 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
             if (!info.checks) info.checks = [];
             info.checks.push({
               framework,
-              strings: configEntry.checkFor,
+              patterns: configEntry.checkFor,
             });
 
             if (!info.detectedFrameworks) info.detectedFrameworks = new Set();
@@ -123,7 +123,7 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
 
             info.checks.push({
               framework, // PM checks count toward framework scoring
-              strings: df.checkFor,
+              patterns: df.checkFor,
             });
 
             if (!info.detectedFrameworks) info.detectedFrameworks = new Set();

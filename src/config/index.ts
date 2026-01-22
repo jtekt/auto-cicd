@@ -20,7 +20,10 @@ export const loadConfig = async () => {
   const content = YAML.parse(text);
 
   // Validate with Zod
-  parsedConfig = ConfigSchema.parse(content);
+  const validated = ConfigSchema.parse(content);
+
+  // Convert checkFor → RegExp[]
+  parsedConfig = normalizeConfig(validated);
 };
 
 export const getConfig = () => parsedConfig;
@@ -84,4 +87,33 @@ async function fetchTemplateSource(
   }
 
   return null;
+}
+
+function normalizeConfig(config: Config) {
+  for (const framework of Object.values(config.frameworks)) {
+    if (!framework.configFiles) continue;
+
+    for (const entry of framework.configFiles) {
+      entry.checkFor = entry.checkFor.map((pattern) => {
+        if (pattern instanceof RegExp) {
+          return pattern; // already good
+        }
+
+        // If string in form /foo/, convert to RegExp
+        if (
+          typeof pattern === "string" &&
+          pattern.startsWith("/") &&
+          pattern.endsWith("/")
+        ) {
+          return new RegExp(pattern.slice(1, -1));
+        }
+
+        // Otherwise treat as literal string and escape it
+        const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return new RegExp(escaped);
+      });
+    }
+  }
+
+  return config;
 }

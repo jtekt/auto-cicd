@@ -15,10 +15,14 @@ const UrlSource = z.object({
   url: z.url(),
 });
 
-const LocalSource = z.string()
+const LocalSource = z.string();
 
 // Union of all template file types
-export const TemplateSourceSchema = z.union([GitLabSource, UrlSource, LocalSource]);
+export const TemplateSourceSchema = z.union([
+  GitLabSource,
+  UrlSource,
+  LocalSource,
+]);
 
 // Main schema
 export const FrameworkConfigSchema = z.object({
@@ -38,7 +42,10 @@ export const FrameworkConfigSchema = z.object({
   files: z.array(TemplateSourceSchema).optional(),
   configFiles: z
     .array(
-      z.object({ file: z.array(z.string()), checkFor: z.array(z.string()) })
+      z.object({
+        file: z.array(z.string()),
+        checkFor: z.array(z.union([z.string(), z.instanceof(RegExp)])),
+      }),
     )
     .optional(), // What files and variations to check and what key words to look for
   supportedManagers: z
@@ -46,7 +53,7 @@ export const FrameworkConfigSchema = z.object({
       z.object({
         manager: z.string(),
         requiredFiles: z.array(z.string()),
-      })
+      }),
     )
     .min(1),
   defaultManager: z.string(),
@@ -66,7 +73,7 @@ const PackageManagerSchema = z.object({
     z.object({
       file: z.string(),
       checkFor: z.array(z.string()).optional(),
-    })
+    }),
   ),
   languages: z.array(z.string()),
 });

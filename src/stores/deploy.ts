@@ -81,7 +81,7 @@ export const useDeployStore = defineStore("deploy", () => {
     Object.entries(config ? config.frameworks : {}).map(([id, value]) => ({
       id,
       ...value,
-    }))
+    })),
   );
 
   const currentProjectFrameworkConfig = computed(() => {
@@ -105,7 +105,7 @@ export const useDeployStore = defineStore("deploy", () => {
       currentProjectFrameworkConfig.value.requiredFiles || [];
     const requiredByPackageManager =
       currentProjectFrameworkConfig.value.supportedManagers.find(
-        (sm) => sm.manager === projectConfig.value?.manager
+        (sm) => sm.manager === projectConfig.value?.manager,
       )?.requiredFiles || [];
     const requiredFilesForConfig = [
       ...new Set([...requiredByFramework, ...requiredByPackageManager]),
@@ -116,7 +116,7 @@ export const useDeployStore = defineStore("deploy", () => {
         !repositoryFiles.value.find((id) => {
           if (typeof f === "string") return id.fileName === f;
           return f.find((fc) => id.fileName === fc);
-        })
+        }),
     );
   });
 
@@ -125,7 +125,7 @@ export const useDeployStore = defineStore("deploy", () => {
     if (projectConfig.value?.buildCommand) return false;
 
     return !repositoryFiles.value.find(
-      (f) => f.fileName === projectConfig.value?.outputFile
+      (f) => f.fileName === projectConfig.value?.outputFile,
     );
   });
 
@@ -138,7 +138,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     environmentVariables.value.forEach((newEnv) => {
       const origEnv = originalEnvironmentVariables.value.find(
-        (e) => e.key === newEnv.key
+        (e) => e.key === newEnv.key,
       );
       if (!origEnv) e.added.push(newEnv);
       else if (origEnv.value !== newEnv.value) e.modified.push(newEnv);
@@ -146,7 +146,9 @@ export const useDeployStore = defineStore("deploy", () => {
 
     e.removed = originalEnvironmentVariables.value.filter(
       (origEnv) =>
-        !environmentVariables.value.some((newEnv) => newEnv.key === origEnv.key)
+        !environmentVariables.value.some(
+          (newEnv) => newEnv.key === origEnv.key,
+        ),
     );
 
     return e;
@@ -171,12 +173,12 @@ export const useDeployStore = defineStore("deploy", () => {
       // Update projectConfig with the new framework
       projectConfig.value = getDefaultProjectConfig(
         newFramework,
-        managerSelector.value
+        managerSelector.value,
       );
 
       // Check if the selected manager is supported by the new framework
       const supportedManagers = newFrameworkConfig.supportedManagers.map(
-        (m) => m.manager
+        (m) => m.manager,
       );
 
       if (
@@ -186,7 +188,7 @@ export const useDeployStore = defineStore("deploy", () => {
         managerSelector.value = newFrameworkConfig.defaultManager;
         projectConfig.value.manager = managerSelector.value;
       }
-    }
+    },
   );
 
   watch(
@@ -199,7 +201,7 @@ export const useDeployStore = defineStore("deploy", () => {
       ) {
         projectConfig.value.manager = newManager;
       }
-    }
+    },
   );
 
   // Actions
@@ -257,13 +259,13 @@ export const useDeployStore = defineStore("deploy", () => {
 
     // Validate envs
     const invalidEnvs = environmentVariables.value.filter(
-      (e) => !e.key || !e.value
+      (e) => !e.key || !e.value,
     );
     if (invalidEnvs.length) {
       toast.error(
         t("components.deployHandler.script.errors.invalidEnvs", {
           keys: invalidEnvs.map((e) => e.key).join(", "),
-        })
+        }),
       );
       return;
     }
@@ -275,14 +277,14 @@ export const useDeployStore = defineStore("deploy", () => {
       authStore.session.auth_token.access_token,
       projectConfig.value,
       project.value,
-      authStore.session.user.nickname
+      authStore.session.user.nickname,
     );
 
     if (!generated.success) {
       toast.error(
         t("components.deployHandler.script.errors.fileGenerationFailed", {
           error: generated.error,
-        })
+        }),
       );
       isLoading.value = false;
       return;
@@ -307,7 +309,7 @@ export const useDeployStore = defineStore("deploy", () => {
         const existingContent = normalizeContent(existing.content);
         const newContent = normalizeContent(file.content);
 
-        const isMatch = existingContent === newContent
+        const isMatch = existingContent === newContent;
         if (!isMatch) {
           return {
             fileName: file.fileName,
@@ -338,7 +340,7 @@ export const useDeployStore = defineStore("deploy", () => {
       btoa(
         new TextEncoder()
           .encode(str)
-          .reduce((data, byte) => data + String.fromCharCode(byte), "")
+          .reduce((data, byte) => data + String.fromCharCode(byte), ""),
       );
 
     const result: {
@@ -379,7 +381,7 @@ export const useDeployStore = defineStore("deploy", () => {
             headers: {
               Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
             },
-          }
+          },
         );
         result.commit = { success: true };
 
@@ -393,7 +395,7 @@ export const useDeployStore = defineStore("deploy", () => {
           t("components.deployHandler.script.success.commitSuccess"),
           {
             id: commitToastId,
-          }
+          },
         );
       } catch (err) {
         const errorMessage =
@@ -420,7 +422,7 @@ export const useDeployStore = defineStore("deploy", () => {
           t("components.deployHandler.script.success.envUpdateSuccess"),
           {
             id: envToastId,
-          }
+          },
         );
       } catch (err) {
         const errorMessage =
@@ -430,7 +432,7 @@ export const useDeployStore = defineStore("deploy", () => {
           t("components.deployHandler.script.errors.envUpdateFailed"),
           {
             id: envToastId,
-          }
+          },
         );
         console.error("Env update error:", err);
       }
@@ -455,24 +457,24 @@ export const useDeployStore = defineStore("deploy", () => {
         deploymentInfo.value.messages.push(
           t("components.deployHandler.script.success.deployMessages.deploying"),
           t(
-            "components.deployHandler.script.success.deployMessages.firstDeploy"
+            "components.deployHandler.script.success.deployMessages.firstDeploy",
           ),
           t(
-            "components.deployHandler.script.success.deployMessages.trackProgress"
-          )
+            "components.deployHandler.script.success.deployMessages.trackProgress",
+          ),
         );
       }
     } else {
       if (hasCommitAttempt && !result.commit?.success) {
         deploymentInfo.value.errors.push(
-          `Failed to commit files: ${result.commit?.error || "Unknown error"}`
+          `Failed to commit files: ${result.commit?.error || "Unknown error"}`,
         );
       }
       if (hasEnvAttempt && !result.env?.success) {
         deploymentInfo.value.errors.push(
           `Failed to update environment variables: ${
             result.env?.error || "Unknown error"
-          }`
+          }`,
         );
       }
     }
@@ -508,7 +510,7 @@ export const useDeployStore = defineStore("deploy", () => {
       paths.push({
         file: df,
         project: project.value!,
-        alwaysFetch: true
+        alwaysFetch: true,
       });
     });
 
@@ -520,35 +522,27 @@ export const useDeployStore = defineStore("deploy", () => {
     if (!filesResponse.success) {
       console.warn(
         "Failed to fetch files; falling back to unknown:",
-        filesResponse.error
+        filesResponse.error,
       );
       return;
     }
 
     // Map fileName to content for quick lookup (handle optional content)
     const fileContents = new Map(
-      filesResponse.data.map((f) => [f.fileName, f.content || null])
+      filesResponse.data.map((f) => [f.fileName, f.content || null]),
     );
 
     repositoryFiles.value = filesResponse.data; // Keep for UI/other uses
 
     // Detection using structured checks
     const frameworkMatches: Map<string, number> = new Map(
-      Object.keys(config.frameworks).map((framework) => [framework, 0]) // Key: framework, Value: initial score 0
+      Object.keys(config.frameworks).map((framework) => [framework, 0]), // Key: framework, Value: initial score 0
     );
 
     configFiles.forEach((info) => {
       // Skip if file not fetched
       if (!fileContents.has(info.file)) {
         return;
-      }
-
-      // Existence-based scoring for required files
-      if (info.requiredFor && info.requiredFor.size > 0) {
-        info.requiredFor.forEach((framework) => {
-          const currentScore = frameworkMatches.get(framework) ?? 0;
-          frameworkMatches.set(framework, currentScore + 1);
-        });
       }
 
       // String-based scoring for files with checks (requires content)
@@ -561,9 +555,25 @@ export const useDeployStore = defineStore("deploy", () => {
         return;
       }
 
+      // Existence-based scoring for required files
+      if (info.requiredFor && info.requiredFor.size > 0) {
+        info.requiredFor.forEach((framework) => {
+          const currentScore = frameworkMatches.get(framework) ?? 0;
+
+          // Required files gives 2 points
+          frameworkMatches.set(framework, currentScore + 2);
+        });
+      }
+
       // Check each framework's indicators
-      info.checks.forEach(({ framework, strings }) => {
-        const matches = strings.some((str) => content.includes(str));
+      info.checks.forEach(({ framework, patterns }) => {
+        const matches = patterns.some((pattern) => {
+          if (pattern instanceof RegExp) {
+            return pattern.test(content);
+          }
+          // fallback for plain strings
+          return content.includes(pattern);
+        });
 
         if (matches) {
           const currentScore = frameworkMatches.get(framework) ?? 0;
@@ -602,7 +612,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
   function detectPackageManager(
     frameworkConfig: FrameworkConfigType,
-    fileContents: Map<string, string | null>
+    fileContents: Map<string, string | null>,
   ): string | undefined {
     for (const {
       manager,
@@ -633,7 +643,7 @@ export const useDeployStore = defineStore("deploy", () => {
       if (!fileData) return;
 
       const existingFileIndex = repositoryFiles.value.findIndex(
-        (f) => f.fileName === file
+        (f) => f.fileName === file,
       );
 
       if (existingFileIndex !== -1) {
