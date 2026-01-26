@@ -16,13 +16,14 @@
         v-model="deployStore.projectConfig.installCommand"
         :label="
           t(
-            'components.deployHandler.deployDialog.buildSettings.installCommand'
+            'components.deployHandler.deployDialog.buildSettings.installCommand',
           )
         "
         variant="outlined"
         :class="
           deployStore.projectConfig.installCommand ===
-          config?.packageManagers[deployStore.projectConfig.manager]?.commands.install
+          config?.packageManagers[deployStore.projectConfig.manager]?.commands
+            .install
             ? ''
             : 'text-warning'
         "
@@ -37,7 +38,8 @@
         :class="
           selectedFramework.userConfigurable?.buildCommand.defaultEmpty ||
           deployStore.projectConfig.buildCommand ===
-            config?.packageManagers[deployStore.projectConfig.manager]?.commands.build
+            config?.packageManagers[deployStore.projectConfig.manager]?.commands
+              .build
             ? ''
             : 'text-warning'
         "
@@ -57,7 +59,7 @@
           <v-tooltip activator="parent">
             <span>{{
               t(
-                "components.deployHandler.deployDialog.buildSettings.outputFileDescription"
+                "components.deployHandler.deployDialog.buildSettings.outputFileDescription",
               )
             }}</span>
           </v-tooltip>
@@ -90,7 +92,9 @@ const { t } = useLocale();
 const deployStore = useDeployStore();
 
 const selectedFramework = computed(
-  () => deployStore.projectConfig && config?.frameworks[deployStore.projectConfig.framework] 
+  () =>
+    deployStore.projectConfig &&
+    config?.frameworks[deployStore.projectConfig.framework],
 );
 
 // Debounce implementation
@@ -119,18 +123,19 @@ const searchFileDebounced = debounce((fileName: string) => {
 watch(
   () => deployStore.projectConfig?.outputFile,
   (newValue, oldValue) => {
+    const hasFile = deployStore.repositoryFiles.find((f) => f.fileName === newValue)
+
     if (
       selectedFramework.value?.userConfigurable?.outputFile &&
       newValue &&
       deployStore.isOutputFileInvalid &&
       newValue !== oldValue &&
       newValue !== selectedFramework.value.outputFile &&
-      deployStore.repositoryFiles.find((f) => f.fileName === newValue) ===
-        undefined
+      !hasFile?.content
     ) {
       searchFileDebounced(newValue);
     }
   },
-  { immediate: false } // Don't trigger on initial load
+  { immediate: false }
 );
 </script>

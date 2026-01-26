@@ -127,7 +127,7 @@ export const getGitLabFiles = async ({
 
           return {
             fileName: item.file,
-            content: item.alwaysFetch || item.checks ? content : null,
+            content,
           } satisfies GitLabFile;
         })();
 

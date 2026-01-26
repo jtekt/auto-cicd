@@ -12,7 +12,6 @@ export type ConfigFileInfo = {
   checks?: Array<{ framework: string; patterns: (string | RegExp)[] }>;
   detectedFrameworks?: Set<string>;
   requiredFor?: Set<string>;
-  alwaysFetch?: boolean;
 };
 
 /**
@@ -98,7 +97,6 @@ export const getConfigFiles = (lang?: string): ConfigFileInfo[] => {
           if (!fileMap.has(fileName)) {
             fileMap.set(fileName, {
               file: fileName,
-              alwaysFetch: true,
             });
           }
         });

@@ -121,12 +121,11 @@ export const useDeployStore = defineStore("deploy", () => {
   });
 
   const isOutputFileInvalid = computed(() => {
-    // If has buildCommand, outputFile is not required
-    if (projectConfig.value?.buildCommand) return false;
-
-    return !repositoryFiles.value.find(
+    const res = repositoryFiles.value.find(
       (f) => f.fileName === projectConfig.value?.outputFile,
     );
+
+    return !res?.content
   });
 
   const envChanges = computed(() => {
@@ -507,7 +506,6 @@ export const useDeployStore = defineStore("deploy", () => {
       paths.push({
         file: df,
         project: project.value!,
-        alwaysFetch: true,
       });
     });
 
@@ -631,13 +629,13 @@ export const useDeployStore = defineStore("deploy", () => {
 
     const filesData = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: [{ file, alwaysFetch: true, project: project.value }],
+      paths: [{ file,  project: project.value }],
     });
 
     if (filesData.success && filesData.data.length === 1) {
       const fileData = filesData.data[0];
 
-      if (!fileData) return;
+      if (!fileData?.content) return;
 
       const existingFileIndex = repositoryFiles.value.findIndex(
         (f) => f.fileName === file,
