@@ -15,7 +15,6 @@ data:
       CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
       CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
       K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
-      DEPLOYMENT_SUB_DOMAIN: ${APPLICATION_NAME}.${DEPLOYMENT_DOMAIN}
       PORT: {{ PORT }}
 
     # Build the Docker container image
@@ -59,7 +58,7 @@ data:
         # The ENV file is saved as a CI/CD variable in GitLab under Settings -> CI/CD -> Variables with the key `ENV` and the type set to `File`.
         # This file contains key-value pairs of environment variables needed for the application.
 
-        # Create secret for env files
+        # Create secret for env file
         - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
 
         # Apply the Kubernetes manifest
@@ -75,31 +74,40 @@ data:
             exit 1
           fi
 
+        - PORT=$(sed "s/.*\([0-9]\+\):\([0-9]\+\)\/TCP.*/\2/" <<< "$KUBECTL_GET_SVC")
+
         # The IP address is the static IP of one node from the Kubernetes cluster or a load balancer
-        - echo "The APP is available at http://$DEPLOYMENT_SUB_DOMAIN"
+        - |
+          if [ -n "$K8S_HOST" ]; then
+            echo "The APP is available at $K8S_HOST:$PORT"
+          fi
 
         # Send an email notification if the deployment was newly created
         - |
           if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
-            docker run \
-              -e SMTP_PORT=$AWS_SES_PORT \
-              -e SMTP_HOST=$AWS_SES_HOST \
-              -e SMTP_USERNAME=$AWS_SES_USERNAME \
-              -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
-              -e SMTP_TO=$GITLAB_USER_EMAIL \
-              -e SMTP_FROM=$AWS_SES_FROM \
-              -e SMTP_SUBJECT="Auto CICD" \
-              -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to http://$DEPLOYMENT_SUB_DOMAIN. Please note that it might take a few minutes for the application to start." \
-              moreillon/sendemail
+            if [ -n "$K8S_HOST" ]; then
+              docker run \
+                -e SMTP_PORT=$AWS_SES_PORT \
+                -e SMTP_HOST=$AWS_SES_HOST \
+                -e SMTP_USERNAME=$AWS_SES_USERNAME \
+                -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
+                -e SMTP_TO=$GITLAB_USER_EMAIL \
+                -e SMTP_FROM=$AWS_SES_FROM \
+                -e SMTP_SUBJECT="Auto CICD" \
+                -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to $K8S_HOST:$PORT. Please note that it might take a few minutes for the application to start." \
+                moreillon/sendemail
 
-            echo "Email was sent to: $GITLAB_USER_EMAIL"
+              echo "Email was sent to: $GITLAB_USER_EMAIL"
+            else
+              echo "Your application $APPLICATION_NAME was deployed"
+            fi
           else
             echo "Please note that it might take a few minutes for the application to update."
           fi
 
         # Validate deployment rollout status
         - kubectl rollout status deployment/$APPLICATION_NAME --timeout=600s;
-  
+
   kubernetes_manifest.yml: |
     apiVersion: apps/v1
     kind: Deployment
@@ -145,30 +153,11 @@ data:
       labels:
         app.kubernetes.io/name: ${APPLICATION_NAME}
     spec:
-      type: ClusterIP
+      type: NodePort
       selector:
         app.kubernetes.io/name: ${APPLICATION_NAME}
       ports:
         - port: ${PORT}
-    ---
-
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    metadata:
-      name: ${APPLICATION_NAME}
-    spec:
-      # ingressClassName: # Use the default so it is not needed
-      rules:
-        - host: ${DEPLOYMENT_SUB_DOMAIN}
-          http:
-            paths:
-              - path: /
-                pathType: Prefix
-                backend:
-                  service:
-                    name: ${APPLICATION_NAME}
-                    port:
-                      number: ${PORT}
 
   config.yml: |
     packageManagers:
