@@ -74,13 +74,20 @@ async function fetchTemplateSource(
   if (typeof file === "string") {
     const localRes = await fetch(file, {
       method: "GET",
+      cache: "no-store",
       headers: {
         Accept: "text/plain",
       },
     });
     return localRes.ok ? localRes.text() : null;
   } else if (file.type === "url") {
-    const urlRes = await fetch(file.url);
+    const urlRes = await fetch(file.url, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        Accept: "text/plain",
+      },
+    });
     return urlRes.ok ? urlRes.text() : null;
   } else if (file.type === "gitlab") {
     return graphqlFetchFile(file.project, file.ref, file.path, token);

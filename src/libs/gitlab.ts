@@ -174,6 +174,7 @@ export async function graphqlFetchFile(
     `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
     {
       method: "POST",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
