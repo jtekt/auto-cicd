@@ -52,9 +52,9 @@ deploy-job:
     # The ENV file is saved as a CI/CD variable in GitLab under Settings -> CI/CD -> Variables with the key `ENV` and the type set to `File`.
     # This file contains key-value pairs of environment variables needed for the application.
 
-    # First delete any existing secret to ensure it is updated
+    # Create secret for env file
     - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
-    
+
     # Apply the Kubernetes manifest
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 
