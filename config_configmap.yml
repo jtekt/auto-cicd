@@ -113,8 +113,6 @@ data:
     kind: Deployment
     metadata:
       name: ${APPLICATION_NAME}
-      labels:
-        app.kubernetes.io/name: ${APPLICATION_NAME}
       annotations:
         users: ${GITLAB_USER_EMAIL}
         repository.url: ${CI_PROJECT_URL}
