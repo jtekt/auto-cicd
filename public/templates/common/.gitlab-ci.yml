@@ -17,9 +17,10 @@ build-job:
   tags:
     # optional: Docker is the default runner
     - docker
-  only:
+  rules:
     # Branches to run the Build stage
-    - {{ROOT_REF}}
+    # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
+    - if: '$CI_COMMIT_BRANCH == "{{ROOT_REF}}"'
   before_script:
     # Create repository if needed
     # The repository might already exist if the pipeline have already run
@@ -38,9 +39,10 @@ deploy-job:
   tags:
     # optional: Docker is the default runner
     - docker
-  only:
+  rules:
     # Branches to run the Deploy stage
-    - {{ROOT_REF}}
+    # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
+    - if: '$CI_COMMIT_BRANCH == "{{ROOT_REF}}"'
   before_script:
     # Uses the correct Kubernetes context
     - kubectl config use-context ${K8S_CONTEXT}
@@ -51,8 +53,6 @@ deploy-job:
     # Create an environment secret containing necessary variables
     # The ENV file is saved as a CI/CD variable in GitLab under Settings -> CI/CD -> Variables with the key `ENV` and the type set to `File`.
     # This file contains key-value pairs of environment variables needed for the application.
-
-    # Create secret for env file
     - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
 
     # Apply the Kubernetes manifest
