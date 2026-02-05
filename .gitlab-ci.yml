@@ -17,9 +17,8 @@ build-job:
   tags:
     # optional: Docker is the default runner
     - docker
-  only:
-    - master
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
   before_script:
     # Create repository if needed
     - >
@@ -37,9 +36,8 @@ deploy-job:
   tags:
     # optional: Docker is the default runner
     - docker
-  only:
-    - master
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
   script:
     # Create secret for env
     - kubectl create secret generic auto-cicd-env --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
