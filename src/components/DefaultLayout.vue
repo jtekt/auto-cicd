@@ -100,6 +100,7 @@
           />
         </template>
       </div>
+      <div v-if="footerMessage" v-html="footerMessage" class="text-caption text-medium-emphasis" />
     </v-footer>
   </v-app>
 
@@ -114,6 +115,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useRoute, useRouter } from "vue-router";
 
 const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
+const footerMessage = import.meta.env.VITE_APP_FOOTER_MESSAGE;
 
 const route = useRoute()
 const router = useRouter()
