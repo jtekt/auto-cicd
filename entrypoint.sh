@@ -15,7 +15,10 @@ do
 
   sed -i 's|VITE_APP_GITLAB_GROUP_MANAGER_URL_PLACEHOLDER|'${VITE_APP_GITLAB_GROUP_MANAGER_URL}'|g' $file
   sed -i 's|VITE_APP_MORE_INFORMATION_PLACEHOLDER|'${VITE_APP_MORE_INFORMATION}'|g' $file
-  sed -i 's|VITE_APP_FOOTER_MESSAGE_PLACEHOLDER|'${VITE_APP_FOOTER_MESSAGE}'|g' $file
+  
+  # Escape special characters for sed: & \ and | 
+  ESCAPED_FOOTER=$(printf '%s\n' "${VITE_APP_FOOTER_MESSAGE}" | sed 's/[&\|]/\\&/g')
+  sed -i 's|VITE_APP_FOOTER_MESSAGE_PLACEHOLDER|'"${ESCAPED_FOOTER}"'|g' $file
 
 done
 
