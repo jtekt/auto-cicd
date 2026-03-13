@@ -114,8 +114,8 @@ data:
     metadata:
       name: ${APPLICATION_NAME}
       annotations:
-        deploymanager.jtekt.co.jp/users: ${GITLAB_USER_EMAIL}
-        deploymanager.jtekt.co.jp/repository.url: ${CI_PROJECT_URL}
+        deployment-manager.jtekt.co.jp/users: ${GITLAB_USER_EMAIL}
+        deployment-manager.jtekt.co.jp/repository.url: ${CI_PROJECT_URL}
     spec:
       replicas: 1
       selector:
