@@ -50,3 +50,26 @@ spec:
   ports:
     - port: 80
       nodePort: ${K8S_NODEPORT}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${APPLICATION_NAME}
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Self-Service Suite
+    gethomepage.dev/name: Auto-CICD
+    gethomepage.dev/description: CICD configuration generator
+    gethomepage.dev/icon: https://gitlab.jtektrnd.net/uploads/-/system/project/avatar/2866/auto-cicd.png
+spec:
+  rules:
+    - host: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ${APPLICATION_NAME}
+                port:
+                  number: 80
