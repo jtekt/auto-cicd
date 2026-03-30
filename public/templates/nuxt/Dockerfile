@@ -1,5 +1,7 @@
+FROM node:24-alpine AS base
+
 # Start from an appropriate base image
-FROM node:24-alpine AS build
+FROM base AS build
 
 # Set the working directory for building
 WORKDIR /app
@@ -26,7 +28,7 @@ COPY . .
 RUN {{BUILD_COMMAND}}
 
 # Build Stage 2: Production Image
-FROM build AS production-stage
+FROM base AS production
 WORKDIR /app
 
 # Only `.output` folder is needed from the build stage
