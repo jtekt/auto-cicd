@@ -436,11 +436,11 @@ data:
             - vite.config.mjs
           - package.json
     usefulLinks:
-      - name: K8s Dashboard
-        icon: "http://172.16.98.151:31030/icon.png"
-        url: "http://172.16.98.151:31389/?namespace=auto-cicd"
+      - name: Deployment Manager
+        icon: "https://gitlab.jtektrnd.net/uploads/-/system/project/avatar/4058/apps-box.png"
+        url: "https://deployment-manager.higashikariya.jtektrnd.net"
         description:
           en: >-
-            Access the Kubernetes Dashboard to monitor, manage, and undeploy your
+            Access the Deployment Manager to monitor, manage, and undeploy your
             running applications.
-          ja: Kubernetes ダッシュボードにアクセスして、実行中のアプリケーションの監視・管理やデプロイ解除を行うことができます。
+          ja: Deployment Manager にアクセスして、実行中のアプリケーションの監視・管理やデプロイ解除を行うことができます。
