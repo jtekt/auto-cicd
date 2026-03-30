@@ -44,12 +44,11 @@ kind: Service
 metadata:
   name: ${APPLICATION_NAME}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app.kubernetes.io/name: ${APPLICATION_NAME}
   ports:
     - port: 80
-      nodePort: ${K8S_NODEPORT}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -61,7 +60,13 @@ metadata:
     gethomepage.dev/name: Auto-CICD
     gethomepage.dev/description: CICD configuration generator
     gethomepage.dev/icon: https://gitlab.jtektrnd.net/uploads/-/system/project/avatar/2866/auto-cicd.png
+
+    cert-manager.io/cluster-issuer: letsencrypt
 spec:
+  tls:
+    - hosts:
+        - ${APPLICATION_NAME}.higashikariya.jtektrnd.net
+      secretName: ${APPLICATION_NAME}-tls
   rules:
     - host: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
       http:
