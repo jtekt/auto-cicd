@@ -140,6 +140,7 @@
         "index": {
             "searchLabel": "プロジェクト名で検索",
             "subgroupLabel": "サブグループで検索",
+            "sortLabel": "並び替え",
             "projects": {
                 "noFound": "プロジェクトが見つかりません",
                 "lastActivity": "最終アクティビティ：",
