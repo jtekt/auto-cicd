@@ -113,18 +113,27 @@ import { setLanguage } from "@/plugins/vuetify";
 import Toaster from "./Toaster.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRoute, useRouter } from "vue-router";
+import { getConfig } from "@/config";
+import { computed } from "vue";
 
 const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
-const footerMessage = import.meta.env.VITE_APP_FOOTER_MESSAGE;
 
 const route = useRoute()
 const router = useRouter()
 
 const authStore = useAuthStore();
 
+const config = getConfig()
+
 const { current } = useLocale();
 
 const theme = useTheme();
+
+const footerMessage = computed(() => {
+  if (!config) return null;
+  const message = config.footerMessage[current.value as "ja"] ?? Object.values(config.footerMessage)[0];
+  return message ? message.replace(/\n/g, "<br>") : null;
+})
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";

@@ -15,11 +15,6 @@ do
 
   sed -i 's|VITE_APP_GITLAB_GROUP_MANAGER_URL_PLACEHOLDER|'${VITE_APP_GITLAB_GROUP_MANAGER_URL}'|g' $file
   sed -i 's|VITE_APP_MORE_INFORMATION_PLACEHOLDER|'${VITE_APP_MORE_INFORMATION}'|g' $file
-  
-  SAFE_FOOTER=$(echo "$VITE_APP_FOOTER_MESSAGE" | sed 's/[&\|]/\\&/g')
-
-  # Use the escaped variable in your sed command
-  sed -i "s|VITE_APP_FOOTER_MESSAGE_PLACEHOLDER|$SAFE_FOOTER|g" "$file"
 
 done
 

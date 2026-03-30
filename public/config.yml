@@ -269,3 +269,6 @@ usefulLinks:
         Access the Kubernetes Dashboard to monitor, manage, and undeploy your
         running applications.
       ja: Kubernetes ダッシュボードにアクセスして、実行中のアプリケーションの監視・管理やデプロイ解除を行うことができます。
+footerMessage: 
+  en: "You can create your own group in <a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a>"
+  ja: "<a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a> で独自のグループを作成できます"
