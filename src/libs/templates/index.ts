@@ -6,7 +6,7 @@ import { parseTemplate } from "../mustache";
 import type { ProjectConfig } from "@/types/app-config";
 import type { TemplateSource } from "@/types/config";
 import type { GitLabFile } from "../gitlab";
-import { getCacheKey } from "@/utils/cache";
+import { getTemplateCacheKey } from "@/utils/cache";
 import { resolveOutputFileName } from "@/utils/file";
 
 export const generateFiles = async (
@@ -33,7 +33,7 @@ export const generateFiles = async (
     const results: GitLabFile[] = [];
 
     for (const file of filesToRender) {
-      const key = getCacheKey(file);
+      const key = getTemplateCacheKey(file);
       const template = templates[key];
 
       if (!template) {

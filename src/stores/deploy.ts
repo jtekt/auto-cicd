@@ -6,6 +6,7 @@ import { generateFiles } from "@/libs/templates";
 import {
   getEnvs,
   getGitLabFiles,
+  invalidateGitLabFiles,
   updateEnvs,
   type CommitAction,
   type CommitActionObject,
@@ -20,6 +21,7 @@ import type { ProjectConfig } from "@/types/app-config";
 import { DEFAULT_FILES, getConfig } from "@/config";
 import type { FrameworkConfigType } from "@/types/config";
 import { normalizeContent } from "@/utils/file";
+import { getProjectCacheKey, getTemplateCacheKey } from "@/utils/cache";
 
 type Env = {
   key: string;
@@ -125,7 +127,7 @@ export const useDeployStore = defineStore("deploy", () => {
       (f) => f.fileName === projectConfig.value?.outputFile,
     );
 
-    return !res?.content
+    return !res?.content;
   });
 
   const envChanges = computed(() => {
@@ -288,10 +290,12 @@ export const useDeployStore = defineStore("deploy", () => {
       isLoading.value = false;
       return;
     }
-    
+
     injectFiles.value = generated.content
       .map<InjectFile | null>((file) => {
-        const existing = repositoryFiles.value.find((r) => r.fileName === file.fileName);
+        const existing = repositoryFiles.value.find(
+          (r) => r.fileName === file.fileName,
+        );
 
         if (!existing || !existing.content) {
           return {
@@ -402,6 +406,17 @@ export const useDeployStore = defineStore("deploy", () => {
         });
         console.error("Commit error:", err);
       }
+    }
+
+    // invalidate cache for committed files to ensure next fetch gets the updated content
+    if (result.commit?.success) {
+      console.log("Invalidating cache for files:", actions.commit.map((c) => c.file_path));
+      invalidateGitLabFiles(
+        actions.commit.map((c) => getProjectCacheKey({
+          file: c.file_path,
+          project: project.value!,
+        })),
+      );
     }
 
     if (actions.env) {
@@ -629,7 +644,7 @@ export const useDeployStore = defineStore("deploy", () => {
 
     const filesData = await getGitLabFiles({
       access_token: authStore.session.auth_token.access_token,
-      paths: [{ file,  project: project.value }],
+      paths: [{ file, project: project.value }],
     });
 
     if (filesData.success && filesData.data.length === 1) {

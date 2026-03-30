@@ -6,6 +6,7 @@ import { UserSchema } from "@/schemas/user";
 import type { Session } from "@/types/session";
 import type { Token } from "@/types/token";
 import { TokenSchema } from "@/schemas/token";
+import { getProjectCacheKey } from "@/utils/cache";
 
 export type CommitAction = "create" | "update" | "delete" | "move" | "chmod";
 export interface CommitActionObject {
@@ -108,7 +109,7 @@ export const getGitLabFiles = async ({
     const results: GitLabFile[] = [];
 
     for (const item of paths) {
-      const key = cacheKey(item);
+      const key = getProjectCacheKey(item);
 
       // If already cached (or in-flight), reuse promise
       let promise = gitlabFileCache.get(key);
@@ -147,6 +148,10 @@ export const getGitLabFiles = async ({
     return { success: false, error: (err as Error).message };
   }
 };
+
+export const invalidateGitLabFiles = (keys: string[]) => {
+  keys.forEach((k) => gitlabFileCache.delete(k));
+}
 
 export async function graphqlFetchFile(
   project: string,
@@ -191,13 +196,6 @@ export async function graphqlFetchFile(
   }
 
   return null;
-}
-
-// Files helper
-function cacheKey(item: ConfigFileInfo & {
-  project: { fullPath: string; repository: { rootRef: string } };
-}) {
-  return `${item.project.fullPath}:${item.project.repository.rootRef}:${item.file}`;
 }
 
 export const getEnvs = async ({

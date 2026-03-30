@@ -1,4 +1,4 @@
-import { getCacheKey } from "@/utils/cache";
+import { getTemplateCacheKey } from "@/utils/cache";
 import { graphqlFetchFile } from "@/libs/gitlab";
 import { ConfigSchema } from "@/schemas/config";
 import type { Config, TemplateSource } from "@/types/config";
@@ -51,7 +51,7 @@ export const loadTemplates = async (
   });
 
   const requests = filesToFetch.map(async (file) => {
-    const cacheKey = getCacheKey(file);
+    const cacheKey = getTemplateCacheKey(file);
 
     if (templates[cacheKey]) return;
 
