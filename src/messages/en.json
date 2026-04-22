@@ -26,11 +26,7 @@
                 },
                 "envSettings": {
                     "title": "Environment Variables",
-                    "description": "Add environment variables for your project.",
-                    "key": "Key",
-                    "value": "Value",
-                    "pasteHint": "You can paste the contents of a valid .env file directly into one of the key input fields, and it will automatically populate the corresponding values for you.",
-                    "addMore": "Add More"
+                    "description": "Add environment variables for your project."
                 },
                 "noFrameworkIdentified": "No framework identified, please select one to proceed."
             },
@@ -158,5 +154,8 @@
                 "moreInformation": "More information"
             }
         }
+    },
+    "env": {
+        "invalid": "Invalid .env format at: {details}"
     }
 }
