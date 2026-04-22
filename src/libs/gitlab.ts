@@ -207,7 +207,7 @@ export const getEnvs = async ({
 }): Promise<
   | {
       success: true;
-      data: Env[];
+      data: string;
     }
   | { success: false; error: string }
 > => {
@@ -231,31 +231,9 @@ export const getEnvs = async ({
       },
     });
 
-    let envs: Env[] = [];
+    let envs: string = ""
     if (response.data.variable_type === "file") {
-      envs = response.data.value.split("\n").map((e) => {
-        const [key, value] = e.split("=");
-
-        if (!key || !value) {
-          throw new Error("Invalid environment variable format");
-        }
-
-        return {
-          key,
-          value,
-          protected: response.data.protected,
-          visible: false,
-        };
-      });
-    } else if (response.data.variable_type === "env_var") {
-      envs = [
-        {
-          key: response.data.key,
-          value: response.data.value,
-          protected: response.data.protected,
-          visible: false,
-        },
-      ];
+      envs = response.data.value;
     }
     return { success: true, data: envs };
   } catch (error) {
@@ -268,7 +246,7 @@ export const getEnvs = async ({
   }
   return {
     success: true,
-    data: [],
+    data: ""
   };
 };
 
@@ -279,11 +257,11 @@ export const updateEnvs = async ({
 }: {
   access_token: string;
   project: ProjectNode;
-  envsUpdate: Env[];
+  envsUpdate: string;
 }): Promise<
   | {
       success: true;
-      data: Env[];
+      data: string;
     }
   | { success: false; error: string }
 > => {
@@ -308,14 +286,14 @@ export const updateEnvs = async ({
     if (existingEnvs.length === 0)
       return {
         success: true,
-        data: [],
+        data: "",
       };
     return await axios.delete(`${url}/${envKey}`, config);
   }
 
   const body = {
     key: envKey,
-    value: envsUpdate.map((e) => `${e.key}=${e.value}`).join("\n"),
+    value: envsUpdate,
     description: "Generated in the Auto CI/CD App",
     variable_type: "file",
   };
