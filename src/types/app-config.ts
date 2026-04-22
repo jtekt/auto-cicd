@@ -12,6 +12,6 @@ export type ProjectConfig = {
   // User configurable commands
   installCommand: string; // Explicitly set based on manager/framework
   buildCommand?: string; // Optional, based on framework
-  outputFile: string; // Optional, based on framework
+  outputFile?: string; // Optional, based on framework
   port: number;
 };
