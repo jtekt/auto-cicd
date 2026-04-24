@@ -26,7 +26,10 @@
                 },
                 "envSettings": {
                     "title": "Environment Variables",
-                    "description": "Add environment variables for your project."
+                    "description": "Define environment variables for your project.",
+                    "existing": "Environment variables are already configured. You can manage them here or directly in GitLab (CI/CD settings).",
+                    "missing": "No environment variables are configured yet. You can define them here or directly in GitLab.",
+                    "link": "Open in GitLab"
                 },
                 "noFrameworkIdentified": "No framework identified, please select one to proceed."
             },
