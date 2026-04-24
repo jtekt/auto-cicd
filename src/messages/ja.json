@@ -26,11 +26,7 @@
                 },
                 "envSettings": {
                     "title": "環境変数",
-                    "description": "プロジェクトの環境変数を追加してください。",
-                    "key": "キー",
-                    "value": "値",
-                    "pasteHint": "有効な .env ファイルの内容をキー入力フィールドに直接貼り付けると、対応する値が自動的に入力されます。",
-                    "addMore": "さらに追加"
+                    "description": "プロジェクトの環境変数を追加してください。"
                 },
                 "noFrameworkIdentified": "フレームワークが特定されていません。続行するには、フレームワークを選択してください。"
             },
@@ -157,6 +153,9 @@
                 "startTutorial": "チュートリアルを開始",
                 "moreInformation": "詳細情報"
             }
+        },
+        "env": {
+            "invalid": "Invalid .env format at: {details}"
         }
     }
 }

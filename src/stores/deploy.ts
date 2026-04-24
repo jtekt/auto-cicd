@@ -21,14 +21,9 @@ import type { ProjectConfig } from "@/types/app-config";
 import { DEFAULT_FILES, getConfig } from "@/config";
 import type { FrameworkConfigType } from "@/types/config";
 import { normalizeContent } from "@/utils/file";
-import { getProjectCacheKey, getTemplateCacheKey } from "@/utils/cache";
-
-type Env = {
-  key: string;
-  value: string;
-  visible: boolean;
-  protected?: boolean;
-};
+import { getProjectCacheKey } from "@/utils/cache";
+import { parseEnv, validateEnv } from "@/libs/env";
+import type { Env } from "@/types/env";
 
 export const useDeployStore = defineStore("deploy", () => {
   const config = getConfig();
@@ -54,8 +49,8 @@ export const useDeployStore = defineStore("deploy", () => {
   const projectConfig = ref<ProjectConfig>();
 
   // Environment variables
-  const environmentVariables = ref<Env[]>([]);
-  const originalEnvironmentVariables = ref<Env[]>([]);
+  const environmentVariables = ref<string>("");
+  const originalEnvironmentVariables = ref<string>("");
 
   // Files to be committed
   type InjectFile = {
@@ -140,19 +135,17 @@ export const useDeployStore = defineStore("deploy", () => {
       removed: [],
     };
 
-    environmentVariables.value.forEach((newEnv) => {
-      const origEnv = originalEnvironmentVariables.value.find(
-        (e) => e.key === newEnv.key,
-      );
+    const originalEnv = parseEnv(originalEnvironmentVariables.value);
+    const newEnv = parseEnv(environmentVariables.value);
+
+    newEnv.forEach((newEnv) => {
+      const origEnv = originalEnv.find((e) => e.key === newEnv.key);
       if (!origEnv) e.added.push(newEnv);
       else if (origEnv.value !== newEnv.value) e.modified.push(newEnv);
     });
 
-    e.removed = originalEnvironmentVariables.value.filter(
-      (origEnv) =>
-        !environmentVariables.value.some(
-          (newEnv) => newEnv.key === origEnv.key,
-        ),
+    e.removed = originalEnv.filter(
+      (origEnv) => !newEnv.some((newEnv) => newEnv.key === origEnv.key),
     );
 
     return e;
@@ -262,13 +255,12 @@ export const useDeployStore = defineStore("deploy", () => {
     }
 
     // Validate envs
-    const invalidEnvs = environmentVariables.value.filter(
-      (e) => !e.key || !e.value,
-    );
-    if (invalidEnvs.length) {
+    const invalidEnvs = validateEnv(environmentVariables.value);
+
+    if (!invalidEnvs.valid) {
       toast.error(
         t("components.deployHandler.script.errors.invalidEnvs", {
-          keys: invalidEnvs.map((e) => e.key).join(", "),
+          keys: invalidEnvs.errors.map((e) => `Line: ${e.line}`).join(", "),
         }),
       );
       return;
@@ -413,12 +405,13 @@ export const useDeployStore = defineStore("deploy", () => {
 
     // invalidate cache for committed files to ensure next fetch gets the updated content
     if (result.commit?.success) {
-      console.log("Invalidating cache for files:", actions.commit.map((c) => c.file_path));
       invalidateGitLabFiles(
-        actions.commit.map((c) => getProjectCacheKey({
-          file: c.file_path,
-          project: project.value!,
-        })),
+        actions.commit.map((c) =>
+          getProjectCacheKey({
+            file: c.file_path,
+            project: project.value!,
+          }),
+        ),
       );
     }
 
