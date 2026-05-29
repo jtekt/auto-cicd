@@ -282,7 +282,7 @@ usefulLinks:
 
   - name: Feedback
     icon: "mdi-message-alert-outline"
-    url: "https://gitlab.jtektrnd.net/on-premise-k8s-cluster/fabel/auto-cicd/-/work_items/new?type=Issue&initialCreationContext=list-route"
+    url: "https://gitlab.jtektrnd.net/on-premise-k8s-cluster/fabel/auto-cicd/-/work_items/new?issue%5Btitle%5D=%5Bfeedback%5D-"
     description:
       en: >-
         Submit feedback, improvement requests, or report issues regarding the
