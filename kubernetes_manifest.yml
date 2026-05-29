@@ -72,7 +72,7 @@ spec:
     spec:
       containers:
         - name: auto-cicd-issue-creator
-          image: "{AWS_ECR_URL}/issue-creator:v1.0.8"
+          image: "${AWS_ECR_URL}/issue-creator:v1.0.8"
           envFrom:
             - secretRef:
                 name: auto-cicd-env
@@ -123,7 +123,7 @@ spec:
     - host: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
       http:
         paths:
-          - path: /issue-creator
+          - path: /feedback
             pathType: Prefix
             backend:
               service:
