@@ -458,7 +458,7 @@ data:
 
       - name: Feedback
         icon: "mdi-message-alert-outline"
-        url: "/issue-creator"
+        url: "https://gitlab.jtektrnd.net/on-premise-k8s-cluster/fabel/auto-cicd/-/work_items/new?type=Issue&initialCreationContext=list-route"
         description:
           en: >-
             Submit feedback, improvement requests, or report issues regarding the
