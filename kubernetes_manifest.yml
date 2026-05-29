@@ -99,7 +99,7 @@ spec:
   selector:
     app.kubernetes.io/name: auto-cicd-issue-creator
   ports:
-    - port: 80
+    - port: 3000
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -129,7 +129,7 @@ spec:
               service:
                 name: auto-cicd-issue-creator
                 port:
-                  number: 80
+                  number: 3000
 
           - path: /
             pathType: Prefix
