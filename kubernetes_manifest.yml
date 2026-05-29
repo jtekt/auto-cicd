@@ -1,4 +1,3 @@
-# AUTO CICD
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,55 +52,6 @@ spec:
     - port: 80
 
 ---
-# ISSUE CREATOR
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: auto-cicd-issue-creator
-  labels:
-    app.kubernetes.io/name: auto-cicd-issue-creator
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: auto-cicd-issue-creator
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: auto-cicd-issue-creator
-    spec:
-      containers:
-        - name: auto-cicd-issue-creator
-          image: "${AWS_ECR_URL}/issue-creator:v1.0.8"
-          envFrom:
-            - secretRef:
-                name: auto-cicd-env
-                optional: true
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "10m"
-            limits:
-              memory: "512Mi"
-              cpu: "600m"
-      imagePullSecrets:
-        - name: ecr-credentials
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: auto-cicd-issue-creator
-  labels:
-    app.kubernetes.io/name: auto-cicd-issue-creator
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: auto-cicd-issue-creator
-  ports:
-    - port: 3000
-
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -123,14 +73,6 @@ spec:
     - host: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
       http:
         paths:
-          - path: /issue-creator
-            pathType: Prefix
-            backend:
-              service:
-                name: auto-cicd-issue-creator
-                port:
-                  number: 3000
-
           - path: /
             pathType: Prefix
             backend:
