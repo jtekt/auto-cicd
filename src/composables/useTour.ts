@@ -16,7 +16,7 @@ function pulseElement(selector: string) {
   const el = document.querySelector(selector);
   if (!el) return;
   el.classList.add("tour-pulse");
-  setTimeout(() => el.classList.remove("tour-pulse"), 5000);
+  setTimeout(() => el.classList.remove("tour-pulse"), 3000);
 }
 
 export function useTour() {
