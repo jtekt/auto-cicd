@@ -94,7 +94,7 @@ Create a public OAuth application in your GitLab instance:
 
 Why these scopes?
 
-- `write_repository` to push pipeline files and Dockerfiles
+- `write_repository` to push pipeline files and Dockerfile
 - `api` to manage CI variables and repo content where needed
 - `openid/profile/email` for user identity
 - `read_api/read_user` to access project metadata
@@ -109,7 +109,7 @@ These variables configure the dashboard (Vite `VITE_*` envs). Create an `.env` (
 # Required
 VITE_APP_GITLAB_URL=http://gitlab.example.com
 VITE_APP_GITLAB_OAUTH_ID=xxxxxxxxxxxxxxxxxxxx
-VITE_APP_GITLAB_GROUP_PATH=group/auto-cicd
+VITE_APP_GITLAB_GROUP_PATH=group/sub-group
 ```
 
 Notes:
@@ -159,19 +159,6 @@ You need a GitLab Agent connected to your cluster. High-level steps:
 
 Define these in GitLab → Settings → CI/CD → Variables.
 
-Common:
-
-- `K8S_CONTEXT`: The name of the context to be used in k8s cluster
-- `K8S_HOST`: Public IP or DNS users will access when the service is of type NodePort (e.g., your node or load balancer address).
-
-For GitLab Container Registry:
-
-- GitLab auto-provides `CI_REGISTRY`, `CI_REGISTRY_USER`, `CI_REGISTRY_PASSWORD`, `CI_JOB_TOKEN`. No extra setup needed.
-
-For CONTAINER REGISTRY:
-
-- `CONTAINER_REGISTRY_URL`: e.g., `123456789012.dkr.ecr.us-east-1.amazonaws.com`
-
 Optional (email via AWS SES):
 
 - `AWS_SES_HOST`
@@ -182,7 +169,6 @@ Optional (email via AWS SES):
 
 Runner requirements:
 
-- The runner tagged `docker`
 - Docker available (DinD or host)
 - `kubectl` installed on the runner for deploy stage
 
@@ -205,16 +191,6 @@ The dashboard suggests Dockerfile templates for these; users can edit as needed.
 - Scope CI variables at the least permissive level (project > group).
 - Review `.gitlab-ci.yml` for secrets exposure in logs.
 - Consider Ingress + TLS for production-facing apps.
-
----
-
-## Roadmap / Contributions
-
-Issues and PRs are welcome! Please:
-
-- Open an issue describing the change/bug
-- For new features, include rationale and docs updates
-- Keep templates minimal and secure by default
 
 ---
 
