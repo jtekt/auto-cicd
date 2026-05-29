@@ -123,7 +123,7 @@ spec:
     - host: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
       http:
         paths:
-          - path: /feedback
+          - path: /issue-creator
             pathType: Prefix
             backend:
               service:

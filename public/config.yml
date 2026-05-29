@@ -282,7 +282,7 @@ usefulLinks:
 
   - name: Feedback
     icon: "mdi-message-alert-outline"
-    url: "/feedback"
+    url: "/issue-creator"
     description:
       en: >-
         Submit feedback, improvement requests, or report issues regarding the
