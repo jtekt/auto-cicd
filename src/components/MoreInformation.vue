@@ -1,10 +1,9 @@
 <template>
   <v-btn
-    variant="elevated"
-    color="primary"
-    size="large"
+    :id="props.id"
+    variant="outlined"
     @click="dialog = true"
-    class="font-weight-bold"
+    prepend-icon="mdi-information-variant"
   >
     {{ t("components.usefulLinks.buttonText") }}
   </v-btn>
@@ -28,18 +27,19 @@
           <v-list-item
             v-for="(link, index) in config.usefulLinks"
             :key="index"
-            class="mb-2"
+            class="mb-2 d-flex ga-4"
           >
-            <template #prepend>
-              <img
-                :src="link.icon"
-                :alt="link.name"
-                style="
-                  width: 40px;
-                  height: 40px;
-                  margin-right: 16px;
-                "
-              />
+            <template #prepend v-if="link.icon">
+              <div>
+                <img
+                  v-if="link.icon.startsWith('http')"
+                  :src="link.icon"
+                  :alt="link.name"
+                  class="link-icon"
+                />
+
+                <v-icon v-else :icon="link.icon" size="40" />
+              </div>
             </template>
             <v-list-item-title>
               <a :href="link.url" target="_blank">
@@ -54,7 +54,6 @@
             </p>
           </v-list-item>
         </v-list>
-        <MoreInformationsSection />
       </v-card-text>
 
       <v-card-actions class="pa-4">
@@ -69,25 +68,23 @@
 
 <script setup lang="ts">
 import { useLocale } from "vuetify";
-import { onMounted, ref } from "vue";
-import MoreInformationsSection from "./MoreInformationsSection.vue";
+import { ref } from "vue";
 import { getConfig } from "@/config";
+
+const props = defineProps<{
+  id?: string;
+}>();
 
 const config = getConfig();
 
 const { t, current } = useLocale();
 
-// State for dialog
 const dialog = ref(false);
-
-onMounted(() => {
-  // Check if first 3 times login and show the links
-  const hasUsed = parseInt(localStorage.getItem("welcome") || "", 10);
-  const safeHasUsed = Number.isNaN(hasUsed) ? 0 : hasUsed;
-
-  if (safeHasUsed > 2) return;
-
-  dialog.value = true;
-  localStorage.setItem("welcome", (safeHasUsed + 1).toString());
-});
 </script>
+
+<style scoped>
+.link-icon {
+  width: 40px;
+  height: 40px;
+}
+</style>

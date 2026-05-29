@@ -445,6 +445,37 @@ data:
             Access the Deployment Manager to monitor, manage, and undeploy your
             running applications.
           ja: Deployment Manager にアクセスして、実行中のアプリケーションの監視・管理やデプロイ解除を行うことができます。
+
+      - name: Apache Answer
+        icon: "https://answer.jtektrnd.net/favicon.ico"
+        url: "https://answer.jtektrnd.net/"
+        description:
+          en: >-
+            Access the Apache Answer knowledge base and community Q&A platform.
+          ja: >-
+            Apache Answer のナレッジベースおよび Q&A プラットフォームに
+            アクセスできます。
+
+      - name: Feedback
+        icon: "mdi-message-alert-outline"
+        url: "/feedback"
+        description:
+          en: >-
+            Submit feedback, improvement requests, or report issues regarding the
+            platform and applications.
+          ja: >-
+            プラットフォームやアプリケーションに関するフィードバック、
+            改善要望、不具合報告を送信できます。
+
+      - name: Contact Support
+        icon: "mdi-email-outline"
+        url: "mailto:kevin_fabel@jtekt.co.jp?subject=Auto%20CI%2FCD"
+        description:
+          en: >-
+            Contact the support team by email for assistance or inquiries.
+          ja: >-
+            サポートやお問い合わせについて、メールでサポートチームへ
+            連絡できます。
     footerMessage: 
       en: "You can create your own group in <a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a>"
       ja: "<a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a> で独自のグループを作成できます"

@@ -101,30 +101,71 @@
             }
         },
         "usefulLinks": {
-            "buttonText": "役立つリンク",
-            "dialogTitle": "自動デプロイのための役立つリンク",
+            "buttonText": "詳細情報",
+            "dialogTitle": "自動デプロイのリソース",
             "dialogDescription": "デプロイ中に役立つリソースを以下に示します：",
             "closeButton": "閉じる"
         },
-        "information": {
-            "moreInformation": "追加の情報が必要な場合は、次にアクセスしてください：",
-            "accessMoreInformation": "情報にアクセス"
+        "homeTour": {
+            "welcome": {
+                "title": "Auto-CICD へようこそ",
+                "description": "このツアーでは、プロジェクトの検索とデプロイ方法を説明します。さっそく始めましょう！"
+            },
+            "subgroup": {
+                "title": "サブグループでフィルター",
+                "description": "このドロップダウンでチームのサブグループ別にプロジェクトを絞り込めます。あなた自身のサブグループが見つかった場合は自動的に選択されます。"
+            },
+            "search": {
+                "title": "プロジェクトを検索",
+                "description": "プロジェクト名を入力して素早く見つけられます。検索時は関連度順に表示されます。"
+            },
+            "sort": {
+                "title": "並び替え",
+                "description": "プロジェクトの表示順を変更できます — 名前順または最終アクティビティ順。"
+            },
+            "projectCard": {
+                "title": "あなたのプロジェクト",
+                "description": "各カードは GitLab プロジェクトを表しています。プロジェクト名をクリックすると GitLab が開きます。Deploy ボタンでデプロイ設定を開始できます。"
+            },
+            "deployBtn": {
+                "title": "Deploy ボタン",
+                "description": "Deploy をクリックするとプロジェクトのデプロイ設定が開きます。Auto-CICD がフレームワークを自動検出し、必要なファイルを生成します。"
+            },
+            "moreInfo": {
+                "title": "詳細情報",
+                "description": "ご不明な点やお困りのことがあれば、このボタンから Auto-CICD のガイドやドキュメントが掲載されたサポートポータルにアクセスできます。"
+            }
         },
-        "tutorial": {
-            "title": "Auto-CICD へようこそ",
-            "openGroup": "Auto-CICD の GitLab グループを開く",
-            "previous": "戻る",
-            "next": "次へ",
-            "finish": "完了",
-            "steps": {
-                "intro": "Auto-CICD を使用するには、MAINTAINER 権限を持つ Auto-CICD GitLab グループ内に少なくとも 1 つのプロジェクトが必要です。このチュートリアルでは、最初のプロジェクトを追加してデプロイする手順を説明します。",
-                "transferProject": "プロジェクトを Auto-CICD GitLab グループ内に移動するか、新しく作成してください。このグループ内にあるプロジェクトのみが Auto-CICD アプリケーションで使用できます。",
-                "findProject": "プロジェクトを移動または作成した後、Auto-CICD のホームページに戻ってください。プロジェクトが一覧に表示されるようになります。",
-                "deployButton": "デプロイを開始するには、対象プロジェクトの Deploy ボタンをクリックしてください。",
-                "frameworkInference": "Auto-CICD はフレームワークを自動的に検出しようとします。検出できない場合は、適切なフレームワークを手動で選択してください。",
-                "configDocker": "Docker 設定を構成します：ビルドコマンド、開始コマンド、メインファイルのパス、ポート。一般的なフレームワークを使用している場合、通常はデフォルト設定のままで問題ありません。",
-                "envVariables": "プロジェクトで環境変数を使用している場合は、.env ファイル全体をコピーしてここに貼り付けることができます。",
-                "reviewCommit": "Deploy をクリックすると、リポジトリに追加または更新されるファイルの一覧が表示されます。チェックボックスでコミットしたいファイルを選択できます。確認すると、Auto-CICD はそれらのファイルをプロジェクトの main ブランチにコミットします。"
+        "deployTour": {
+            "framework": {
+                "title": "フレームワーク検出",
+                "description": "Auto-CICD はプロジェクトのフレームワークを自動検出します。検出が正しくない場合はドロップダウンから手動で選択できます。パッケージマネージャーも自動検出され変更可能です。"
+            },
+            "buildSettings": {
+                "title": "ビルドと出力設定",
+                "description": "このセクションを展開するとビルドコマンド、出力ファイルのパス、ポートをカスタマイズできます。一般的なフレームワークではデフォルト設定がそのまま使えます。"
+            },
+            "envSettings": {
+                "title": "環境変数",
+                "description": "このセクションを展開してプロジェクトの環境変数を追加・更新できます。.env ファイル全体をそのまま貼り付けられます。変数は GitLab CI/CD 設定に安全に保存されます。"
+            },
+            "deployAction": {
+                "title": "デプロイ",
+                "description": "準備ができたら Deploy をクリックしてください。リポジトリにコミットされるファイルのプレビューが表示され、含めたくないファイルのチェックを外すことができます。"
+            }
+        },
+        "confirmTour": {
+            "fileList": {
+                "title": "コミットするファイルを確認",
+                "description": "リポジトリにコミットされるデプロイ設定ファイルです。ファイルを展開して内容をプレビューできます。不要なファイルのチェックを外すとそのファイルをコミットから除外できます。"
+            },
+            "dockerfile": {
+                "title": "デプロイ後のカスタマイズ",
+                "description": "デプロイ後もカスタムベースイメージや追加依存関係、マルチステージビルドが必要な場合は GitLab 上で Dockerfile を直接編集できます。main ブランチへのプッシュがあるとパイプラインが自動的に再実行されます。"
+            },
+            "continueBtn": {
+                "title": "確認してデプロイ",
+                "description": "Continue をクリックすると選択したファイルがコミットされ CI/CD パイプラインが開始されます。デプロイは通常数分以内に完了します。"
             }
         }
     },
@@ -152,10 +193,9 @@
                 },
                 "errors": {
                     "fetchProjects": "プロジェクトの取得に失敗しました。再試行してください。"
-                },
-                "startTutorial": "チュートリアルを開始",
-                "moreInformation": "詳細情報"
-            }
+                }
+            },
+            "getStarted": "はじめる"
         },
         "env": {
             "invalid": "Invalid .env format at: {details}"

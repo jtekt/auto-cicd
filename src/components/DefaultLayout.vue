@@ -27,16 +27,7 @@
         <v-divider vertical></v-divider>
         <h1 class="text-h5 font-weight-bold px-2">Auto CICD</h1>
         <v-spacer />
-        <template v-if="supportContact">
-          <v-btn
-            icon="mdi-help-circle"
-            variant="text"
-            :href="supportContact"
-            target="_blank"
-            rel="noopener"
-            size="small"
-          />
-        </template>
+        <MoreInformation id="tour-home-information-btn" v-if="(config?.usefulLinks?.length || 0) > 0" />
         <v-btn
           :icon="
             !theme.current.value.dark
@@ -63,7 +54,6 @@
 
     <v-main>
       <v-container style="height: 100%" class="py-2 d-flex flex-column">
-        
         <template v-if="!route.meta.protected || authStore.session">
           <div style="flex: 1; display: flex; flex-direction: column">
             <router-view />
@@ -88,19 +78,12 @@
         <span>
           {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
         </span>
-        <template v-if="supportContact">
-          <v-divider vertical />
-          <v-btn
-            icon="mdi-help-circle"
-            variant="text"
-            :href="supportContact"
-            target="_blank"
-            rel="noopener"
-            size="small"
-          />
-        </template>
       </div>
-      <div v-if="footerMessage" v-html="footerMessage" class="text-caption text-medium-emphasis" />
+      <div
+        v-if="footerMessage"
+        v-html="footerMessage"
+        class="text-caption text-medium-emphasis"
+      />
     </v-footer>
   </v-app>
 
@@ -115,15 +98,14 @@ import { useAuthStore } from "@/stores/auth";
 import { useRoute, useRouter } from "vue-router";
 import { getConfig } from "@/config";
 import { computed } from "vue";
+import MoreInformation from "./MoreInformation.vue";
 
-const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
-
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 const authStore = useAuthStore();
 
-const config = getConfig()
+const config = getConfig();
 
 const { current } = useLocale();
 
@@ -131,9 +113,11 @@ const theme = useTheme();
 
 const footerMessage = computed(() => {
   if (!config) return null;
-  const message = config.footerMessage[current.value as "ja"] ?? Object.values(config.footerMessage)[0];
+  const message =
+    config.footerMessage[current.value as "ja"] ??
+    Object.values(config.footerMessage)[0];
   return message ? message.replace(/\n/g, "<br>") : null;
-})
+});
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";
@@ -141,8 +125,8 @@ function toggleTheme() {
 }
 
 function handleLogout() {
-  authStore.logout()
+  authStore.logout();
 
-  router.push("Auth")
+  router.push("Auth");
 }
 </script>

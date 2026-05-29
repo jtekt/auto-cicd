@@ -101,30 +101,71 @@
             }
         },
         "usefulLinks": {
-            "buttonText": "Useful Links",
-            "dialogTitle": "Useful Links for Auto Deployment",
+            "buttonText": "More Information",
+            "dialogTitle": "Resources for Auto Deployment",
             "dialogDescription": "Here are some resources to assist you during deployment:",
             "closeButton": "Close"
         },
-        "information": {
-            "moreInformation": "If you need more information, please access:",
-            "accessMoreInformation": "Access information"
+        "homeTour": {
+            "welcome": {
+                "title": "Welcome to Auto-CICD",
+                "description": "This quick tour will show you how to find your projects and deploy them. Let's get started!"
+            },
+            "subgroup": {
+                "title": "Filter by Subgroup",
+                "description": "Use this dropdown to filter projects by your team's subgroup. Your personal subgroup is selected automatically if found."
+            },
+            "search": {
+                "title": "Search Projects",
+                "description": "Type a project name here to quickly find it. Results are sorted by relevance when you search."
+            },
+            "sort": {
+                "title": "Sort Projects",
+                "description": "Change the order in which projects are listed — by name or by last activity."
+            },
+            "projectCard": {
+                "title": "Your Projects",
+                "description": "Each card represents a GitLab project. Click the project name to open it in GitLab, or use the Deploy button below to start the deployment setup."
+            },
+            "deployBtn": {
+                "title": "Deploy Button",
+                "description": "Click Deploy to open the deployment configuration for this project. Auto-CICD will detect your framework and generate the necessary files automatically."
+            },
+            "moreInfo": {
+                "title": "More Information",
+                "description": "Need help or have questions? Click this button to access the support portal with guides and documentation for Auto-CICD."
+            }
         },
-        "tutorial": {
-            "title": "Welcome to Auto-CICD",
-            "openGroup": "Open Auto-CICD GitLab Group",
-            "previous": "Previous",
-            "next": "Next",
-            "finish": "Finish",
-            "steps": {
-                "intro": "To begin using Auto-CICD, you need at least one project inside of the Auto-CICD GitLab group where you have MAINTAINER permissions. This tutorial will guide you through adding your first project and deploying it.",
-                "transferProject": "Move or create the project inside your Auto-CICD GitLab group. Only projects located in this group can be used in the Auto-CICD application.",
-                "findProject": "After transferring or creating the project, return to the Auto-CICD home page. Your project will now appear in the list.",
-                "deployButton": "Click the Deploy button on your project to begin the deployment setup.",
-                "frameworkInference": "Auto-CICD will try to automatically detect your framework. If detection is not possible, choose the appropriate framework manually.",
-                "configDocker": "Configure your Docker settings: build command, start command, main file path, and port. If you are using a common framework, the default configuration usually works without changes.",
-                "envVariables": "If your project uses environment variables, you can copy your entire .env file and paste it here.",
-                "reviewCommit": "When you click Deploy, you will be shown the list of files that will be added or updated in your repository, you can select what files do you want to commit by selecting the checkboxes. If you confirm, Auto-CICD will commit those files to the main branch of your project."
+        "deployTour": {
+            "framework": {
+                "title": "Framework Detection",
+                "description": "Auto-CICD automatically detects your project's framework. If the detection is wrong, you can select the correct one from this dropdown. The package manager is also detected and can be changed here."
+            },
+            "buildSettings": {
+                "title": "Build & Output Settings",
+                "description": "Expand this section to customize build commands, the output file path, and the port. For most common frameworks the defaults work out of the box — only change these if your project has special needs."
+            },
+            "envSettings": {
+                "title": "Environment Variables",
+                "description": "Expand this section to add or update your project's environment variables. You can paste your entire .env file here. Variables are stored securely in GitLab CI/CD settings."
+            },
+            "deployAction": {
+                "title": "Deploy",
+                "description": "When you're ready, click Deploy. You'll be shown a preview of all files that will be committed to your repository — you can uncheck any file you don't want to include."
+            }
+        },
+        "confirmTour": {
+            "fileList": {
+                "title": "Review Files to Commit",
+                "description": "These are the deployment configuration files that will be committed to your repository. Expand any file to preview its contents. Uncheck a file to exclude it from this commit."
+            },
+            "dockerfile": {
+                "title": "Customize After Deploy",
+                "description": "After deployment you can always edit the Dockerfile directly in GitLab if your project needs a custom base image, extra dependencies, or multi-stage build steps. Any change pushed to the main branch re-triggers the pipeline automatically."
+            },
+            "continueBtn": {
+                "title": "Confirm & Deploy",
+                "description": "Click Continue to commit the selected files and trigger your CI/CD pipeline. The deployment usually completes within a few minutes."
             }
         }
     },
@@ -152,10 +193,9 @@
                 },
                 "errors": {
                     "fetchProjects": "Failed to fetch projects. Please try again."
-                },
-                "startTutorial": "Start Tutorial",
-                "moreInformation": "More information"
-            }
+                }
+            },
+            "getStarted": "Get Started"
         }
     },
     "env": {

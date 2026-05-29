@@ -40,7 +40,7 @@ packageManagers:
 frameworks:
   express:
     name: Express
-    image: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg'
+    image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg"
     languages:
       - javascript
       - typescript
@@ -55,13 +55,13 @@ frameworks:
         defaultEmpty: false
     outputFile: app.js
     port: 3000
-    files: 
+    files:
       - /templates/express/Dockerfile
     configFiles:
       - file:
           - package.json
         checkFor:
-          - /"express"\s*:/
+          - express
     supportedManagers:
       - manager: npm
         requiredFiles:
@@ -77,7 +77,7 @@ frameworks:
       - package.json
   fastapi:
     name: FastAPI
-    image: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/fastapi/fastapi-original.svg'
+    image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/fastapi/fastapi-original.svg"
     languages:
       - python
     userConfigurable:
@@ -89,7 +89,7 @@ frameworks:
         defaultEmpty: false
     outputFile: main.py
     port: 8000
-    files: 
+    files:
       - /templates/fastapi/Dockerfile
     configFiles:
       - file:
@@ -103,7 +103,7 @@ frameworks:
     defaultManager: pip
   nextjs:
     name: NextJs
-    image: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg'
+    image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg"
     languages:
       - tsx
       - jsx
@@ -116,7 +116,7 @@ frameworks:
         defaultEmpty: false
     outputFile: .next/server.js
     port: 3000
-    files: 
+    files:
       - /templates/nextjs/Dockerfile
     configFiles:
       - file:
@@ -151,7 +151,7 @@ frameworks:
           https://nextjs.org/docs/pages/api-reference/config/next-config-js/output#automatically-copying-traced-files
   nuxt:
     name: Nuxt
-    image: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nuxt/nuxt-original.svg'
+    image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nuxt/nuxt-original.svg"
     languages:
       - vue
       - typescript
@@ -163,7 +163,7 @@ frameworks:
         defaultEmpty: false
     outputFile: /app/server/index.mjs
     port: 3000
-    files: 
+    files:
       - /templates/nuxt/Dockerfile
     configFiles:
       - file:
@@ -192,7 +192,7 @@ frameworks:
       - package.json
   streamlit:
     name: Streamlit
-    image: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/streamlit/streamlit-original.svg'
+    image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/streamlit/streamlit-original.svg"
     languages:
       - python
     userConfigurable:
@@ -204,7 +204,7 @@ frameworks:
         defaultEmpty: false
     outputFile: app.py
     port: 8501
-    files: 
+    files:
       - /templates/streamlit/Dockerfile
     configFiles:
       - file:
@@ -218,7 +218,7 @@ frameworks:
     defaultManager: pip
   vite:
     name: Vite
-    image: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitejs/vitejs-original.svg'
+    image: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitejs/vitejs-original.svg"
     languages:
       - vue
       - typescript
@@ -261,14 +261,45 @@ frameworks:
         - vite.config.mjs
       - package.json
 usefulLinks:
-  - name: K8s Dashboard
-    icon: 'http://172.16.98.151:31030/icon.png'
-    url: 'http://172.16.98.151:31389/?namespace=auto-cicd'
+  - name: Deployment Manager
+    icon: "https://gitlab.jtektrnd.net/uploads/-/system/project/avatar/4058/apps-box.png"
+    url: "https://deployment-manager.higashikariya.jtektrnd.net"
     description:
       en: >-
-        Access the Kubernetes Dashboard to monitor, manage, and undeploy your
+        Access the Deployment Manager to monitor, manage, and undeploy your
         running applications.
-      ja: Kubernetes ダッシュボードにアクセスして、実行中のアプリケーションの監視・管理やデプロイ解除を行うことができます。
-footerMessage: 
+      ja: Deployment Manager にアクセスして、実行中のアプリケーションの監視・管理やデプロイ解除を行うことができます。
+
+  - name: Apache Answer
+    icon: "https://answer.jtektrnd.net/favicon.ico"
+    url: "https://answer.jtektrnd.net/"
+    description:
+      en: >-
+        Access the Apache Answer knowledge base and community Q&A platform.
+      ja: >-
+        Apache Answer のナレッジベースおよび Q&A プラットフォームに
+        アクセスできます。
+
+  - name: Feedback
+    icon: "mdi-message-alert-outline"
+    url: "/feedback"
+    description:
+      en: >-
+        Submit feedback, improvement requests, or report issues regarding the
+        platform and applications.
+      ja: >-
+        プラットフォームやアプリケーションに関するフィードバック、
+        改善要望、不具合報告を送信できます。
+
+  - name: Contact Support
+    icon: "mdi-email-outline"
+    url: "mailto:kevin_fabel@jtekt.co.jp?subject=Auto%20CI%2FCD"
+    description:
+      en: >-
+        Contact the support team by email for assistance or inquiries.
+      ja: >-
+        サポートやお問い合わせについて、メールでサポートチームへ
+        連絡できます。
+footerMessage:
   en: "You can create your own group in <a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a>"
   ja: "<a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a> で独自のグループを作成できます"

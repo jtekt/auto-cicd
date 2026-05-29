@@ -1,7 +1,7 @@
 <template>
   <div>
-    <v-row class="mb-2">
-      <v-col cols="12" md="3">
+    <v-row>
+      <v-col cols="12" md="3" id="tour-subgroup">
         <v-autocomplete
           v-model="selectedSubgroup"
           :items="subgroupOptions"
@@ -16,7 +16,7 @@
           :loading="isLoadingGroups"
         />
       </v-col>
-      <v-col cols="12" md="3">
+      <v-col cols="12" md="3" lg="4" id="tour-search">
         <v-text-field
           v-model="searchQuery"
           :label="t('views.index.searchLabel')"
@@ -26,7 +26,7 @@
           hide-details
         />
       </v-col>
-      <v-col cols="12" sm="6" md="3">
+      <v-col cols="12" sm="6" md="3" id="tour-sort">
         <v-select
           v-model="sortBy"
           :items="sortOptions"
@@ -47,10 +47,24 @@
           </template>
         </v-select>
       </v-col>
-      <v-col cols="12" sm="6" md="3" class="text-right">
-        <UsefulLinks />
-        <v-btn color="primary" class="ml-4" icon @click="tutorialDialog = true">
-          <v-icon icon="mdi-school" />
+      <v-col
+        cols="12"
+        sm="6"
+        md="3"
+        lg="2"
+        class="d-flex align-center justify-end"
+      >
+        <v-btn
+          id="tour-home-help-btn"
+          color="secondary"
+          variant="tonal"
+          size="x-large"
+          @click="startHomeTour"
+        >
+          <template #prepend>
+            <v-icon icon="mdi-play" size="36" />
+          </template>
+          {{ t("views.index.getStarted") }}
         </v-btn>
       </v-col>
     </v-row>
@@ -83,39 +97,31 @@
           v-if="!searchQuery"
           color="primary"
           class="mt-4 mx-auto d-flex align-center"
-          @click="tutorialDialog = true"
+          @click="startHomeTour"
         >
-          <v-icon class="mr-2" icon="mdi-school" />
-          {{ t("views.index.projects.startTutorial") }}
-        </v-btn>
-
-        <v-btn
-          v-if="!searchQuery && supportContact"
-          :href="supportContact"
-          color="secondary"
-          class="mt-2 mx-auto"
-          density="default"
-          slim
-          target="_blank"
-        >
-          <v-icon class="mr-2" icon="mdi-information" />
-          {{ t("views.index.projects.moreInformation") }}
+          {{ t("views.index.getStarted") }}
+          <v-icon end icon="mdi-school" />
         </v-btn>
       </v-col>
     </v-row>
 
     <template v-else>
-      <v-row class="mb-2">
+      <v-row>
         <v-col
-          v-for="project in projects"
+          v-for="(project, projectIndex) in projects"
           :key="project.id"
           cols="12"
           sm="6"
           lg="4"
-          xl="3"
+          xl="2"
           class="pa-2"
         >
-          <v-card class="project-card pa-2 h-100" elevation="4" rounded="lg">
+          <v-card
+            class="project-card pa-2 h-100"
+            elevation="4"
+            rounded="lg"
+            :id="projectIndex === 0 ? 'tour-project-card' : undefined"
+          >
             <v-card-item>
               <v-btn
                 variant="text"
@@ -165,7 +171,9 @@
               </p>
             </v-card-text>
 
-            <v-card-actions>
+            <v-card-actions
+              :id="projectIndex === 0 ? 'tour-deploy-btn' : undefined"
+            >
               <DeployBtn :project="project" />
             </v-card-actions>
           </v-card>
@@ -184,14 +192,13 @@
     </template>
   </div>
 
-  <TutorialDialog v-model="tutorialDialog" />
   <DeployHandler />
 </template>
 
 <script lang="ts" setup>
 import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
 import DeployBtn from "@/components/deploy/DeployButton.vue";
 import { useLocale } from "vuetify";
@@ -199,10 +206,10 @@ import { type ProjectNode, type ProjectsResponse } from "@/types/project";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
-import UsefulLinks from "@/components/UsefulLinks.vue";
-import TutorialDialog from "@/components/TutorialDialog.vue";
+import { useTour } from "@/composables/useTour";
 
-const supportContact = import.meta.env.VITE_APP_MORE_INFORMATION;
+const HOME_TOUR_KEY = "tour-home-done";
+
 const parentGroup = import.meta.env.VITE_APP_GITLAB_GROUP_PATH;
 
 const { t } = useLocale();
@@ -210,6 +217,80 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const toast = useToast();
+const { startTour } = useTour();
+
+function startHomeTour() {
+  const hasProjects = projects.value.length > 0;
+  const steps = [
+    {
+      popover: {
+        title: t("components.homeTour.welcome.title"),
+        description: t("components.homeTour.welcome.description"),
+      },
+    },
+    {
+      element: "#tour-subgroup",
+      popover: {
+        title: t("components.homeTour.subgroup.title"),
+        description: t("components.homeTour.subgroup.description"),
+        side: "bottom" as const,
+        align: "start" as const,
+      },
+    },
+    {
+      element: "#tour-search",
+      popover: {
+        title: t("components.homeTour.search.title"),
+        description: t("components.homeTour.search.description"),
+        side: "bottom" as const,
+        align: "start" as const,
+      },
+    },
+    {
+      element: "#tour-sort",
+      popover: {
+        title: t("components.homeTour.sort.title"),
+        description: t("components.homeTour.sort.description"),
+        side: "bottom" as const,
+        align: "start" as const,
+      },
+    },
+    ...(hasProjects
+      ? [
+          {
+            element: "#tour-project-card",
+            popover: {
+              title: t("components.homeTour.projectCard.title"),
+              description: t("components.homeTour.projectCard.description"),
+              side: "bottom" as const,
+              align: "start" as const,
+            },
+          },
+          {
+            element: "#tour-deploy-btn",
+            popover: {
+              title: t("components.homeTour.deployBtn.title"),
+              description: t("components.homeTour.deployBtn.description"),
+              side: "top" as const,
+              align: "start" as const,
+            },
+          },
+        ]
+      : []),
+    {
+      element: "#tour-home-information-btn",
+      popover: {
+        title: t("components.homeTour.moreInfo.title"),
+        description: t("components.homeTour.moreInfo.description"),
+        side: "bottom" as const,
+        align: "end" as const,
+      },
+    },
+  ];
+  startTour(steps, "#tour-home-help-btn", () => {
+    localStorage.setItem(HOME_TOUR_KEY, "1");
+  });
+}
 
 const isLoading = ref(true);
 const isLoadingGroups = ref(false);
@@ -217,8 +298,6 @@ const error = ref<string | null>(null);
 const searchQuery = ref(
   typeof route.query.search === "string" ? route.query.search : "",
 );
-const tutorialDialog = ref(false);
-
 const isInitialLoad = ref(true);
 
 const selectedSubgroup = ref(
@@ -608,6 +687,12 @@ onMounted(async () => {
 
   // Mark initial load as complete
   isInitialLoad.value = false;
+
+  // Auto-start home tour for first-time visitors
+  if (!localStorage.getItem(HOME_TOUR_KEY)) {
+    await nextTick();
+    startHomeTour();
+  }
 });
 </script>
 

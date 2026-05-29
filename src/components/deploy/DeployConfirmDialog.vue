@@ -62,7 +62,7 @@
         </p>
 
         <!-- Files Section -->
-        <div class="mb-6">
+        <div id="tour-confirm-files" class="mb-6">
           <h3 class="text-subtitle-s font-weight-medium mb-2">
             {{ t("components.deployHandler.confirmDialog.filesSection") }}
           </h3>
@@ -135,9 +135,11 @@
       </v-card-text>
 
       <v-card-actions class="pa-4">
+        <v-btn id="tour-confirm-help-btn" icon="mdi-help-circle-outline" variant="text" @click="startConfirmTour" />
         <v-spacer />
         <v-btn
           v-if="hasChanges"
+          id="tour-confirm-continue"
           color="success"
           class="px-4"
           variant="tonal"
@@ -156,10 +158,15 @@
 <script setup lang="ts">
 import { useLocale } from "vuetify";
 import { useDeployStore } from "@/stores/deploy";
-import { computed } from "vue";
+import { computed, watch } from "vue";
+import { useTour } from "@/composables/useTour";
 
 const { t } = useLocale();
 const deployStore = useDeployStore();
+const { startTour } = useTour();
+
+
+const CONFIRM_TOUR_KEY = "tour-confirm-done";
 
 const hasChanges = computed(() => {
   return !!(
@@ -169,4 +176,46 @@ const hasChanges = computed(() => {
     deployStore.envChanges.removed.length > 0
   );
 });
+
+function startConfirmTour() {
+  const steps = [
+    {
+      element: "#tour-confirm-files",
+      popover: {
+        title: t("components.confirmTour.fileList.title"),
+        description: t("components.confirmTour.fileList.description"),
+        side: "bottom" as const,
+        align: "start" as const,
+      },
+    },
+    {
+      popover: {
+        title: t("components.confirmTour.dockerfile.title"),
+        description: t("components.confirmTour.dockerfile.description"),
+      },
+    },
+    {
+      element: "#tour-confirm-continue",
+      popover: {
+        title: t("components.confirmTour.continueBtn.title"),
+        description: t("components.confirmTour.continueBtn.description"),
+        side: "top" as const,
+        align: "end" as const,
+      },
+    },
+  ];
+  startTour(steps, "#tour-confirm-help-btn", () => {
+    localStorage.setItem(CONFIRM_TOUR_KEY, "1");
+  });
+}
+
+// Auto-start confirm tour on first open
+watch(
+  () => deployStore.confirmDeployDialog,
+  (open) => {
+    if (open && !localStorage.getItem(CONFIRM_TOUR_KEY)) {
+      setTimeout(() => startConfirmTour(), 300);
+    }
+  },
+);
 </script>

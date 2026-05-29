@@ -46,6 +46,12 @@
             </div>
           </a>
         </v-toolbar-items>
+        <v-btn
+          id="tour-deploy-help-btn"
+          style="position: absolute; right: 0"
+          icon="mdi-help-circle-outline"
+          @click="startDeployTour"
+        ></v-btn>
       </v-toolbar>
       <div
         style="
@@ -111,14 +117,17 @@
               })
             }}
           </v-alert>
-          <DeployFrameworkSelector />
+          <div id="tour-deploy-framework">
+            <DeployFrameworkSelector />
+          </div>
           <v-expansion-panels v-if="deployStore.projectConfig">
             <DeployBuildSettings
               v-if="
                 config?.frameworks[deployStore.projectConfig.framework]?.userConfigurable
               "
+              id="tour-deploy-build"
             />
-            <DeployEnvironmentSettings />
+            <DeployEnvironmentSettings id="tour-deploy-env" />
           </v-expansion-panels>
           <v-alert v-else type="error" variant="tonal" class="pa-5 mt-5">
             {{ t("components.deployHandler.deployDialog.noFrameworkIdentified") }}
@@ -126,6 +135,7 @@
         </template>
       </div>
       <div
+        id="tour-deploy-action"
         class="d-flex justify-end ga-2"
         style="padding: 24px; margin-top: auto"
       >
@@ -152,9 +162,87 @@ import { useDeployStore } from "@/stores/deploy";
 import DeployBuildSettings from "./DeployBuildSettings.vue";
 import { useI18n } from "vue-i18n";
 import { getConfig } from "@/config";
+import { useTour } from "@/composables/useTour";
+import { watch } from "vue";
 
 const config = getConfig();
-
 const { t } = useI18n();
 const deployStore = useDeployStore();
+const { startTour } = useTour();
+
+
+const DEPLOY_TOUR_KEY = "tour-deploy-done";
+
+function startDeployTour() {
+  const hasBuildSettings =
+    deployStore.projectConfig &&
+    config?.frameworks[deployStore.projectConfig.framework]?.userConfigurable;
+
+  const steps = [
+    {
+      element: "#tour-deploy-framework",
+      popover: {
+        title: t("components.deployTour.framework.title"),
+        description: t("components.deployTour.framework.description"),
+        side: "bottom" as const,
+        align: "start" as const,
+      },
+    },
+    ...(hasBuildSettings
+      ? [
+          {
+            element: "#tour-deploy-build",
+            popover: {
+              title: t("components.deployTour.buildSettings.title"),
+              description: t("components.deployTour.buildSettings.description"),
+              side: "bottom" as const,
+              align: "start" as const,
+            },
+          },
+        ]
+      : []),
+    {
+      element: "#tour-deploy-env",
+      popover: {
+        title: t("components.deployTour.envSettings.title"),
+        description: t("components.deployTour.envSettings.description"),
+        side: "bottom" as const,
+        align: "start" as const,
+      },
+    },
+    {
+      element: "#tour-deploy-action",
+      popover: {
+        title: t("components.deployTour.deployAction.title"),
+        description: t("components.deployTour.deployAction.description"),
+        side: "top" as const,
+        align: "end" as const,
+      },
+    },
+  ];
+
+  startTour(steps, "#tour-deploy-help-btn", () => {
+    localStorage.setItem(DEPLOY_TOUR_KEY, "1");
+  });
+}
+
+// Auto-start deploy tour on first open
+watch(
+  () => deployStore.deployDialog,
+  (open) => {
+    if (open && !localStorage.getItem(DEPLOY_TOUR_KEY)) {
+      // Wait for dialog content to render and loading to finish
+      const unwatch = watch(
+        () => deployStore.isLoading,
+        (loading) => {
+          if (!loading) {
+            unwatch();
+            setTimeout(() => startDeployTour(), 400);
+          }
+        },
+        { immediate: true },
+      );
+    }
+  },
+);
 </script>

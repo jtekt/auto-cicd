@@ -8,3 +8,84 @@
 // @use 'vuetify/settings' with (
 //   $color-pack: false
 // );
+
+// Tour help-button pulse animation
+@keyframes tour-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(var(--v-theme-primary), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0);
+  }
+}
+
+.tour-pulse {
+  animation: tour-pulse-ring 0.9s ease-out 3;
+}
+
+// driver.js dark mode theme
+// The composable adds .tour-dark to <body> while running in dark mode
+body.tour-dark {
+  .driver-popover {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    box-shadow: 0 1px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  .driver-popover-title {
+    color: #ffffff;
+  }
+
+  .driver-popover-footer button {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    border-color: #444;
+    text-shadow: none;
+
+    &:hover,
+    &:focus {
+      background-color: #3a3a3a;
+    }
+  }
+
+  .driver-popover-close-btn {
+    color: #666;
+
+    &:hover,
+    &:focus {
+      color: #e0e0e0;
+    }
+  }
+
+  // // Arrow colors — match the popover background
+  .driver-popover-arrow {
+    border-color: #1e1e1e;
+  }
+
+  .driver-popover-arrow-side-left {
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    border-top-color: transparent;
+  }
+
+  .driver-popover-arrow-side-right {
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-top-color: transparent;
+  }
+
+  .driver-popover-arrow-side-top {
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+  }
+
+  .driver-popover-arrow-side-bottom {
+    border-left-color: transparent;
+    border-top-color: transparent;
+    border-right-color: transparent;
+  }
+}

@@ -80,8 +80,8 @@ const PackageManagerSchema = z.object({
 
 const UsefulLinkSchema = z.object({
   name: z.string(),
-  icon: z.url(),
-  url: z.url(),
+  icon: z.string(), // Url or mdi icon name
+  url: z.string(),
   description: z.record(z.string(), z.string().optional()),
 });
 

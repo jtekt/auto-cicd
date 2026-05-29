@@ -20,11 +20,11 @@ declare module 'vue' {
     DeployFrameworkSelector: typeof import('./src/components/deploy/DeployFrameworkSelector.vue')['default']
     DeployHandler: typeof import('./src/components/deploy/DeployHandler.vue')['default']
     DeployNextStepsDialog: typeof import('./src/components/deploy/DeployNextStepsDialog.vue')['default']
-    MoreInformationsSection: typeof import('./src/components/MoreInformationsSection.vue')['default']
+    MoreInformation: typeof import('./src/components/MoreInformation.vue')['default']
+    MoreInformations: typeof import('./src/components/MoreInformations.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Toaster: typeof import('./src/components/Toaster.vue')['default']
-    TutorialDialog: typeof import('./src/components/TutorialDialog.vue')['default']
     UsefulLinks: typeof import('./src/components/UsefulLinks.vue')['default']
   }
 }
