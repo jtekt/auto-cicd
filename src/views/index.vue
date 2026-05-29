@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="pt-4">
     <v-row>
       <v-col cols="12" md="3" id="tour-subgroup">
         <v-autocomplete

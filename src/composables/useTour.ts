@@ -63,6 +63,7 @@ export function useTour() {
         if (d.isLastStep()) {
           d.destroy();
           cleanup();
+          pulseElement(helpBtnSelector);
           onDone?.();
         } else {
           d.moveNext();
