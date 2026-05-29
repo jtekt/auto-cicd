@@ -18,58 +18,140 @@ export interface CommitActionObject {
 
 const GITLAB = import.meta.env.VITE_APP_GITLAB_URL;
 const CLIENT_ID = import.meta.env.VITE_APP_GITLAB_OAUTH_ID;
-const REDIRECT = window.location.origin + "/auth";
-const CODE_VERIFIER = import.meta.env.VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR;
 
-export const createGitlabAuthUrl = () => {
-  const url = new URL(GITLAB + "/oauth/authorize");
-  url.searchParams.append("client_id", CLIENT_ID);
-  url.searchParams.append("redirect_uri", REDIRECT);
-  url.searchParams.append("response_type", "code");
-  url.searchParams.append("scope", "openid profile email api");
-  url.searchParams.append("code_challenge", CODE_VERIFIER);
-  url.searchParams.append("code_challenge_method", "plain");
+const REDIRECT_URI = `${window.location.origin}/auth`;
 
-  return url.toString();
+const STORAGE_KEYS = {
+  verifier: "gitlab_pkce_verifier",
+  state: "gitlab_oauth_state",
 };
 
-export const exchangeCodeForTokens = async (
-  code: string
-): Promise<Token | null> => {
-  try {
-    const params = new URLSearchParams();
-    params.append("client_id", CLIENT_ID);
-    params.append("grant_type", "authorization_code");
-    params.append("code", code);
-    params.append("redirect_uri", REDIRECT);
-    params.append("code_verifier", CODE_VERIFIER);
+const oauthUrl = new URL("/oauth", GITLAB).toString();
 
-    const res = await axios.post(GITLAB + "/oauth/token", params);
+function base64UrlEncode(buffer: ArrayBuffer | Uint8Array): string {
+  const bytes =
+    buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function generateRandomString(length = 32): string {
+  return base64UrlEncode(crypto.getRandomValues(new Uint8Array(length)));
+}
+
+async function sha256(input: string): Promise<ArrayBuffer> {
+  return crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(input),
+  );
+}
+
+async function createPkce() {
+  const verifier = generateRandomString(32);
+
+  const challenge = base64UrlEncode(await sha256(verifier));
+
+  return {
+    verifier,
+    challenge,
+  };
+}
+
+export async function createGitlabAuthUrl(): Promise<string> {
+  const { verifier, challenge } = await createPkce();
+
+  const state = generateRandomString(16);
+
+  sessionStorage.setItem(STORAGE_KEYS.verifier, verifier);
+  sessionStorage.setItem(STORAGE_KEYS.state, state);
+
+  const url = new URL(`${oauthUrl}/authorize`);
+
+  url.searchParams.set("client_id", CLIENT_ID);
+  url.searchParams.set("redirect_uri", REDIRECT_URI);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("scope", "openid profile email api");
+  url.searchParams.set("state", state);
+  url.searchParams.set("code_challenge", challenge);
+  url.searchParams.set("code_challenge_method", "S256");
+
+  return url.toString();
+}
+
+export async function exchangeCodeForTokens(
+  code: string,
+  state: string | null,
+): Promise<Token | null> {
+  try {
+    const storedState = sessionStorage.getItem(STORAGE_KEYS.state);
+    const verifier = sessionStorage.getItem(STORAGE_KEYS.verifier);
+
+    if (!state || state !== storedState) {
+      throw new Error("Invalid OAuth state");
+    }
+
+    if (!verifier) {
+      throw new Error("Missing PKCE verifier");
+    }
+
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: REDIRECT_URI,
+      code_verifier: verifier,
+    });
+
+    const res = await axios.post(
+      `${oauthUrl}/token`,
+      params,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      },
+    );
+
+    sessionStorage.removeItem(STORAGE_KEYS.verifier);
+    sessionStorage.removeItem(STORAGE_KEYS.state);
+
     return TokenSchema.parse(res.data);
   } catch (err) {
     console.error("exchangeCodeForTokens error:", err);
     return null;
   }
-};
+}
 
-export const refreshAccessToken = async (
-  session: Session
-): Promise<Token | null> => {
+export async function refreshAccessToken(
+  session: Session,
+): Promise<Token | null> {
   try {
-    const params = new URLSearchParams();
-    params.append("client_id", CLIENT_ID);
-    params.append("grant_type", "refresh_token");
-    params.append("refresh_token", session.auth_token.refresh_token);
-    params.append("redirect_uri", REDIRECT);
-    params.append("code_verifier", CODE_VERIFIER);
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID,
+      grant_type: "refresh_token",
+      refresh_token: session.auth_token.refresh_token,
+      redirect_uri: REDIRECT_URI,
+    });
 
-    const res = await axios.post(GITLAB + "/oauth/token", params);
+    const res = await axios.post(
+      `${oauthUrl}/token`,
+      params,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      },
+    );
+
     return TokenSchema.parse(res.data);
   } catch (err) {
     console.error("refreshAccessToken error:", err);
     return null;
   }
-};
+}
 
 export const getGitlabProfile = async (token: string) => {
   try {

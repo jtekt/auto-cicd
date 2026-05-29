@@ -109,19 +109,13 @@ These variables configure the dashboard (Vite `VITE_*` envs). Create an `.env` (
 # Required
 VITE_APP_GITLAB_URL=http://gitlab.example.com
 VITE_APP_GITLAB_OAUTH_ID=xxxxxxxxxxxxxxxxxxxx
-VITE_APP_GITLAB_OAUTH_STATE_VALIDATOR=auto-cicd-state
 VITE_APP_GITLAB_GROUP_PATH=group/auto-cicd
-
-# Optional
-VITE_APP_GITLAB_GROUP_MANAGER_URL=
-VITE_APP_MORE_INFORMATION=https://gitlab.com/...
 ```
 
 Notes:
 
 - Do not put confidential secrets in these `VITE_*` variables; they are embedded client-side.
 - `VITE_APP_GITLAB_GROUP_PATH` is the group in gitlab where projects will be deployed to.
-- `VITE_APP_GITLAB_GROUP_MANAGER_URL` is a REST API endpoint to generate the current user group by using its username. By using the Bearer token from the Gitlab Auth
 
 Additionally, at the GitLab group/project where users will deploy, define CI/CD variables (see [Required GitLab CI/CD variables](#required-gitlab-cicd-variables-group-or-project)).
 
