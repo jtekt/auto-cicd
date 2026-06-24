@@ -10,12 +10,15 @@ data:
       - deploy # Stage responsible for deploying the application to Kubernetes
 
     variables:
+      K8S_NAMESPACE: auto-cicd
+      K8S_CONTEXT: auto-cicd/gitlab-agent-for-kubernetes:auto-cicd
+
       APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
       CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{{USERNAME}}/${APPLICATION_NAME}
-      CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
+      CONTAINER_IMAGE: 732469118990.dkr.ecr.ap-northeast-1.amazonaws.com/${CONTAINER_IMAGE_NAME}
       CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
+      DEPLOYMENT_SUB_DOMAIN: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
       K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
-      DEPLOYMENT_SUB_DOMAIN: ${APPLICATION_NAME}.${DEPLOYMENT_DOMAIN}
       PORT: {{ PORT }}
 
     # Build the Docker container image
