@@ -1,25 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${APPLICATION_NAME}
+  name: auto-cicd
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: ${APPLICATION_NAME}
+      app.kubernetes.io/name: auto-cicd
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: ${APPLICATION_NAME}
+        app.kubernetes.io/name: auto-cicd
     spec:
       containers:
-        - name: ${APPLICATION_NAME}
+        - name: auto-cicd
           image: ${CONTAINER_IMAGE_TAGGED}
           ports:
             - containerPort: 80
           envFrom:
             - secretRef:
-                name: auto-cicd-env
+                name: auto-cicd-es
+          env:
+            - name: VITE_APP_GITLAB_URL
+              value: https://gitlab.jtektrnd.net
+            - name: VITE_APP_GITLAB_GROUP_PATH
+              value: auto-cicd-aws
           volumeMounts:
             - name: auto-cicd-config
               mountPath: /app/config.yml
@@ -30,6 +37,13 @@ spec:
             - name: auto-cicd-config
               mountPath: /app/templates/common/kubernetes_manifest.yml
               subPath: kubernetes_manifest.yml
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "10m"
+            limits:
+              memory: "500Mi"
+              cpu: "300m"
 
       volumes:
         - name: auto-cicd-config
@@ -38,45 +52,53 @@ spec:
 
       imagePullSecrets:
         - name: ecr-credentials
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ${APPLICATION_NAME}
+  name: auto-cicd
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: ${APPLICATION_NAME}
+    app.kubernetes.io/name: auto-cicd
   ports:
     - port: 80
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ${APPLICATION_NAME}
+  name: auto-cicd
   annotations:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Self-Service Suite
     gethomepage.dev/name: Auto-CICD
-    gethomepage.dev/description: CICD configuration generator
+    gethomepage.dev/description: Allows users to deploy their applications easily
     gethomepage.dev/icon: https://gitlab.jtektrnd.net/uploads/-/system/project/avatar/2866/auto-cicd.png
-
-    cert-manager.io/cluster-issuer: letsencrypt
 spec:
-  tls:
-    - hosts:
-        - ${APPLICATION_NAME}.higashikariya.jtektrnd.net
-      secretName: ${APPLICATION_NAME}-tls
   rules:
-    - host: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: ${APPLICATION_NAME}
-                port:
-                  number: 80
+  - host: auto-cicd.ssc.jtektrnd.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: auto-cicd
+            port:
+              number: 80
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: auto-cicd
+spec:
+  refreshInterval: 1h0m0s
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  dataFrom:
+    - extract:
+        key: eks/eso/public/auto-cicd
+  target:
+    name: auto-cicd-es
+    creationPolicy: Orphan

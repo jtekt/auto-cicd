@@ -1,14 +1,13 @@
 stages:
   - build
   - deploy
-  - release
 
 variables:
   APPLICATION_NAME: auto-cicd
   CONTAINER_IMAGE_NAME: auto-cicd
   CONTAINER_IMAGE: ${AWS_ECR_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  K8S_NAMESPACE: fabel
+  K8S_NAMESPACE: self-service-suite
 
 # Build the Docker container image
 build-job:
@@ -38,36 +37,11 @@ deploy-job:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    # Create secret for env
-    - kubectl create secret generic auto-cicd-env --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl config use-context eks-internal-public/gitlab-agent-for-kubernetes:eks-internal-public
+    - kubectl config set-context --current --namespace=${K8S_NAMESPACE}
     # Apply the Config
     - kubectl apply -f config_configmap.yml
     # Apply the Deployment
     - envsubst < kubernetes_manifest.yml | kubectl apply -f -
     # Wait for rollout to complete
     - kubectl rollout status deployment/${APPLICATION_NAME} --timeout=5m
-  environment:
-    name: production
-    kubernetes:
-      namespace: ${K8S_NAMESPACE}
-
-# Release tagged versions
-release-job:
-  stage: release
-  tags:
-    - docker
-  only:
-    - tags
-  before_script:
-    - >
-      aws ecr create-repository --repository-name ${CONTAINER_IMAGE_NAME}
-      || echo "Repository might have already existed"
-  script:
-    - echo "Releasing version ${CI_COMMIT_TAG}"
-    # Build the image fresh from the tagged commit
-    - docker build -t ${CONTAINER_IMAGE}:${CI_COMMIT_TAG} .
-    # Also tag as latest
-    - docker tag ${CONTAINER_IMAGE}:${CI_COMMIT_TAG} ${CONTAINER_IMAGE}:latest
-    # Push both tags
-    - docker push ${CONTAINER_IMAGE}:${CI_COMMIT_TAG}
-    - docker push ${CONTAINER_IMAGE}:latest

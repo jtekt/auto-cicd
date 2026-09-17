@@ -11,13 +11,13 @@ data:
 
     variables:
       K8S_NAMESPACE: auto-cicd
-      K8S_CONTEXT: auto-cicd/gitlab-agent-for-kubernetes:auto-cicd
+      K8S_CONTEXT: auto-cicd-aws/gitlab-agent-for-kubernetes:auto-cicd
 
       APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
       CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{{USERNAME}}/${APPLICATION_NAME}
       CONTAINER_IMAGE: 732469118990.dkr.ecr.ap-northeast-1.amazonaws.com/${CONTAINER_IMAGE_NAME}
       CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
-      DEPLOYMENT_SUB_DOMAIN: ${APPLICATION_NAME}.higashikariya.jtektrnd.net
+      DEPLOYMENT_SUB_DOMAIN: ${APPLICATION_NAME}.ssc.jtektrnd.net
       K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
       PORT: {{ PORT }}
 
@@ -50,7 +50,7 @@ data:
         # optional: Docker is the default runner
         - docker
       rules:
-        # Branches to run the Deploy stage
+        # Branches to run the Build stage
         # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
         - if: '$CI_COMMIT_BRANCH == "{{ROOT_REF}}"'
       before_script:
@@ -63,6 +63,8 @@ data:
         # Create an environment secret containing necessary variables
         # The ENV file is saved as a CI/CD variable in GitLab under Settings -> CI/CD -> Variables with the key `ENV` and the type set to `File`.
         # This file contains key-value pairs of environment variables needed for the application.
+
+        # First delete any existing secret to ensure it is updated
         - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
 
         # Apply the Kubernetes manifest
@@ -101,13 +103,15 @@ data:
           fi
 
         # Validate deployment rollout status
-        - kubectl rollout status deployment/$APPLICATION_NAME --timeout=600s;
+        - kubectl rollout status deployment/$APPLICATION_NAME --timeout=300s;
 
   kubernetes_manifest.yml: |
     apiVersion: apps/v1
     kind: Deployment
     metadata:
       name: ${APPLICATION_NAME}
+      labels:
+        app.kubernetes.io/name: ${APPLICATION_NAME}
       annotations:
         deployment-manager.jtekt.co.jp/users: ${GITLAB_USER_EMAIL}
         deployment-manager.jtekt.co.jp/repository.url: ${CI_PROJECT_URL}
@@ -134,7 +138,7 @@ data:
                   cpu: "10m"
                 limits:
                   memory: "512Mi"
-                  cpu: "600m"
+                  cpu: "500m"
           imagePullSecrets:
             - name: ecr-credentials
     ---      
@@ -151,19 +155,14 @@ data:
         app.kubernetes.io/name: ${APPLICATION_NAME}
       ports:
         - port: ${PORT}
-    
     ---
+
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       name: ${APPLICATION_NAME}
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
     spec:
-      tls:
-        - hosts:
-            - ${DEPLOYMENT_SUB_DOMAIN}
-          secretName: ${APPLICATION_NAME}-tls
+      # ingressClassName: # Use the default so it is not needed
       rules:
         - host: ${DEPLOYMENT_SUB_DOMAIN}
           http:
@@ -442,7 +441,7 @@ data:
     usefulLinks:
       - name: Deployment Manager
         icon: "https://gitlab.jtektrnd.net/uploads/-/system/project/avatar/4058/apps-box.png"
-        url: "https://deployment-manager.higashikariya.jtektrnd.net"
+        url: "https://deployment-manager.ssc.jtektrnd.net"
         description:
           en: >-
             Access the Deployment Manager to monitor, manage, and undeploy your
@@ -480,5 +479,5 @@ data:
             サポートやお問い合わせについて、メールでサポートチームへ
             連絡できます。
     footerMessage: 
-      en: "You can create your own group in <a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a>"
-      ja: "<a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a> で独自のグループを作成できます"
+      en: "You can create your own group in <a href='https://gitlab-subgroup-creator.ssc.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a>"
+      ja: "<a href='https://gitlab-subgroup-creator.ssc.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a> で独自のグループを作成できます"
