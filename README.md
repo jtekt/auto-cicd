@@ -13,12 +13,13 @@ A zero-friction way to deploy your GitLab repositories to Kubernetes. This proje
 
 - [Features](#features)
 - [Architecture Overview](#architecture-overview)
+- [Two Configuration Surfaces](#two-configuration-surfaces)
 - [Prerequisites](#prerequisites)
-- [GitLab OAuth Setup](#gitlab-oauth-setup)
-- [Environment Variables](#environment-variables)
-- [Running the Dashboard (Local and Production)](#running-the-dashboard-local-and-production)
-- [Kubernetes and GitLab Agent Setup](#kubernetes-and-gitlab-agent-setup)
-- [Required GitLab CI/CD variables (group or project)](#required-gitlab-cicd-variables-group-or-project)
+- [GitLab OAuth Setup (Auto-CICD itself)](#gitlab-oauth-setup-auto-cicd-itself)
+- [Environment Variables (Auto-CICD itself)](#environment-variables-auto-cicd-itself)
+- [Running the Dashboard (Local)](#running-the-dashboard-local)
+- [Kubernetes and GitLab Agent Setup (for target projects)](#kubernetes-and-gitlab-agent-setup-for-target-projects)
+- [Required GitLab CI/CD variables (target group or project)](#required-gitlab-cicd-variables-target-group-or-project)
 - [Supported Frameworks and Package Managers](#supported-frameworks-and-package-managers)
 - [Security Considerations](#security-considerations)
 - [Roadmap / Contributions](#roadmap--contributions)
@@ -52,25 +53,43 @@ A zero-friction way to deploy your GitLab repositories to Kubernetes. This proje
 
 ---
 
-## Prerequisites
+## Two Configuration Surfaces
 
-- A GitLab instance (GitLab.com or self-managed)
-- A Kubernetes cluster with:
-  - A namespace for app deployments (e.g., `auto-cicd`)
-  - GitLab Agent for Kubernetes connected to your GitLab instance
-- A container registry:
-  - GitLab Container Registry (recommended), or
-  - AWS ECR (requires AWS CLI and credentials in CI)
-- A GitLab Runner with Docker available:
-  - Docker-in-Docker (DinD) or a runner with Docker installed
-  - `kubectl` available on the runner for deploy stage
-- Optional:
-  - AWS SES credentials if you want email notifications from pipelines
-  - A static/public URL to host this dashboard
+This project has two independent configuration surfaces. Don't conflate them:
+
+1. **Running the Auto-CICD dashboard itself** — this repo, its own pipeline, its own Kubernetes Deployment. Configured by whoever operates this instance: the `VITE_APP_GITLAB_*` env vars, this repo's own GitLab OAuth application, and the cluster this dashboard's own container runs on.
+2. **The `.gitlab-ci.yml` / `kubernetes_manifest.yml` templates the dashboard writes into other repos** (`public/templates/common/`, plus a per-framework Dockerfile) — these reference CI/CD variables that must be defined on the **target group/project being deployed through the dashboard**, not on this repo. End users never edit these templates: the file preview shown before commit (`DeployConfirmDialog.vue`) is read-only, and the framework `config.yml` only exposes build command / install command / output file / port as user-configurable — never the pipeline or manifest content itself. Only whoever operates/maintains this repo controls what's in the templates.
+
+Everything below is grouped under whichever surface it belongs to.
 
 ---
 
-## GitLab OAuth Setup
+## Prerequisites
+
+### For running Auto-CICD itself
+
+- A GitLab instance (GitLab.com or self-managed) with a registered OAuth application (see below)
+- A Kubernetes cluster this dashboard's own container will run on, with a GitLab Agent connected
+- A container registry to host the dashboard's own image (this repo's `.gitlab-ci.yml` expects an ECR/registry URL as a CI/CD variable, e.g. `AWS_ECR_URL`)
+- Optional: a static/public URL to host this dashboard
+
+### For projects deployed *through* Auto-CICD
+
+These apply to whatever group/project the generated `.gitlab-ci.yml` template ends up running in — provision them there, independently of the dashboard's own setup:
+
+- A Kubernetes cluster + namespace for the *deployed apps* (can be the same cluster as Auto-CICD itself, or a different one)
+- A GitLab Agent for Kubernetes connected to that cluster, scoped to that namespace
+- A container registry for the *deployed apps*' images:
+  - GitLab Container Registry (recommended), or
+  - AWS ECR (requires AWS CLI/credentials available to the runner, plus an `ecr-credentials` image-pull secret in that namespace)
+- A GitLab Runner with Docker available:
+  - Docker-in-Docker (DinD) or a runner with Docker installed
+  - `kubectl` available on the runner for the deploy stage
+- Optional: AWS SES credentials if you want the deploy-notification email step to actually send mail
+
+---
+
+## GitLab OAuth Setup (Auto-CICD itself)
 
 Create a public OAuth application in your GitLab instance:
 
@@ -101,9 +120,9 @@ Why these scopes?
 
 ---
 
-## Environment Variables
+## Environment Variables (Auto-CICD itself)
 
-These variables configure the dashboard (Vite `VITE_*` envs). Create an `.env` (or `.env.local`) at the dashboard root:
+These variables configure the dashboard app (Vite `VITE_*` envs) — they have nothing to do with the projects deployed through it. Create an `.env` (or `.env.local`) at the dashboard root:
 
 ```env
 # Required
@@ -115,9 +134,10 @@ VITE_APP_GITLAB_GROUP_PATH=group/sub-group
 Notes:
 
 - Do not put confidential secrets in these `VITE_*` variables; they are embedded client-side.
-- `VITE_APP_GITLAB_GROUP_PATH` is the group in gitlab where projects will be deployed to.
+- `VITE_APP_GITLAB_GROUP_PATH` is the group in GitLab where projects deployable through the dashboard live.
+- In the built Docker image these are baked in at container start (`entrypoint.sh` `sed`-replaces `*_PLACEHOLDER` tokens in the static assets from the actual env vars), not read at request time.
 
-Additionally, at the GitLab group/project where users will deploy, define CI/CD variables (see [Required GitLab CI/CD variables](#required-gitlab-cicd-variables-group-or-project)).
+Separately — and only relevant to the projects being *deployed*, not to running this dashboard — define CI/CD variables on the target GitLab group/project (see [Required GitLab CI/CD variables (target group or project)](#required-gitlab-cicd-variables-target-group-or-project)).
 
 ---
 
@@ -132,9 +152,9 @@ npm run dev
 
 ---
 
-## Kubernetes and GitLab Agent Setup
+## Kubernetes and GitLab Agent Setup (for target projects)
 
-You need a GitLab Agent connected to your cluster. High-level steps:
+This is about the cluster that **deployed apps** land on — not the cluster running the Auto-CICD dashboard itself (that's set up independently, see [Prerequisites](#prerequisites)). High-level steps:
 
 1. Create a namespace for deployments, e.g.:
    ```bash
@@ -147,30 +167,43 @@ You need a GitLab Agent connected to your cluster. High-level steps:
 3. For least-privilege access:
    - Create an agent scoped to the target namespace
    - RBAC: grant only deploy/list/watch/patch in that namespace
-4. The CI jobs will select the context:
+4. Point the target group/project's `K8S_CONTEXT` CI/CD variable (see below) at that agent, e.g.:
    ```
-   ${K8S_NAMESPACE}/gitlab-agent-for-kubernetes:${K8S_NAMESPACE}
+   <group/project-path-hosting-the-agent>/gitlab-agent-for-kubernetes:<agent-name>
    ```
-   Ensure your agent name and namespace align with this convention (or update the CI template accordingly).
+   The template (`public/templates/common/.gitlab-ci.yml`) runs `kubectl config use-context ${K8S_CONTEXT}` verbatim — it does not derive the context from the namespace name, so `K8S_CONTEXT` must be set explicitly to match your agent.
 
 ---
 
-### Required GitLab CI/CD variables (group or project)
+### Required GitLab CI/CD variables (target group or project)
 
-Define these in GitLab → Settings → CI/CD → Variables.
+These are consumed by the shipped `.gitlab-ci.yml` template (`public/templates/common/.gitlab-ci.yml`) — define them on the **group or project being deployed through the dashboard**, in GitLab → Settings → CI/CD → Variables. They have no effect on the dashboard's own pipeline.
 
-Optional (email via AWS SES):
+Required:
+
+- `K8S_CONTEXT` — kubectl context selecting the target cluster/agent, e.g. `<group>/gitlab-agent-for-kubernetes:<agent-name>`
+- `K8S_NAMESPACE` — namespace deployed apps are placed in
+- `CONTAINER_REGISTRY_URL` — registry built images are pushed to (GitLab Container Registry URL or AWS ECR URL)
+
+Auto-managed — do not set manually:
+
+- `ENV` — a File-type variable holding the deployed app's runtime env vars. The dashboard creates/updates/deletes it itself via the GitLab API (`updateEnvs` in `src/libs/gitlab.ts`) whenever a user edits Environment Settings in the deploy dialog.
+
+Optional (deploy-notification email via AWS SES — the template's deploy stage sends one on first deploy if `K8S_HOST` is also set; without these it silently skips the email):
 
 - `AWS_SES_HOST`
 - `AWS_SES_PORT`
 - `AWS_SES_USERNAME`
 - `AWS_SES_PASSWORD`
 - `AWS_SES_FROM`
+- `K8S_HOST` — static IP/hostname of the cluster, used only to compose the notification message and console output
 
 Runner requirements:
 
 - Docker available (DinD or host)
 - `kubectl` installed on the runner for deploy stage
+
+> **Operator note:** this doesn't have to happen by editing `public/templates/common/` and rebuilding the image. This deployment's own `kubernetes_manifest.yml` mounts a ConfigMap (`config_configmap.yml`, applied by this repo's own pipeline) over `/app/templates/common/.gitlab-ci.yml`, `/app/templates/common/kubernetes_manifest.yml` and `/app/config.yml` inside the running container — so the templates actually served in production can differ from what's checked into `public/templates/`. As of this writing that ConfigMap hardcodes `K8S_NAMESPACE`, `K8S_CONTEXT` and the ECR registry URL instead of reading them from the target group's CI/CD variables, and always attempts the SES email step (no `K8S_HOST` guard). Check `config_configmap.yml` for what's actually live before assuming the in-repo template is what runs.
 
 ---
 
@@ -180,7 +213,7 @@ Runner requirements:
 - Package managers: npm, yarn, pnpm, pip
 - Languages: JavaScript/TypeScript and Python
 
-The dashboard suggests Dockerfile templates for these; users can edit as needed.
+The dashboard picks a Dockerfile template based on the detected framework; the generated file is shown read-only for review before commit (see [Two Configuration Surfaces](#two-configuration-surfaces)) — end users tune build/install command, output file and port instead of the template content itself.
 
 ---
 
