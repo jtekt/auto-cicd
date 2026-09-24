@@ -13,9 +13,6 @@ variables:
 # Build the Docker container image
 build-job:
   stage: build
-  tags:
-    # optional: Docker is the default runner
-    - docker
   rules:
     - if: $CI_COMMIT_TAG
   before_script:
@@ -33,9 +30,6 @@ build-job:
 # Deploy to Kubernetes
 deploy-job:
   stage: deploy
-  tags:
-    # optional: Docker is the default runner
-    - docker
   rules:
     - if: $CI_COMMIT_TAG
   script:
