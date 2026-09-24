@@ -6,7 +6,8 @@ variables:
   APPLICATION_NAME: auto-cicd
   CONTAINER_IMAGE_NAME: auto-cicd
   CONTAINER_IMAGE: ${AWS_ECR_URL}/${CONTAINER_IMAGE_NAME}
-  CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
+  CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_TAG}
+  CONTAINER_IMAGE_LATEST: ${CONTAINER_IMAGE}:latest
   K8S_NAMESPACE: self-service-suite
 
 # Build the Docker container image
@@ -16,7 +17,7 @@ build-job:
     # optional: Docker is the default runner
     - docker
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: $CI_COMMIT_TAG
   before_script:
     # Create repository if needed
     - >
@@ -24,9 +25,10 @@ build-job:
       || echo "Repository might have already existed"
   script:
     # Build the container image
-    - docker build -t ${CONTAINER_IMAGE_TAGGED} .
+    - docker build --build-arg APP_VERSION=${CI_COMMIT_TAG} -t ${CONTAINER_IMAGE_TAGGED} -t ${CONTAINER_IMAGE_LATEST} .
     # Push container images to registry
     - docker push ${CONTAINER_IMAGE_TAGGED}
+    - docker push ${CONTAINER_IMAGE_LATEST}
 
 # Deploy to Kubernetes
 deploy-job:
@@ -35,7 +37,7 @@ deploy-job:
     # optional: Docker is the default runner
     - docker
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: $CI_COMMIT_TAG
   script:
     - kubectl config use-context eks-internal-public/gitlab-agent-for-kubernetes:eks-internal-public
     - kubectl config set-context --current --namespace=${K8S_NAMESPACE}

@@ -75,9 +75,7 @@
       }"
     >
       <div class="d-flex align-center justify-center ga-2 px-4 w-100">
-        <span>
-          {{ new Date().getFullYear() }} — <strong>JTEKT Corporation</strong>
-        </span>
+        <span>Auto CICD | JTEKT Corporation | {{ appVersion }}</span>
       </div>
       <div
         v-if="footerMessage"
@@ -110,6 +108,8 @@ const config = getConfig();
 const { current } = useLocale();
 
 const theme = useTheme();
+
+const appVersion = import.meta.env.VITE_APP_VERSION ?? "dev";
 
 const footerMessage = computed(() => {
   if (!config) return null;

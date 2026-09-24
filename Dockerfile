@@ -12,6 +12,10 @@ RUN npm install
 # Copy all source code
 COPY . .
 
+# The git tag, passed in by CI; shown in the footer
+ARG APP_VERSION=dev
+ENV VITE_APP_VERSION=$APP_VERSION
+
 # Build the project
 RUN npm run build
 
