@@ -5,7 +5,7 @@ stages:
 
 variables:
   APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
-  CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{{USERNAME}}/${APPLICATION_NAME}
+  CONTAINER_IMAGE_NAME: auto-cicd/{{USERNAME}}/{{APPLICATION_NAME}}
   CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
   K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
@@ -15,9 +15,6 @@ variables:
 # Build the Docker container image
 build-job:
   stage: build
-  tags:
-    # optional: Docker is the default runner
-    - docker
   only:
     # Branches to run the Build stage
     - {{ ROOT_REF }}
@@ -36,9 +33,6 @@ build-job:
 # Deploy to Kubernetes
 deploy-job:
   stage: deploy
-  tags:
-    # optional: Docker is the default runner
-    - docker
   only:
     # Branches to run the Deploy stage
     - {{ ROOT_REF }}
@@ -56,16 +50,6 @@ deploy-job:
 
     # Apply the Kubernetes manifest
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
-
-    # Get the Kubernetes service details
-    - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
-
-    # Ensure the service exists and extract the exposed port
-    - |
-      if [[ -z "$KUBECTL_GET_SVC" ]]; then
-        echo "Error: Could not find service port for $APPLICATION_NAME"
-        exit 1
-      fi
 
     # The IP address is the static IP of one node from the Kubernetes cluster or a load balancer
     - echo "The APP is available at https://$DEPLOYMENT_SUB_DOMAIN"
