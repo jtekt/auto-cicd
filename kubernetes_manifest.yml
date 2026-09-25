@@ -20,13 +20,8 @@ spec:
           ports:
             - containerPort: 80
           envFrom:
-            - secretRef:
-                name: auto-cicd-es
-          env:
-            - name: VITE_APP_GITLAB_URL
-              value: https://gitlab.jtektrnd.net
-            - name: VITE_APP_GITLAB_GROUP_PATH
-              value: auto-cicd-aws
+            - configMapRef:
+                name: auto-cicd-env
           volumeMounts:
             - name: auto-cicd-config
               mountPath: /app/config.yml
@@ -76,29 +71,13 @@ metadata:
     gethomepage.dev/icon: https://gitlab.jtektrnd.net/uploads/-/system/project/avatar/2866/auto-cicd.png
 spec:
   rules:
-  - host: auto-cicd.ssc.jtektrnd.net
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: auto-cicd
-            port:
-              number: 80
----
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
-  name: auto-cicd
-spec:
-  refreshInterval: 1h0m0s
-  secretStoreRef:
-    name: aws-secrets-manager
-    kind: ClusterSecretStore
-  dataFrom:
-    - extract:
-        key: eks/eso/public/auto-cicd
-  target:
-    name: auto-cicd-es
-    creationPolicy: Orphan
+    - host: auto-cicd.ssc.jtektrnd.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: auto-cicd
+                port:
+                  number: 80
