@@ -5,7 +5,7 @@ stages:
 
 variables:
   APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
-  CONTAINER_IMAGE_NAME: ${K8S_NAMESPACE}/{{USERNAME}}/${APPLICATION_NAME}
+  CONTAINER_IMAGE_NAME: auto-cicd/{{USERNAME}}/{{APPLICATION_NAME}}
   CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
   K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
@@ -14,9 +14,6 @@ variables:
 # Build the Docker container image
 build-job:
   stage: build
-  tags:
-    # optional: Docker is the default runner
-    - docker
   rules:
     # Branches to run the Build stage
     # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
@@ -36,9 +33,6 @@ build-job:
 # Deploy to Kubernetes
 deploy-job:
   stage: deploy
-  tags:
-    # optional: Docker is the default runner
-    - docker
   rules:
     # Branches to run the Deploy stage
     # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
