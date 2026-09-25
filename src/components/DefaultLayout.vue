@@ -13,18 +13,8 @@
           to="/"
           class="d-flex align-center mr-auto text-decoration-none"
         >
-          <v-img
-            :src="
-              theme.current.value.dark
-                ? '/JTEKT_logo_negative.jpg'
-                : '/JTEKT_logo.jpg'
-            "
-            alt="JTEK logo"
-            width="120"
-            contain
-          />
+          <AppIcon class="app-icon" />
         </RouterLink>
-        <v-divider vertical></v-divider>
         <h1 class="text-h5 font-weight-bold px-2">Auto CICD</h1>
         <v-spacer />
         <MoreInformation id="tour-home-information-btn" v-if="(config?.usefulLinks?.length || 0) > 0" />
@@ -97,6 +87,7 @@ import { useRoute, useRouter } from "vue-router";
 import { getConfig } from "@/config";
 import { computed } from "vue";
 import MoreInformation from "./MoreInformation.vue";
+import AppIcon from "./AppIcon.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -130,3 +121,13 @@ function handleLogout() {
   router.push("Auth");
 }
 </script>
+
+<style scoped>
+.app-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  /* the glyph uses currentColor; don't inherit the link colour */
+  color: rgb(var(--v-theme-on-surface));
+}
+</style>
