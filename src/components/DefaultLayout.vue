@@ -15,9 +15,12 @@
         >
           <AppIcon class="app-icon" />
         </RouterLink>
-        <h1 class="text-h5 font-weight-bold px-2">Auto CICD</h1>
+        <h1 class="text-h5 font-weight-bold ml-2">Auto CICD</h1>
         <v-spacer />
-        <MoreInformation id="tour-home-information-btn" v-if="(config?.usefulLinks?.length || 0) > 0" />
+        <MoreInformation
+          id="tour-home-information-btn"
+          v-if="(config?.usefulLinks?.length || 0) > 0"
+        />
         <v-btn
           :icon="
             !theme.current.value.dark
@@ -124,9 +127,6 @@ function handleLogout() {
 
 <style scoped>
 .app-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
   /* the glyph uses currentColor; don't inherit the link colour */
   color: rgb(var(--v-theme-on-surface));
 }
