@@ -196,6 +196,7 @@
 </template>
 
 <script lang="ts" setup>
+import runtimeEnv from "@/runtimeEnv";
 import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
 import { ref, computed, onMounted, watch, nextTick } from "vue";
@@ -210,7 +211,7 @@ import { useTour } from "@/composables/useTour";
 
 const HOME_TOUR_KEY = "tour-home-done";
 
-const parentGroup = import.meta.env.VITE_APP_GITLAB_GROUP_PATH;
+const parentGroup = runtimeEnv.VITE_APP_GITLAB_GROUP_PATH;
 
 const { t } = useLocale();
 const router = useRouter();
@@ -459,7 +460,7 @@ const fetchProjects = async (clear?: boolean) => {
   `;
 
     const res = await axios.post<ProjectsResponse>(
-      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
+      `${runtimeEnv.VITE_APP_GITLAB_URL}/api/graphql`,
       {
         query,
       },
@@ -527,7 +528,7 @@ const fetchGroups = async () => {
 
   const query = `
 {
-  group(fullPath: "${import.meta.env.VITE_APP_GITLAB_GROUP_PATH}") {
+  group(fullPath: "${runtimeEnv.VITE_APP_GITLAB_GROUP_PATH}") {
     descendantGroups (includeParentDescendants: false) {
       nodes {
         id
@@ -542,7 +543,7 @@ const fetchGroups = async () => {
 
   try {
     const res = await axios.post(
-      `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
+      `${runtimeEnv.VITE_APP_GITLAB_URL}/api/graphql`,
       { query },
       {
         headers: {

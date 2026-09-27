@@ -1,3 +1,4 @@
+import runtimeEnv from "@/runtimeEnv";
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import axios from "axios";
@@ -368,7 +369,7 @@ export const useDeployStore = defineStore("deploy", () => {
       const commitToastId = toast.loading("Committing files...");
       try {
         const commitUrl = `${
-          import.meta.env.VITE_APP_GITLAB_URL
+          runtimeEnv.VITE_APP_GITLAB_URL
         }/api/v4/projects/${project.value.id}/repository/commits`;
         await axios.post(
           commitUrl,

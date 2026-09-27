@@ -18,6 +18,7 @@ A zero-friction way to deploy your GitLab repositories to Kubernetes. This proje
 - [GitLab OAuth Setup (Auto-CICD itself)](#gitlab-oauth-setup-auto-cicd-itself)
 - [Environment Variables (Auto-CICD itself)](#environment-variables-auto-cicd-itself)
 - [Running the Dashboard (Local)](#running-the-dashboard-local)
+- [Releasing and Deploying Auto-CICD itself](#releasing-and-deploying-auto-cicd-itself)
 - [Kubernetes and GitLab Agent Setup (for target projects)](#kubernetes-and-gitlab-agent-setup-for-target-projects)
 - [Required GitLab CI/CD variables (target group or project)](#required-gitlab-cicd-variables-target-group-or-project)
 - [Supported Frameworks and Package Managers](#supported-frameworks-and-package-managers)
@@ -33,9 +34,7 @@ A zero-friction way to deploy your GitLab repositories to Kubernetes. This proje
 - Create Dockerfile from templates
 - Auto-generate `.gitlab-ci.yml` for deployments
 - Deploy to Kubernetes via GitLab Agent (no k8s expertise needed)
-- Optional integrations:
-  - Group Manager service (for generating subgroups without needing user have admin credentials)
-  - Pod Viewer (monitoring/inspection of deployments)
+- Configurable links to related tools (e.g. Deployment Manager, GitLab Subgroup Creator) via `config.yml` (`usefulLinks`, `footerMessage`)
 - Frameworks: Vite, Nuxt.js, Next.js, Express, Streamlit, FastAPI, Default
 - Package managers: npm, Yarn, pnpm, pip
 - Languages: JavaScript/TypeScript, Python
@@ -133,9 +132,10 @@ VITE_APP_GITLAB_GROUP_PATH=group/sub-group
 
 Notes:
 
-- Do not put confidential secrets in these `VITE_*` variables; they are embedded client-side.
+- Do not put confidential secrets in these `VITE_*` variables; they are sent to the browser.
 - `VITE_APP_GITLAB_GROUP_PATH` is the group in GitLab where projects deployable through the dashboard live.
-- In the built Docker image these are baked in at container start (`entrypoint.sh` `sed`-replaces `*_PLACEHOLDER` tokens in the static assets from the actual env vars), not read at request time.
+- In the Docker image they are read at runtime, so one image works in any environment without a rebuild. At container start, `40-env-config.sh` (run from nginx's `/docker-entrypoint.d/`) writes every `VITE_*` env var into `/app/env.js` as `window.__ENV__`. `index.html` loads that file before the app, and `src/runtimeEnv.ts` merges it over `import.meta.env`, so runtime values win. Always read these settings through `runtimeEnv`, not `import.meta.env`. Locally, `public/env.js` is empty and the values come from `.env.local`.
+- `VITE_APP_VERSION` is the exception: it is set at build time from the git tag (see below).
 
 Separately — and only relevant to the projects being *deployed*, not to running this dashboard — define CI/CD variables on the target GitLab group/project (see [Required GitLab CI/CD variables (target group or project)](#required-gitlab-cicd-variables-target-group-or-project)).
 
@@ -144,11 +144,25 @@ Separately — and only relevant to the projects being *deployed*, not to runnin
 ## Running the Dashboard (Local)
 
 ```bash
-# Node 18+ recommended
+# Node 24 (same as the Dockerfile)
 npm install
 cp .env.example .env   # create and edit envs as needed
 npm run dev
 ```
+
+---
+
+## Releasing and Deploying Auto-CICD itself
+
+A release is a `vX.Y.Z` tag on `main`. Pushing `main` without a tag deploys nothing. On a tag, this repo's `.gitlab-ci.yml`:
+
+1. Builds the image with `--build-arg APP_VERSION=<tag>`. That becomes `VITE_APP_VERSION`, which is shown in the footer (`Auto CICD | JTEKT Corporation | vX.Y.Z`).
+2. Pushes it to the private ECR as `732469118990.dkr.ecr.ap-northeast-1.amazonaws.com/auto-cicd` (`:<tag>` and `:latest`). The cluster pulls it with the `ecr-credentials` secret.
+3. Applies `config_configmap.yml` (ConfigMap `auto-cicd`: `/app/config.yml` and the common templates, see the operator note below), then `kubernetes_manifest.yml`, to namespace `self-service-suite`.
+
+The `VITE_APP_GITLAB_*` values for this instance are **not** in this repo. They come from the `auto-cicd-env` ConfigMap (`auto-cicd/env.yml` in the `gitops` repo, applied by ArgoCD), loaded with `envFrom`. That ConfigMap must exist before a rollout, or the pod fails with `CreateContainerConfigError`.
+
+`public/config.yml` is only the fallback bundled into the image. In production, `/app/config.yml` comes from `config_configmap.yml`, so edit that file to change links or the footer message.
 
 ---
 

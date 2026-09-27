@@ -1,3 +1,4 @@
+import runtimeEnv from "@/runtimeEnv";
 import axios, { AxiosError } from "axios";
 import type { ProjectNode } from "@/types/project";
 import { envKey, type ConfigFileInfo } from "@/config/frameworks-config";
@@ -16,8 +17,8 @@ export interface CommitActionObject {
   encoding: "base64";
 }
 
-const GITLAB = import.meta.env.VITE_APP_GITLAB_URL;
-const CLIENT_ID = import.meta.env.VITE_APP_GITLAB_OAUTH_ID;
+const GITLAB = runtimeEnv.VITE_APP_GITLAB_URL;
+const CLIENT_ID = runtimeEnv.VITE_APP_GITLAB_OAUTH_ID;
 
 const REDIRECT_URI = `${window.location.origin}/auth`;
 
@@ -258,7 +259,7 @@ export async function graphqlFetchFile(
   `;
 
   const res = await fetch(
-    `${import.meta.env.VITE_APP_GITLAB_URL}/api/graphql`,
+    `${runtimeEnv.VITE_APP_GITLAB_URL}/api/graphql`,
     {
       method: "POST",
       cache: "no-store",
@@ -293,7 +294,7 @@ export const getEnvs = async ({
     }
   | { success: false; error: string }
 > => {
-  const apiUrl = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
+  const apiUrl = `${runtimeEnv.VITE_APP_GITLAB_URL}/api/v4/projects/${
     project.id
   }/variables/${envKey}`;
   try {
@@ -355,7 +356,7 @@ export const updateEnvs = async ({
     return [];
   });
 
-  const url = `${import.meta.env.VITE_APP_GITLAB_URL}/api/v4/projects/${
+  const url = `${runtimeEnv.VITE_APP_GITLAB_URL}/api/v4/projects/${
     project.id
   }/variables`;
   const config = {
