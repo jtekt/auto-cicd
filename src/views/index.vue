@@ -1,38 +1,14 @@
 <template>
   <v-container>
+    <!-- Row 1: path-style source + subgroup selector + action buttons -->
     <v-row dense align="center">
-      <v-col cols="12" class="pb-0">
-        <v-breadcrumbs
-          :items="[
-            { title: gitlabUrl, href: gitlabUrl, disabled: false },
-            { title: parentGroup, href: gitlabUrl + '/' + parentGroup, disabled: false },
-          ]"
-          density="compact"
-          class="pa-0 text-caption"
-        >
-          <template #prepend>
-            <v-icon icon="mdi-gitlab" size="16" class="mr-1" />
-          </template>
-          <template #item="{ item }">
-            <v-breadcrumbs-item
-              :href="item.href"
-              target="_blank"
-              :disabled="item.disabled"
-              class="text-caption"
-            >
-              {{ item.title }}
-            </v-breadcrumbs-item>
-          </template>
-        </v-breadcrumbs>
-      </v-col>
-      <v-col cols="12" md="3" id="tour-subgroup">
+      <v-col cols="12" md="9" id="tour-subgroup">
         <v-autocomplete
           v-model="selectedSubgroup"
           :items="subgroupOptions"
           item-title="name"
           item-value="fullPath"
           :label="t('views.index.subgroupLabel')"
-          prepend-inner-icon="mdi-folder-account"
           variant="solo"
           border
           @update:model-value="updateUrlParams"
@@ -40,9 +16,48 @@
           :loading="isLoadingGroups"
           density="comfortable"
           hide-details
-        />
+        >
+          <template #prepend-inner>
+            <v-btn
+              :href="gitlabUrl + '/' + parentGroup"
+              target="_blank"
+              variant="text"
+              density="compact"
+              size="small"
+              class="text-lowercase px-2 mr-1"
+              @click.stop
+            >
+              <v-icon icon="mdi-gitlab" size="16" start />
+              {{ gitlabUrl }}/{{ parentGroup }}
+            </v-btn>
+            <v-divider vertical class="mr-2" />
+          </template>
+        </v-autocomplete>
       </v-col>
-      <v-col cols="12" md="3" lg="4" id="tour-search">
+      <v-col cols="12" md="3" class="d-flex ga-2 align-center justify-end">
+        <v-tooltip :text="t('views.index.getStarted')" location="bottom">
+          <template #activator="{ props: tooltipProps }">
+            <v-btn
+              id="tour-home-help-btn"
+              v-bind="tooltipProps"
+              rounded="lg"
+              variant="text"
+              border
+              icon="mdi-map-marker-path"
+              color="secondary"
+              @click="startHomeTour"
+            >
+            </v-btn>
+          </template>
+        </v-tooltip>
+
+        <MoreInformation id="tour-home-information-btn" />
+      </v-col>
+    </v-row>
+
+    <!-- Row 2: search + sort -->
+    <v-row dense align="center">
+      <v-col cols="12" md="8" lg="9" id="tour-search">
         <v-text-field
           v-model="searchQuery"
           :label="t('views.index.searchLabel')"
@@ -54,7 +69,7 @@
           hide-details
         />
       </v-col>
-      <v-col cols="12" sm="6" md="3" id="tour-sort">
+      <v-col cols="12" md="4" lg="3" id="tour-sort">
         <v-select
           v-model="sortBy"
           :items="sortOptions"
@@ -76,31 +91,6 @@
             </v-list-item>
           </template>
         </v-select>
-      </v-col>
-      <v-col
-        cols="12"
-        sm="6"
-        md="3"
-        lg="2"
-        class="d-flex ga-2 align-center justify-end"
-      >
-        <v-tooltip :text="t('views.index.getStarted')" location="bottom">
-          <template #activator="{ props: tooltipProps }">
-            <v-btn
-              id="tour-home-help-btn"
-              v-bind="tooltipProps"
-              rounded="lg"
-              variant="text"
-              border
-              icon="mdi-map-marker-path"
-              color="secondary"
-              @click="startHomeTour"
-            >
-            </v-btn>
-          </template>
-        </v-tooltip>
-
-        <MoreInformation id="tour-home-information-btn" />
       </v-col>
     </v-row>
 
