@@ -64,6 +64,11 @@ export const setLanguage = (lang: "ja" | "en") => {
 export default createVuetify({
   theme: {
     defaultTheme,
+    // Same red as the self-service apps (and the cross in the app icon)
+    themes: {
+      light: { colors: { primary: "#B00000" } },
+      dark: { colors: { primary: "#B42424" } },
+    },
   },
   locale: {
     adapter: createVueI18nAdapter({ i18n, useI18n }),
