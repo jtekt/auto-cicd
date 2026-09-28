@@ -2,7 +2,6 @@ import runtimeEnv from "@/runtimeEnv";
 import axios, { AxiosError } from "axios";
 import type { ProjectNode } from "@/types/project";
 import { envKey, type ConfigFileInfo } from "@/config/frameworks-config";
-import type { Env } from "@/types/env";
 import { UserSchema } from "@/schemas/user";
 import type { Session } from "@/types/session";
 import type { Token } from "@/types/token";

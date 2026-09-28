@@ -34,7 +34,7 @@ A zero-friction way to deploy your GitLab repositories to Kubernetes. This proje
 - Create Dockerfile from templates
 - Auto-generate `.gitlab-ci.yml` for deployments
 - Deploy to Kubernetes via GitLab Agent (no k8s expertise needed)
-- Configurable links to related tools (e.g. Deployment Manager, GitLab Subgroup Creator) via `config.yml` (`usefulLinks`, `footerMessage`)
+- Configurable links to related tools (e.g. Deployment Manager, GitLab Subgroup Creator) via `config.yml` (`usefulLinks`)
 - Frameworks: Vite, Nuxt.js, Next.js, Express, Streamlit, FastAPI, Default
 - Package managers: npm, Yarn, pnpm, pip
 - Languages: JavaScript/TypeScript, Python

@@ -1,12 +1,22 @@
 <template>
-  <v-btn
-    :id="props.id"
-    variant="outlined"
-    @click="dialog = true"
-    prepend-icon="mdi-information-variant"
+  <v-tooltip
+    v-if="(config?.usefulLinks?.length || 0) > 0"
+    :text="t('components.usefulLinks.buttonText')"
+    location="bottom"
   >
-    {{ t("components.usefulLinks.buttonText") }}
-  </v-btn>
+    <template #activator="{ props: tooltipProps }">
+      <v-btn
+        :id="props.id"
+        v-bind="tooltipProps"
+        icon="mdi-tools"
+        rounded="lg"
+        variant="text"
+        border
+        @click="dialog = true"
+      >
+      </v-btn>
+    </template>
+  </v-tooltip>
 
   <!-- Dialog with useful links -->
   <v-dialog v-model="dialog" width="600" max-width="90vw" max-height="90vh">

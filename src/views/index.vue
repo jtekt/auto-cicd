@@ -1,6 +1,30 @@
 <template>
-  <div class="py-4">
-    <v-row>
+  <v-container>
+    <v-row dense align="center">
+      <v-col cols="12" class="pb-0">
+        <v-breadcrumbs
+          :items="[
+            { title: gitlabUrl, href: gitlabUrl, disabled: false },
+            { title: parentGroup, href: gitlabUrl + '/' + parentGroup, disabled: false },
+          ]"
+          density="compact"
+          class="pa-0 text-caption"
+        >
+          <template #prepend>
+            <v-icon icon="mdi-gitlab" size="16" class="mr-1" />
+          </template>
+          <template #item="{ item }">
+            <v-breadcrumbs-item
+              :href="item.href"
+              target="_blank"
+              :disabled="item.disabled"
+              class="text-caption"
+            >
+              {{ item.title }}
+            </v-breadcrumbs-item>
+          </template>
+        </v-breadcrumbs>
+      </v-col>
       <v-col cols="12" md="3" id="tour-subgroup">
         <v-autocomplete
           v-model="selectedSubgroup"
@@ -8,21 +32,25 @@
           item-title="name"
           item-value="fullPath"
           :label="t('views.index.subgroupLabel')"
-          prepend-icon="mdi-folder-account"
-          variant="outlined"
+          prepend-inner-icon="mdi-folder-account"
+          variant="solo"
+          border
           @update:model-value="updateUrlParams"
-          hide-details
           autocomplete="off"
           :loading="isLoadingGroups"
+          density="comfortable"
+          hide-details
         />
       </v-col>
       <v-col cols="12" md="3" lg="4" id="tour-search">
         <v-text-field
           v-model="searchQuery"
           :label="t('views.index.searchLabel')"
-          prepend-icon="mdi-magnify"
-          variant="outlined"
+          prepend-inner-icon="mdi-magnify"
+          variant="solo"
+          border
           @input="updateDebouncedUrlParams"
+          density="comfortable"
           hide-details
         />
       </v-col>
@@ -33,9 +61,11 @@
           item-title="text"
           item-value="value"
           :label="t('views.index.sortLabel')"
-          prepend-icon="mdi-sort"
-          variant="outlined"
+          prepend-inner-icon="mdi-sort"
+          variant="solo"
+          border
           @update:model-value="updateUrlParams"
+          density="comfortable"
           hide-details
         >
           <template #item="{ item, props }">
@@ -52,20 +82,25 @@
         sm="6"
         md="3"
         lg="2"
-        class="d-flex align-center justify-end"
+        class="d-flex ga-2 align-center justify-end"
       >
-        <v-btn
-          id="tour-home-help-btn"
-          color="secondary"
-          variant="tonal"
-          size="x-large"
-          @click="startHomeTour"
-        >
-          <template #prepend>
-            <v-icon icon="mdi-play" size="36" />
+        <v-tooltip :text="t('views.index.getStarted')" location="bottom">
+          <template #activator="{ props: tooltipProps }">
+            <v-btn
+              id="tour-home-help-btn"
+              v-bind="tooltipProps"
+              rounded="lg"
+              variant="text"
+              border
+              icon="mdi-map-marker-path"
+              color="secondary"
+              @click="startHomeTour"
+            >
+            </v-btn>
           </template>
-          {{ t("views.index.getStarted") }}
-        </v-btn>
+        </v-tooltip>
+
+        <MoreInformation id="tour-home-information-btn" />
       </v-col>
     </v-row>
 
@@ -190,7 +225,7 @@
         </v-col>
       </v-row>
     </template>
-  </div>
+  </v-container>
 
   <DeployHandler />
 </template>
@@ -208,9 +243,11 @@ import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import { useTour } from "@/composables/useTour";
+import MoreInformation from "@/components/MoreInformation.vue";
 
 const HOME_TOUR_KEY = "tour-home-done";
 
+const gitlabUrl = runtimeEnv.VITE_APP_GITLAB_URL;
 const parentGroup = runtimeEnv.VITE_APP_GITLAB_GROUP_PATH;
 
 const { t } = useLocale();
