@@ -1,7 +1,25 @@
 <template>
   <v-container>
+    <v-row>
+      <v-col>
+        <v-btn
+          id="tour-parent-group"
+          :href="gitlabUrl + '/' + parentGroup"
+          target="_blank"
+          variant="text"
+          size="small"
+          class="text-lowercase px-2"
+          @click.stop
+          @mousedown.stop
+        >
+          <v-icon icon="mdi-gitlab" size="16" start />
+          <span> {{ gitlabUrl }}/{{ parentGroup }} </span>
+        </v-btn>
+      </v-col>
+    </v-row>
+
     <v-row dense>
-      <v-col cols="12" lg="5" id="tour-subgroup">
+      <v-col cols="12" sm="6" md="3" id="tour-subgroup">
         <v-autocomplete
           v-model="selectedSubgroup"
           :items="subgroupOptions"
@@ -9,74 +27,50 @@
           item-value="fullPath"
           :label="t('views.index.subgroupLabel')"
           variant="solo"
-          border
           @update:model-value="updateUrlParams"
           autocomplete="off"
           :loading="isLoadingGroups"
           density="comfortable"
           hide-details
         >
-          <template #prepend-inner>
-            <v-btn
-              :href="gitlabUrl + '/' + parentGroup"
-              target="_blank"
-              variant="text"
-              density="compact"
-              size="small"
-              class="text-lowercase px-2"
-              @click.stop
-              @mousedown.stop
-            >
-              <v-icon icon="mdi-gitlab" size="16" start />
-              <span class="d-none d-sm-block">
-                {{ gitlabUrl }}/{{ parentGroup }}
-              </span>
-            </v-btn>
-            <v-divider vertical class="mx-2" />
-          </template>
         </v-autocomplete>
       </v-col>
-      <v-col cols="12" sm="5" lg="3">
+      <v-col cols="12" sm="6" md="4" id="tour-search">
         <v-text-field
           id="tour-search"
           v-model="searchQuery"
           :label="t('views.index.searchLabel')"
           prepend-inner-icon="mdi-magnify"
           variant="solo"
-          border
           density="comfortable"
           hide-details
           @input="updateDebouncedUrlParams"
-          @click.stop
-          @mousedown.stop
         />
       </v-col>
-      <v-col cols="auto" lg="2">
+      <v-col cols="6" md="3" id="tour-sort">
         <v-select
           v-model="sortBy"
           :items="sortOptions"
           item-title="text"
           item-value="value"
-        :label="t('views.index.sortLabel')"
-        prepend-inner-icon="mdi-sort"
-        variant="solo"
-        border
-        @update:model-value="updateUrlParams"
-        density="comfortable"
-        max-width="200"
-        hide-details
-      >
-        <template #item="{ item, props }">
-          <v-list-item v-bind="props">
-            <template #prepend>
-              <v-icon :icon="item.raw.icon" />
-            </template>
-          </v-list-item>
-        </template>
-      </v-select>
+          :label="t('views.index.sortLabel')"
+          prepend-inner-icon="mdi-sort"
+          variant="solo"
+          @update:model-value="updateUrlParams"
+          density="comfortable"
+          max-width="240"
+          hide-details
+        >
+          <template #item="{ item, props }">
+            <v-list-item v-bind="props">
+              <template #prepend>
+                <v-icon :icon="item.raw.icon" />
+              </template>
+            </v-list-item>
+          </template>
+        </v-select>
       </v-col>
-      <v-spacer></v-spacer>
-      <v-col cols="auto" lg="2" class="d-flex ga-2 align-center justify-end">
+      <v-col cols="6" md="2" class="d-flex ga-2 align-center justify-end">
         <v-tooltip :text="t('views.index.getStarted')" location="bottom">
           <template #activator="{ props: tooltipProps }">
             <v-btn
@@ -142,13 +136,9 @@
           sm="6"
           lg="4"
           xl="2"
-          class="pa-2"
         >
           <v-card
             class="project-card pa-2 h-100"
-            color="transparent"
-            border
-            rounded="lg"
             :id="projectIndex === 0 ? 'tour-project-card' : undefined"
           >
             <v-card-item>
@@ -261,6 +251,15 @@ function startHomeTour() {
       },
     },
     {
+      element: "#tour-parent-group",
+      popover: {
+        title: t("components.homeTour.parentGroup.title"),
+        description: t("components.homeTour.parentGroup.description"),
+        side: "bottom" as const,
+        align: "start" as const,
+      },
+    },
+    {
       element: "#tour-subgroup",
       popover: {
         title: t("components.homeTour.subgroup.title"),
@@ -314,6 +313,15 @@ function startHomeTour() {
       popover: {
         title: t("components.homeTour.moreInfo.title"),
         description: t("components.homeTour.moreInfo.description"),
+        side: "bottom" as const,
+        align: "end" as const,
+      },
+    },
+    {
+      element: "#tour-home-help-btn",
+      popover: {
+        title: t("components.homeTour.replayTour.title"),
+        description: t("components.homeTour.replayTour.description"),
         side: "bottom" as const,
         align: "end" as const,
       },

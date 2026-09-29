@@ -111,6 +111,10 @@
                 "title": "Welcome to Auto-CICD",
                 "description": "This quick tour will show you how to find your projects and deploy them. Let's get started!"
             },
+            "parentGroup": {
+                "title": "Parent Group",
+                "description": "This is the parent group configured in Auto-CICD. For a project to appear here, it must be inside a subgroup of this group."
+            },
             "subgroup": {
                 "title": "Filter by Subgroup",
                 "description": "Use this dropdown to filter projects by your team's subgroup. Your personal subgroup is selected automatically if found."
@@ -134,6 +138,10 @@
             "moreInfo": {
                 "title": "More Information",
                 "description": "Need help or have questions? Click this button to access the support portal with guides and documentation for Auto-CICD."
+            },
+            "replayTour": {
+                "title": "Replay This Tour",
+                "description": "Want to see this tour again? Click this button at any time to restart it from the beginning."
             }
         },
         "deployTour": {

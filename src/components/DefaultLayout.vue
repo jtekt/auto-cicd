@@ -69,16 +69,10 @@
     </v-app-bar>
 
     <v-main>
-      <template v-if="!route.meta.protected || authStore.session">
-        <div style="flex: 1; display: flex; flex-direction: column">
-          <router-view />
-        </div>
-      </template>
-      <template v-else-if="route.meta.protected">
-        <div class="d-flex justify-center">
-          <h3 class="h3">You are not Authenticated</h3>
-        </div>
-      </template>
+      <router-view v-if="!route.meta.protected || authStore.session" />
+      <div v-else-if="route.meta.protected" class="d-flex justify-center">
+        <h3 class="h3">You are not Authenticated</h3>
+      </div>
     </v-main>
 
     <v-footer
