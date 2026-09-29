@@ -6,9 +6,9 @@
       </div>
     </template>
 
-    <v-main v-else>
+    <template v-else>
       <router-view />
-    </v-main>
+    </template>
   </v-app>
 </template>
 

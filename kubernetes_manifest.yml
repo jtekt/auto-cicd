@@ -22,6 +22,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: auto-cicd-env
+          env:
+            - name: VITE_APPS_URL
+              value: https://homepage.ssc.jtektrnd.net
           volumeMounts:
             - name: auto-cicd-config
               mountPath: /app/config.yml

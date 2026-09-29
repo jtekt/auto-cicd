@@ -1,41 +1,64 @@
 <template>
-  <div class="py-4">
+  <v-container>
     <v-row>
-      <v-col cols="12" md="3" id="tour-subgroup">
+      <v-col>
+        <v-btn
+          id="tour-parent-group"
+          :href="gitlabUrl + '/' + parentGroup"
+          target="_blank"
+          variant="text"
+          size="small"
+          class="text-lowercase px-2"
+          @click.stop
+          @mousedown.stop
+        >
+          <v-icon icon="mdi-gitlab" size="16" start />
+          <span> {{ gitlabUrl }}/{{ parentGroup }} </span>
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <v-row dense>
+      <v-col cols="12" sm="6" md="3" id="tour-subgroup">
         <v-autocomplete
           v-model="selectedSubgroup"
           :items="subgroupOptions"
           item-title="name"
           item-value="fullPath"
           :label="t('views.index.subgroupLabel')"
-          prepend-icon="mdi-folder-account"
-          variant="outlined"
+          variant="solo"
           @update:model-value="updateUrlParams"
-          hide-details
           autocomplete="off"
           :loading="isLoadingGroups"
-        />
+          density="comfortable"
+          hide-details
+        >
+        </v-autocomplete>
       </v-col>
-      <v-col cols="12" md="3" lg="4" id="tour-search">
+      <v-col cols="12" sm="6" md="4" id="tour-search">
         <v-text-field
+          id="tour-search"
           v-model="searchQuery"
           :label="t('views.index.searchLabel')"
-          prepend-icon="mdi-magnify"
-          variant="outlined"
-          @input="updateDebouncedUrlParams"
+          prepend-inner-icon="mdi-magnify"
+          variant="solo"
+          density="comfortable"
           hide-details
+          @input="updateDebouncedUrlParams"
         />
       </v-col>
-      <v-col cols="12" sm="6" md="3" id="tour-sort">
+      <v-col cols="6" md="3" id="tour-sort">
         <v-select
           v-model="sortBy"
           :items="sortOptions"
           item-title="text"
           item-value="value"
           :label="t('views.index.sortLabel')"
-          prepend-icon="mdi-sort"
-          variant="outlined"
+          prepend-inner-icon="mdi-sort"
+          variant="solo"
           @update:model-value="updateUrlParams"
+          density="comfortable"
+          max-width="240"
           hide-details
         >
           <template #item="{ item, props }">
@@ -47,25 +70,24 @@
           </template>
         </v-select>
       </v-col>
-      <v-col
-        cols="12"
-        sm="6"
-        md="3"
-        lg="2"
-        class="d-flex align-center justify-end"
-      >
-        <v-btn
-          id="tour-home-help-btn"
-          color="secondary"
-          variant="tonal"
-          size="x-large"
-          @click="startHomeTour"
-        >
-          <template #prepend>
-            <v-icon icon="mdi-play" size="36" />
+      <v-col cols="6" md="2" class="d-flex ga-2 align-center justify-end">
+        <v-tooltip :text="t('views.index.getStarted')" location="bottom">
+          <template #activator="{ props: tooltipProps }">
+            <v-btn
+              id="tour-home-help-btn"
+              v-bind="tooltipProps"
+              rounded="lg"
+              variant="elevated"
+              border
+              icon="mdi-map-marker-path"
+              color="secondary"
+              @click="startHomeTour"
+            >
+            </v-btn>
           </template>
-          {{ t("views.index.getStarted") }}
-        </v-btn>
+        </v-tooltip>
+
+        <MoreInformation id="tour-home-information-btn" />
       </v-col>
     </v-row>
 
@@ -79,7 +101,7 @@
 
     <v-row
       v-else-if="!isLoading && projects.length === 0"
-      class="not-found-container d-flex flex-column align-center justify-center"
+      class="not-found-container flex-grow-1 d-flex flex-column align-center justify-center"
     >
       <v-col cols="12" class="text-center">
         <v-icon
@@ -114,12 +136,9 @@
           sm="6"
           lg="4"
           xl="2"
-          class="pa-2"
         >
           <v-card
             class="project-card pa-2 h-100"
-            elevation="4"
-            rounded="lg"
             :id="projectIndex === 0 ? 'tour-project-card' : undefined"
           >
             <v-card-item>
@@ -190,7 +209,7 @@
         </v-col>
       </v-row>
     </template>
-  </div>
+  </v-container>
 
   <DeployHandler />
 </template>
@@ -208,9 +227,11 @@ import { useRoute, useRouter } from "vue-router";
 import { useToast } from "@/stores/toast";
 import DeployHandler from "@/components/deploy/DeployHandler.vue";
 import { useTour } from "@/composables/useTour";
+import MoreInformation from "@/components/MoreInformation.vue";
 
 const HOME_TOUR_KEY = "tour-home-done";
 
+const gitlabUrl = runtimeEnv.VITE_APP_GITLAB_URL;
 const parentGroup = runtimeEnv.VITE_APP_GITLAB_GROUP_PATH;
 
 const { t } = useLocale();
@@ -227,6 +248,15 @@ function startHomeTour() {
       popover: {
         title: t("components.homeTour.welcome.title"),
         description: t("components.homeTour.welcome.description"),
+      },
+    },
+    {
+      element: "#tour-parent-group",
+      popover: {
+        title: t("components.homeTour.parentGroup.title"),
+        description: t("components.homeTour.parentGroup.description"),
+        side: "bottom" as const,
+        align: "start" as const,
       },
     },
     {
@@ -283,6 +313,15 @@ function startHomeTour() {
       popover: {
         title: t("components.homeTour.moreInfo.title"),
         description: t("components.homeTour.moreInfo.description"),
+        side: "bottom" as const,
+        align: "end" as const,
+      },
+    },
+    {
+      element: "#tour-home-help-btn",
+      popover: {
+        title: t("components.homeTour.replayTour.title"),
+        description: t("components.homeTour.replayTour.description"),
         side: "bottom" as const,
         align: "end" as const,
       },

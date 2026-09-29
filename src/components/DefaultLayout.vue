@@ -8,7 +8,7 @@
         backgroundColor: theme.current.value.dark ? '#000' : '#fff',
       }"
     >
-      <v-container class="d-flex align-center ga-1">
+      <v-container class="d-flex align-center ga-2">
         <RouterLink
           to="/"
           class="d-flex align-center mr-auto text-decoration-none"
@@ -17,10 +17,6 @@
         </RouterLink>
         <h1 class="text-h5 font-weight-bold ml-2">Auto CICD</h1>
         <v-spacer />
-        <MoreInformation
-          id="tour-home-information-btn"
-          v-if="(config?.usefulLinks?.length || 0) > 0"
-        />
         <v-btn
           :icon="
             !theme.current.value.dark
@@ -28,17 +24,44 @@
               : 'mdi-weather-sunny'
           "
           size="small"
+          rounded="lg"
+          variant="elevated"
+          border
           @click="toggleTheme"
         />
         <v-btn
           :text="current === 'en' ? '日本語' : 'EN'"
           size="small"
           icon
+          rounded="lg"
+          variant="elevated"
+          border
           @click="setLanguage(current === 'en' ? 'ja' : 'en')"
+        />
+        <v-btn
+          v-if="!!appsUrl"
+          size="small"
+          rounded="lg"
+          variant="elevated"
+          border
+          icon="mdi-view-grid-outline"
+          :href="appsUrl"
+        />
+        <v-btn
+          v-if="!!helpUrl"
+          size="small"
+          rounded="lg"
+          variant="elevated"
+          border
+          icon="mdi-help"
+          :href="helpUrl"
         />
         <v-btn
           v-if="!!authStore.session"
           size="small"
+          rounded="lg"
+          variant="elevated"
+          border
           icon="mdi-logout"
           @click="handleLogout"
         />
@@ -46,35 +69,20 @@
     </v-app-bar>
 
     <v-main>
-      <v-container style="height: 100%" class="py-2 d-flex flex-column">
-        <template v-if="!route.meta.protected || authStore.session">
-          <div style="flex: 1; display: flex; flex-direction: column">
-            <router-view />
-          </div>
-        </template>
-        <template v-else-if="route.meta.protected">
-          <div class="d-flex justify-center">
-            <h3 class="h3">You are not Authenticated</h3>
-          </div>
-        </template>
-      </v-container>
+      <router-view v-if="!route.meta.protected || authStore.session" />
+      <div v-else-if="route.meta.protected" class="d-flex justify-center">
+        <h3 class="h3">You are not Authenticated</h3>
+      </div>
     </v-main>
 
     <v-footer
       app
-      class="d-flex flex-column border-t-sm"
+      class="d-flex align-center justify-center ga-2 pa-4 border-t-sm"
       :style="{
         backgroundColor: theme.current.value.dark ? '#000' : '#fff',
       }"
     >
-      <div class="d-flex align-center justify-center ga-2 px-4 w-100">
-        <span>Auto CICD | JTEKT Corporation | {{ appVersion }}</span>
-      </div>
-      <div
-        v-if="footerMessage"
-        v-html="footerMessage"
-        class="text-caption text-medium-emphasis"
-      />
+      <span>Auto CICD | JTEKT Corporation | {{ appVersion }}</span>
     </v-footer>
   </v-app>
 
@@ -87,31 +95,21 @@ import { setLanguage } from "@/plugins/vuetify";
 import Toaster from "./Toaster.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRoute, useRouter } from "vue-router";
-import { getConfig } from "@/config";
-import { computed } from "vue";
-import MoreInformation from "./MoreInformation.vue";
 import AppIcon from "./AppIcon.vue";
+import runtimeEnv from "@/runtimeEnv.ts";
 
 const route = useRoute();
 const router = useRouter();
 
 const authStore = useAuthStore();
 
-const config = getConfig();
-
 const { current } = useLocale();
 
 const theme = useTheme();
 
-const appVersion = import.meta.env.VITE_APP_VERSION ?? "dev";
-
-const footerMessage = computed(() => {
-  if (!config) return null;
-  const message =
-    config.footerMessage[current.value as "ja"] ??
-    Object.values(config.footerMessage)[0];
-  return message ? message.replace(/\n/g, "<br>") : null;
-});
+const appVersion = runtimeEnv.VITE_APP_VERSION ?? "dev";
+const helpUrl = runtimeEnv.VITE_HELP_URL;
+const appsUrl = runtimeEnv.VITE_APPS_URL;
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";
