@@ -188,8 +188,7 @@
                 "sort": {
                     "nameAscText": "Name (A-Z)",
                     "nameDscText": "Name (Z-A)",
-                    "editedAscText": "Last Edited (Most Recent)",
-                    "editedDscText": "Last Edited (Least Recent)"
+                    "editedAscText": "Last Edited"
                 },
                 "errors": {
                     "fetchProjects": "Failed to fetch projects. Please try again."

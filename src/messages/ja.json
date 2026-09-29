@@ -188,8 +188,7 @@
                 "sort": {
                     "nameAscText": "名前 (A-Z)",
                     "nameDscText": "名前 (Z-A)",
-                    "editedAscText": "最終編集 (最新)",
-                    "editedDscText": "最終編集 (最古)"
+                    "editedAscText": "最終編集 (最新)"
                 },
                 "errors": {
                     "fetchProjects": "プロジェクトの取得に失敗しました。再試行してください。"

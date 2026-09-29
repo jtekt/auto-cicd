@@ -25,7 +25,7 @@
           "
           size="small"
           rounded="lg"
-          variant="text"
+          variant="elevated"
           border
           @click="toggleTheme"
         />
@@ -34,7 +34,7 @@
           size="small"
           icon
           rounded="lg"
-          variant="text"
+          variant="elevated"
           border
           @click="setLanguage(current === 'en' ? 'ja' : 'en')"
         />
@@ -42,7 +42,7 @@
           v-if="!!appsUrl"
           size="small"
           rounded="lg"
-          variant="text"
+          variant="elevated"
           border
           icon="mdi-view-grid-outline"
           :href="appsUrl"
@@ -51,7 +51,7 @@
           v-if="!!helpUrl"
           size="small"
           rounded="lg"
-          variant="text"
+          variant="elevated"
           border
           icon="mdi-help"
           :href="helpUrl"
@@ -60,7 +60,7 @@
           v-if="!!authStore.session"
           size="small"
           rounded="lg"
-          variant="text"
+          variant="elevated"
           border
           icon="mdi-logout"
           @click="handleLogout"

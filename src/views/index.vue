@@ -1,8 +1,7 @@
 <template>
   <v-container>
-    <!-- Row 1: path-style source + subgroup selector + action buttons -->
-    <v-row dense align="center">
-      <v-col cols="12" md="9" id="tour-subgroup">
+    <v-row dense>
+      <v-col cols="12" lg="5" id="tour-subgroup">
         <v-autocomplete
           v-model="selectedSubgroup"
           :items="subgroupOptions"
@@ -24,24 +23,67 @@
               variant="text"
               density="compact"
               size="small"
-              class="text-lowercase px-2 mr-1"
+              class="text-lowercase px-2"
               @click.stop
+              @mousedown.stop
             >
               <v-icon icon="mdi-gitlab" size="16" start />
-              {{ gitlabUrl }}/{{ parentGroup }}
+              <span class="d-none d-sm-block">
+                {{ gitlabUrl }}/{{ parentGroup }}
+              </span>
             </v-btn>
-            <v-divider vertical class="mr-2" />
+            <v-divider vertical class="mx-2" />
           </template>
         </v-autocomplete>
       </v-col>
-      <v-col cols="12" md="3" class="d-flex ga-2 align-center justify-end">
+      <v-col cols="12" sm="5" lg="3">
+        <v-text-field
+          id="tour-search"
+          v-model="searchQuery"
+          :label="t('views.index.searchLabel')"
+          prepend-inner-icon="mdi-magnify"
+          variant="solo"
+          border
+          density="comfortable"
+          hide-details
+          @input="updateDebouncedUrlParams"
+          @click.stop
+          @mousedown.stop
+        />
+      </v-col>
+      <v-col cols="auto" lg="2">
+        <v-select
+          v-model="sortBy"
+          :items="sortOptions"
+          item-title="text"
+          item-value="value"
+        :label="t('views.index.sortLabel')"
+        prepend-inner-icon="mdi-sort"
+        variant="solo"
+        border
+        @update:model-value="updateUrlParams"
+        density="comfortable"
+        max-width="200"
+        hide-details
+      >
+        <template #item="{ item, props }">
+          <v-list-item v-bind="props">
+            <template #prepend>
+              <v-icon :icon="item.raw.icon" />
+            </template>
+          </v-list-item>
+        </template>
+      </v-select>
+      </v-col>
+      <v-spacer></v-spacer>
+      <v-col cols="auto" lg="2" class="d-flex ga-2 align-center justify-end">
         <v-tooltip :text="t('views.index.getStarted')" location="bottom">
           <template #activator="{ props: tooltipProps }">
             <v-btn
               id="tour-home-help-btn"
               v-bind="tooltipProps"
               rounded="lg"
-              variant="text"
+              variant="elevated"
               border
               icon="mdi-map-marker-path"
               color="secondary"
@@ -55,45 +97,6 @@
       </v-col>
     </v-row>
 
-    <!-- Row 2: search + sort -->
-    <v-row dense align="center">
-      <v-col cols="12" md="8" lg="9" id="tour-search">
-        <v-text-field
-          v-model="searchQuery"
-          :label="t('views.index.searchLabel')"
-          prepend-inner-icon="mdi-magnify"
-          variant="solo"
-          border
-          @input="updateDebouncedUrlParams"
-          density="comfortable"
-          hide-details
-        />
-      </v-col>
-      <v-col cols="12" md="4" lg="3" id="tour-sort">
-        <v-select
-          v-model="sortBy"
-          :items="sortOptions"
-          item-title="text"
-          item-value="value"
-          :label="t('views.index.sortLabel')"
-          prepend-inner-icon="mdi-sort"
-          variant="solo"
-          border
-          @update:model-value="updateUrlParams"
-          density="comfortable"
-          hide-details
-        >
-          <template #item="{ item, props }">
-            <v-list-item v-bind="props">
-              <template #prepend>
-                <v-icon :icon="item.raw.icon" />
-              </template>
-            </v-list-item>
-          </template>
-        </v-select>
-      </v-col>
-    </v-row>
-
     <v-row v-if="error">
       <v-col cols="12">
         <v-alert type="error" variant="tonal" prominent>
@@ -104,7 +107,7 @@
 
     <v-row
       v-else-if="!isLoading && projects.length === 0"
-      class="not-found-container d-flex flex-column align-center justify-center"
+      class="not-found-container flex-grow-1 d-flex flex-column align-center justify-center"
     >
       <v-col cols="12" class="text-center">
         <v-icon
@@ -143,7 +146,8 @@
         >
           <v-card
             class="project-card pa-2 h-100"
-            elevation="4"
+            color="transparent"
+            border
             rounded="lg"
             :id="projectIndex === 0 ? 'tour-project-card' : undefined"
           >

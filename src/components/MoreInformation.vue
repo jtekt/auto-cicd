@@ -10,7 +10,7 @@
         v-bind="tooltipProps"
         icon="mdi-tools"
         rounded="lg"
-        variant="text"
+        variant="elevated"
         border
         @click="dialog = true"
       >
