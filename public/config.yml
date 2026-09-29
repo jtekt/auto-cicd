@@ -300,6 +300,3 @@ usefulLinks:
       ja: >-
         サポートやお問い合わせについて、メールでサポートチームへ
         連絡できます。
-footerMessage:
-  en: "You can create your own group in <a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a>"
-  ja: "<a href='https://gitlab-subgroup-creator.higashikariya.jtektrnd.net/' target='_blank'>GitLab Subgroup Creator</a> で独自のグループを作成できます"

@@ -89,5 +89,4 @@ export const ConfigSchema = z.object({
   packageManagers: z.record(z.string(), PackageManagerSchema),
   frameworks: z.record(z.string(), FrameworkConfigSchema),
   usefulLinks: z.array(UsefulLinkSchema),
-  footerMessage: z.record(z.string(), z.string().optional()),
 });

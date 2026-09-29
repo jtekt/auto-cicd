@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_GITLAB_URL: string;
   readonly VITE_APP_GITLAB_OAUTH_ID: string;
   readonly VITE_APP_GITLAB_GROUP_PATH: string;
+  readonly VITE_HELP_URL?: string;
+  readonly VITE_APPS_URL?: string;
 }
 
 interface ImportMeta {
