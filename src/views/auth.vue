@@ -19,9 +19,7 @@
               class="mb-6"
             />
 
-            <h1 class="text-h4 font-weight-bold mb-6">
-              JTEKT GitLab Auto CI&CD
-            </h1>
+            <h1 class="text-h4 font-weight-bold mb-6">Auto-CICD</h1>
 
             <p class="mb-6">
               {{ t("views.auth.signInMessage") }}
