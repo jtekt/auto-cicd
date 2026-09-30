@@ -12,13 +12,6 @@
       <v-col cols="12" sm="8" md="6" lg="4">
         <v-card class="elevation-8">
           <v-card-text class="text-center pa-8">
-            <v-img
-              src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/gitlab/gitlab-original.svg"
-              height="100"
-              contain
-              class="mb-6"
-            />
-
             <h1 class="text-h4 font-weight-bold mb-6">Auto-CICD</h1>
 
             <p class="mb-6">
