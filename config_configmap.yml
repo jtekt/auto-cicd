@@ -44,7 +44,7 @@ data:
     deploy-job:
       stage: deploy
       rules:
-        # Branches to run the Build stage
+        # Branches to run the Deploy stage
         # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
         - if: '$CI_COMMIT_BRANCH == "{{ROOT_REF}}"'
       before_script:
@@ -57,14 +57,11 @@ data:
         # Create an environment secret containing necessary variables
         # The ENV file is saved as a CI/CD variable in GitLab under Settings -> CI/CD -> Variables with the key `ENV` and the type set to `File`.
         # This file contains key-value pairs of environment variables needed for the application.
-
-        # First delete any existing secret to ensure it is updated
         - kubectl create secret generic $K8S_ENV_SECRET_NAME --from-env-file=$ENV --dry-run=client -o yaml | kubectl apply -f -
 
         # Apply the Kubernetes manifest
         - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 
-        # The IP address is the static IP of one node from the Kubernetes cluster or a load balancer
         - echo "The APP is available at https://$DEPLOYMENT_SUB_DOMAIN"
 
         # Send an email notification if the deployment was newly created
