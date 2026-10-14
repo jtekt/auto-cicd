@@ -69,7 +69,7 @@ Everything below is grouped under whichever surface it belongs to.
 
 - A GitLab instance (GitLab.com or self-managed) with a registered OAuth application (see below)
 - A Kubernetes cluster this dashboard's own container will run on, with a GitLab Agent connected
-- A container registry to host the dashboard's own image (this repo's `.gitlab-ci.yml` expects an ECR/registry URL as a CI/CD variable, e.g. `AWS_ECR_URL`)
+- A container registry to host the dashboard's own image (this repo's `.gitlab-ci.yml` expects an ECR/registry URL as a CI/CD variable, e.g. `AWS_ECR_PUBLIC_URL`)
 - Optional: a static/public URL to host this dashboard
 
 ### For projects deployed *through* Auto-CICD
@@ -157,7 +157,7 @@ npm run dev
 A release is a `vX.Y.Z` tag on `main`. Pushing `main` without a tag deploys nothing. On a tag, this repo's `.gitlab-ci.yml`:
 
 1. Builds the image with `--build-arg APP_VERSION=<tag>`. That becomes `VITE_APP_VERSION`, which is shown in the footer (`Auto CICD | JTEKT Corporation | vX.Y.Z`).
-2. Pushes it to the private ECR as `732469118990.dkr.ecr.ap-northeast-1.amazonaws.com/auto-cicd` (`:<tag>` and `:latest`). The cluster pulls it with the `ecr-credentials` secret.
+2. Pushes it to the public ECR as `public.ecr.aws/jtekt-corporation/auto-cicd` (`:<tag>` and `:latest`).
 3. Applies `config_configmap.yml` (ConfigMap `auto-cicd`: `/app/config.yml` and the common templates, see the operator note below), then `kubernetes_manifest.yml`, to namespace `self-service-suite`.
 
 The `VITE_APP_GITLAB_*` values for this instance are **not** in this repo. They come from the `auto-cicd-env` ConfigMap (`auto-cicd/env.yml` in the `gitops` repo, applied by ArgoCD), loaded with `envFrom`. That ConfigMap must exist before a rollout, or the pod fails with `CreateContainerConfigError`.
