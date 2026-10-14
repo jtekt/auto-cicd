@@ -134,13 +134,13 @@
         </div>
 
         <!-- Errors -->
-        <div v-if="deployStore.deploymentInfo.errors?.length" class="mb-6">
+        <div v-if="deployStore.deploymentInfo?.errors?.length" class="mb-6">
           <h3 class="text-h6 font-weight-medium mb-2 text-error">
             {{ t("components.deployHandler.nextStepsDialog.errors.title") }}
           </h3>
           <div class="pl-4">
             <p
-              v-for="error in deployStore.deploymentInfo.errors"
+              v-for="error in deployStore.deploymentInfo?.errors"
               :key="error"
               class="text-body-2 d-flex align-center ga-3 mb-1"
             >

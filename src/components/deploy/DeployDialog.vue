@@ -17,6 +17,7 @@
           style="display: flex; justify-content: center; width: 100%"
         >
           <a
+            v-if="deployStore.project"
             :href="deployStore.project.webUrl"
             target="_blank"
             rel="noopener noreferrer"
