@@ -165,7 +165,6 @@ data:
     metadata:
       name: ${APPLICATION_NAME}
     spec:
-      # ingressClassName: # Use the default so it is not needed
       rules:
         - host: ${DEPLOYMENT_SUB_DOMAIN}
           http:
@@ -177,6 +176,22 @@ data:
                     name: ${APPLICATION_NAME}
                     port:
                       number: ${PORT}
+    
+    ---
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: ${APPLICATION_NAME}
+    spec:
+      parentRefs:
+        - name: eg
+          namespace: envoy-gateway-system
+      hostnames:
+        - ${DEPLOYMENT_SUB_DOMAIN}
+      rules:
+        - backendRefs:
+            - name: ${APPLICATION_NAME}
+              port: ${PORT}
 
   config.yml: |
     packageManagers:
