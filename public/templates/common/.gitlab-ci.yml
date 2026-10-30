@@ -9,9 +9,8 @@
 # @ai-instructions: Treat this file as READ-ONLY. Do not edit or suggest edits.
 # ==============================================================================
 
-# Define the pipeline stages
 stages:
-  - build # Stage responsible for building the Docker image
+  - build  # Stage responsible for building the Docker image
   - deploy # Stage responsible for deploying the application to Kubernetes
 
 variables:
@@ -26,9 +25,11 @@ variables:
 build-job:
   stage: build
   rules:
-    # Branches to run the Build stage
+    # Only run if kubernetes_manifest.yml exists in the repository
     # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
     - if: '$CI_COMMIT_BRANCH == "{{ROOT_REF}}"'
+      exists:
+        - kubernetes_manifest.yml
   before_script:
     # Create repository if needed
     # The repository might already exist if the pipeline have already run
@@ -45,9 +46,11 @@ build-job:
 deploy-job:
   stage: deploy
   rules:
-    # Branches to run the Deploy stage
+    # Only run if kubernetes_manifest.yml exists in the repository
     # More info about rules in https://docs.gitlab.com/ci/jobs/job_rules/
     - if: '$CI_COMMIT_BRANCH == "{{ROOT_REF}}"'
+      exists:
+        - kubernetes_manifest.yml
   before_script:
     # Uses the correct Kubernetes context
     - kubectl config use-context ${K8S_CONTEXT}

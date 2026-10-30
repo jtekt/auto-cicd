@@ -194,6 +194,7 @@
               :id="projectIndex === 0 ? 'tour-deploy-btn' : undefined"
             >
               <DeployBtn :project="project" />
+              <UndeployBtn :project="project" />
             </v-card-actions>
           </v-card>
         </v-col>
@@ -221,6 +222,7 @@ import axios from "axios";
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import AppLoader from "@/components/AppLoader.vue";
 import DeployBtn from "@/components/deploy/DeployButton.vue";
+import UndeployBtn from "@/components/deploy/UndeployButton.vue";
 import { useLocale } from "vuetify";
 import { type ProjectNode, type ProjectsResponse } from "@/types/project";
 import { useRoute, useRouter } from "vue-router";
@@ -490,6 +492,14 @@ const fetchProjects = async (clear?: boolean) => {
             }
             repository {
               rootRef
+              blobs(ref: "HEAD", paths: ["kubernetes_manifest.yml", ".gitlab-ci.yml"]) {
+                edges {
+                  node {
+                    name
+                    rawBlob
+                  }
+                }
+              }
             }
           }
         }
@@ -541,12 +551,16 @@ const fetchProjects = async (clear?: boolean) => {
         .replace(/\./g, "-")
         .toLowerCase()
         .replace(/[^a-z0-9-]/g, "");
+      const deploymentFiles = (project.node.repository.blobs?.edges ?? []).map(
+        (e) => ({ name: e.node.name, rawTextBlob: e.node.rawBlob ?? undefined }),
+      );
+
       return {
         ...project.node,
         id,
         projectName,
         languages,
-        deploymentFiles: [],
+        deploymentFiles,
       } satisfies ProjectNode;
     });
 

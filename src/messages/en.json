@@ -5,7 +5,14 @@
             "cancelBtn": "Cancel",
             "actions": {
                 "deploy": "Deploy",
-                "redeploy": "Redeploy"
+                "redeploy": "Redeploy",
+                "undeploy": "Undeploy"
+            },
+            "undeployDialog": {
+                "title": "Undeploy Application",
+                "message": "This will replace the CI pipeline with a cleanup job that removes all Kubernetes resources for this application.",
+                "warning": "This action cannot be undone. The application will be stopped and all Kubernetes resources will be deleted.",
+                "confirm": "Undeploy"
             },
             "actionsNeededDialog": {
                 "title": "Actions needed to deploy the app",
@@ -83,11 +90,13 @@
                     "fetchFilesFailed": "Error fetching repository files: {error}",
                     "commitFailed": "Error: Failed to commit deployment files",
                     "envUpdateFailed": "Error: Failed to update environment variables",
+                    "undeployFailed": "Error: Failed to remove deployment files",
                     "deployFailed": "Deployment failed. Please check the logs for more details",
                     "fileGenerationFailed": "Failed to generate deployment files: {error}"
                 },
                 "success": {
                     "commitSuccess": "Deployment files committed successfully!",
+                    "undeploySuccess": "Deployment files removed. The cleanup pipeline will stop the application shortly.",
                     "envUpdateSuccess": "Environment variables updated successfully!",
                     "deployMessages": {
                         "deploying": "Your project will be deployed within a few minutes.",

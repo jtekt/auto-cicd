@@ -44,6 +44,9 @@ export interface ProjectNode {
   maxAccessLevel: MaxAccessLevel;
   repository: {
     rootRef: string;
+    blobs?: {
+      edges: { node: { name: string; rawBlob: string | null } }[];
+    };
   };
   deploymentFiles?: {
     name: string;

@@ -9,7 +9,14 @@
             },
             "actions": {
                 "deploy": "デプロイ",
-                "redeploy": "再デプロイ"
+                "redeploy": "再デプロイ",
+                "undeploy": "アンデプロイ"
+            },
+            "undeployDialog": {
+                "title": "アプリケーションのアンデプロイ",
+                "message": "CIパイプラインをクリーンアップジョブに置き換え、このアプリケーションのすべてのKubernetesリソースを削除します。",
+                "warning": "この操作は取り消せません。アプリケーションが停止し、すべてのKubernetesリソースが削除されます。",
+                "confirm": "アンデプロイ"
             },
             "deployDialog": {
                 "deployingFromGitlab": "GitLabからデプロイ中",
@@ -83,11 +90,13 @@
                     "fetchFilesFailed": "リポジトリファイルの取得エラー：{error}",
                     "commitFailed": "エラー：デプロイファイルのコミットに失敗しました",
                     "envUpdateFailed": "エラー：環境変数の更新に失敗しました",
+                    "undeployFailed": "エラー：デプロイファイルの削除に失敗しました",
                     "deployFailed": "デプロイに失敗しました。詳細はログを確認してください",
                     "fileGenerationFailed": "エラー：デプロイファイルの生成に失敗しました"
                 },
                 "success": {
                     "commitSuccess": "デプロイファイルが正常にコミットされました！",
+                    "undeploySuccess": "デプロイファイルが削除されました。クリーンアップパイプラインがまもなくアプリケーションを停止します。",
                     "envUpdateSuccess": "環境変数が正常に更新されました！",
                     "deployMessages": {
                         "deploying": "プロジェクトは数分以内にデプロイされます。",

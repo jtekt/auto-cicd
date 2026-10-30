@@ -387,15 +387,10 @@ export const updateEnvs = async ({
 };
 
 export const isDeployed = (project: ProjectNode): boolean => {
-  const gitLabCi = project.deploymentFiles?.find(
-    (file) => file.name === ".gitlab-ci.yml"
-  );
-
-  if (!gitLabCi) return false;
-
-  if (gitLabCi.rawTextBlob?.indexOf("cleanup") !== -1) {
-    return false;
-  }
-
-  return true;
+  const ciContent = project.deploymentFiles?.find(
+    (f) => f.name === ".gitlab-ci.yml",
+  )?.rawTextBlob;
+  // Deployed when the CI file is the deploy template (contains build-job),
+  // not the cleanup template
+  return ciContent?.includes("build-job:") ?? false;
 };

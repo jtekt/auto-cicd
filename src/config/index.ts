@@ -6,6 +6,13 @@ import YAML from "yaml";
 
 let parsedConfig: Config | null = null;
 
+export const DEFAULT_FILES = [".gitlab-ci.yml", "kubernetes_manifest.yml"];
+export const DEFAULT_PATHS = DEFAULT_FILES.map((f) => `/templates/common/${f}`);
+
+export const CLEANUP_TEMPLATE_PATH = "/templates/common/.gitlab-ci.cleanup.yml";
+
+export const templates: Record<string, string> = {};
+
 export const loadConfig = async () => {
   const res = await fetch("/config.yml");
 
@@ -13,25 +20,35 @@ export const loadConfig = async () => {
     throw new Error("Error loading config.yml");
   }
 
-  // Read as text (YAML)
   const text = await res.text();
-
-  // Parse YAML → JS object
   const content = YAML.parse(text);
-
-  // Validate with Zod
   const validated = ConfigSchema.parse(content);
-
-  // Convert checkFor → RegExp[]
   parsedConfig = normalizeConfig(validated);
+
+  await loadCommonTemplates();
 };
 
 export const getConfig = () => parsedConfig;
 
-export const DEFAULT_FILES = [".gitlab-ci.yml", "kubernetes_manifest.yml"];
-export const DEFAULT_PATHS = DEFAULT_FILES.map((f) => `/templates/common/${f}`);
+async function loadCommonTemplates() {
+  const templatesToFetch = [...DEFAULT_PATHS, CLEANUP_TEMPLATE_PATH];
 
-export const templates: Record<string, string> = {};
+  const requests = templatesToFetch.map(async (file) => {
+    const cacheKey = getTemplateCacheKey(file);
+
+    if (templates[cacheKey]) return;
+
+    try {
+      const content = await fetchTemplateSource(file);
+
+      if (content) templates[cacheKey] = content;
+    } catch (err) {
+      console.error(`Error fetching template for ${cacheKey}:`, err);
+    }
+  });
+
+  await Promise.all(requests);
+}
 
 export const loadTemplates = async (
   access_token: string,
@@ -40,15 +57,7 @@ export const loadTemplates = async (
   if (!parsedConfig) return;
   const frameworkFiles = parsedConfig.frameworks[framework]?.files || [];
 
-  // Create a local copy to prevent mutating the config
   const filesToFetch = [...frameworkFiles];
-
-  // Add default files only if not already included and not already loaded
-  DEFAULT_PATHS.forEach((defaultPath) => {
-    if (!filesToFetch.includes(defaultPath)) {
-      filesToFetch.push(defaultPath);
-    }
-  });
 
   const requests = filesToFetch.map(async (file) => {
     const cacheKey = getTemplateCacheKey(file);
@@ -69,7 +78,7 @@ export const loadTemplates = async (
 
 async function fetchTemplateSource(
   file: TemplateSource,
-  token: string,
+  token?: string,
 ): Promise<string | null> {
   if (typeof file === "string") {
     const localRes = await fetch(file, {
@@ -89,7 +98,7 @@ async function fetchTemplateSource(
       },
     });
     return urlRes.ok ? urlRes.text() : null;
-  } else if (file.type === "gitlab") {
+  } else if (file.type === "gitlab" && token) {
     return graphqlFetchFile(file.project, file.ref, file.path, token);
   }
 
@@ -103,10 +112,9 @@ function normalizeConfig(config: Config) {
     for (const entry of framework.configFiles) {
       entry.checkFor = entry.checkFor.map((pattern) => {
         if (pattern instanceof RegExp) {
-          return pattern; // already good
+          return pattern;
         }
 
-        // If string in form /foo/, convert to RegExp
         if (
           typeof pattern === "string" &&
           pattern.startsWith("/") &&
@@ -115,7 +123,6 @@ function normalizeConfig(config: Config) {
           return new RegExp(pattern.slice(1, -1));
         }
 
-        // Otherwise treat as literal string and escape it
         const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         return new RegExp(escaped);
       });

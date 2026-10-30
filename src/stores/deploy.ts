@@ -19,7 +19,9 @@ import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@/stores/toast";
 import { useI18n } from "vue-i18n";
 import type { ProjectConfig } from "@/types/app-config";
-import { DEFAULT_FILES, getConfig } from "@/config";
+import { CLEANUP_TEMPLATE_PATH, DEFAULT_FILES, getConfig, templates } from "@/config";
+import { getTemplateCacheKey } from "@/utils/cache";
+import { parseTemplate } from "@/libs/mustache";
 import type { FrameworkConfigType } from "@/types/config";
 import { normalizeContent } from "@/utils/file";
 import { getProjectCacheKey } from "@/utils/cache";
@@ -42,6 +44,7 @@ export const useDeployStore = defineStore("deploy", () => {
   const deployDialog = ref(false);
   const confirmDeployDialog = ref(false);
   const nextStepsDialog = ref(false);
+  const undeployDialog = ref(false);
 
   // State
   const isLoading = ref(false);
@@ -386,11 +389,18 @@ export const useDeployStore = defineStore("deploy", () => {
         );
         result.commit = { success: true };
 
-        // Update the repository files with the new content
-        project.value.deploymentFiles = injectFiles.value.map((f) => ({
-          name: f.fileName,
-          rawTextBlob: f.content,
-        }));
+        // Merge committed files into existing deploymentFiles so unchanged
+        // files (e.g. kubernetes_manifest.yml on a redeploy) are preserved
+        const existing = project.value.deploymentFiles ?? [];
+        const updated = [...existing];
+        for (const f of injectFiles.value) {
+          if (!f.isChecked) continue;
+          const idx = updated.findIndex((e) => e.name === f.fileName);
+          const entry = { name: f.fileName, rawTextBlob: f.content };
+          if (idx !== -1) updated[idx] = entry;
+          else updated.push(entry);
+        }
+        project.value.deploymentFiles = updated;
 
         toast.success(
           t("components.deployHandler.script.success.commitSuccess"),
@@ -499,6 +509,84 @@ export const useDeployStore = defineStore("deploy", () => {
 
   function cancelDeploy() {
     confirmDeployDialog.value = false;
+  }
+
+  function openUndeploy(selectedProject: ProjectNode) {
+    project.value = selectedProject;
+    undeployDialog.value = true;
+  }
+
+  async function confirmUndeploy() {
+    if (!authStore.session || !project.value) {
+      toast.error(t("components.deployHandler.script.errors.unauthorized"));
+      return;
+    }
+
+    const rawTemplate = templates[getTemplateCacheKey(CLEANUP_TEMPLATE_PATH)];
+    if (!rawTemplate) {
+      toast.error(t("components.deployHandler.script.errors.undeployFailed"));
+      return;
+    }
+
+    undeployDialog.value = false;
+    isLoading.value = true;
+
+    const cleanupCiContent = parseTemplate(rawTemplate, {
+      USERNAME: authStore.session.user.nickname,
+      APPLICATION_NAME: project.value.projectName,
+      ROOT_REF: project.value.repository.rootRef,
+    });
+
+    const encodeBase64 = (str: string) =>
+      btoa(
+        new TextEncoder()
+          .encode(str)
+          .reduce((data, byte) => data + String.fromCharCode(byte), ""),
+      );
+
+    try {
+      const commitUrl = `${runtimeEnv.VITE_APP_GITLAB_URL}/api/v4/projects/${project.value.id}/repository/commits`;
+      await axios.post(
+        commitUrl,
+        {
+          branch: project.value.repository.rootRef,
+          commit_message: `[AUTO-CICD] undeploy application`,
+          actions: [
+            {
+              action: "update" as CommitAction,
+              file_path: ".gitlab-ci.yml",
+              content: encodeBase64(cleanupCiContent),
+              encoding: "base64",
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authStore.session.auth_token.access_token}`,
+          },
+        },
+      );
+
+      // Update local CI file content so isDeployed() returns false immediately
+      if (project.value.deploymentFiles) {
+        const ciIdx = project.value.deploymentFiles.findIndex(
+          (f) => f.name === ".gitlab-ci.yml",
+        );
+        if (ciIdx !== -1) {
+          project.value.deploymentFiles[ciIdx] = {
+            name: ".gitlab-ci.yml",
+            rawTextBlob: cleanupCiContent,
+          };
+        }
+      }
+
+      toast.success(t("components.deployHandler.script.success.undeploySuccess"));
+    } catch (err) {
+      console.error("Undeploy error:", err);
+      toast.error(t("components.deployHandler.script.errors.undeployFailed"));
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   async function identifyProject(): Promise<ProjectConfig | undefined> {
@@ -704,5 +792,8 @@ export const useDeployStore = defineStore("deploy", () => {
     confirmDeploy,
     cancelDeploy,
     searchFile,
+    undeployDialog,
+    openUndeploy,
+    confirmUndeploy,
   };
 });
