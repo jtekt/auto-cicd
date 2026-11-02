@@ -92,7 +92,7 @@ data:
               -e SMTP_TO=$GITLAB_USER_EMAIL \
               -e SMTP_FROM=$AWS_SES_FROM \
               -e SMTP_SUBJECT="Auto CICD" \
-              -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to https://$DEPLOYMENT_SUB_DOMAIN. Please note that it might take a few minutes for the application to start." \
+              -e SMTP_MESSAGE="Your application $CI_PROJECT_TITLE is being deployed to https://$DEPLOYMENT_SUB_DOMAIN. Please note that it might take a few minutes for the application to start." \
               moreillon/sendemail
 
             echo "Email was sent to: $GITLAB_USER_EMAIL"
