@@ -21,6 +21,7 @@ A zero-friction way to deploy your GitLab repositories to Kubernetes. This proje
 - [Releasing and Deploying Auto-CICD itself](#releasing-and-deploying-auto-cicd-itself)
 - [Kubernetes and GitLab Agent Setup (for target projects)](#kubernetes-and-gitlab-agent-setup-for-target-projects)
 - [Required GitLab CI/CD variables (target group or project)](#required-gitlab-cicd-variables-target-group-or-project)
+- [Template Variables (available in templates)](#template-variables-available-in-templates)
 - [Supported Frameworks and Package Managers](#supported-frameworks-and-package-managers)
 - [Security Considerations](#security-considerations)
 - [Roadmap / Contributions](#roadmap--contributions)
@@ -218,6 +219,28 @@ Runner requirements:
 - `kubectl` installed on the runner for deploy stage
 
 > **Operator note:** this doesn't have to happen by editing `public/templates/common/` and rebuilding the image. This deployment's own `kubernetes_manifest.yml` mounts a ConfigMap (`config_configmap.yml`, applied by this repo's own pipeline) over `/app/templates/common/.gitlab-ci.yml`, `/app/templates/common/kubernetes_manifest.yml` and `/app/config.yml` inside the running container — so the templates actually served in production can differ from what's checked into `public/templates/`. As of this writing that ConfigMap hardcodes `K8S_NAMESPACE`, `K8S_CONTEXT` and the ECR registry URL instead of reading them from the target group's CI/CD variables, and always attempts the SES email step (no `K8S_HOST` guard). Check `config_configmap.yml` for what's actually live before assuming the in-repo template is what runs.
+
+---
+
+## Template Variables (available in templates)
+
+Templates in `public/templates/` use `{{VARIABLE}}` placeholders that Auto-CICD substitutes at generation time (before the file is committed to the target repo). These are distinct from `${VARIABLE}` placeholders, which are GitLab CI runtime variables resolved when the pipeline runs.
+
+All substitutions are performed by `src/libs/templates/data-builder.ts`.
+
+| Variable | Description |
+|---|---|
+| `{{PROJECT_NAME_SLUG}}` | URL safe project name: lowercase, non-alphanumeric chars replaced with `-`, max 50 chars.  |
+| `{{USERNAME}}` | GitLab username of the user generating the template. |
+| `{{ROOT_REF}}` | Default branch of the project (e.g. `main`, `master`). Used to scope pipeline rules to the main branch. |
+| `{{PORT}}` | Application port configured by the user (falls back to `80`). |
+| `{{FRAMEWORK}}` | Framework key detected or selected (e.g. `vite`, `express`, `fastapi`). |
+| `{{INSTALL_COMMAND}}` | Package manager install command (e.g. `npm install`, `pip install -r requirements.txt`). |
+| `{{BUILD_COMMAND}}` | Build command configured by the user (defaults to `echo 'Skipping build'` if not set). |
+| `{{OUTPUT_FILENAME}}` | Output file name (last segment of `outputFile`, e.g. `dist/index.html` → `index.html`). |
+| `{{OUTPUT_MODULE_NAME}}` | Output file name without extension (e.g. `index.html` → `index`). |
+| `{{OUTPUT_DIRECTORY}}` | Directory portion of `outputFile` (e.g. `dist/index.html` → `dist/`). Defaults to `./` when no directory. |
+| `{{OUTPUT_PATH}}` | Full output path: `{{OUTPUT_DIRECTORY}}{{OUTPUT_FILENAME}}`. |
 
 ---
 
