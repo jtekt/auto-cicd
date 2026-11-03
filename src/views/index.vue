@@ -471,6 +471,7 @@ const fetchProjects = async (clear?: boolean) => {
             name
             webUrl
             fullPath
+            path
             languages { 
               name 
               share
@@ -535,8 +536,7 @@ const fetchProjects = async (clear?: boolean) => {
         )
         .map((l) => ({ name: l.name.toLowerCase(), share: l.share }))
         .sort((a, b) => b.share - a.share);
-      const projectPath = project.node.fullPath.split("/").pop()!;
-      const projectName = projectPath
+      const projectName = project.node.path
         .replace(/_/g, "-")
         .replace(/\./g, "-")
         .toLowerCase()

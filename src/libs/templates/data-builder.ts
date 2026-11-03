@@ -15,14 +15,16 @@ export const templateDataBuilder = (
       ? [...splitOutputFile].slice(0, -1).join("/") + "/"
       : "./";
 
-  const projectPath = project.fullPath.split("/").pop() || "";
-
-  const urlSafeProjectName = projectPath
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50)
-    .replace(/-+$/g, "");
+  const urlSafeProjectName =
+    project.path
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-+$/g, "") ||
+    project.projectName
+      .replace(/^-+|-+$/g, "")
+      .replace(/-+/g, "-")
+      .replace(/-+$/g, "");
 
   return {
     USERNAME: username,

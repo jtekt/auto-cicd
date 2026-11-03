@@ -37,6 +37,7 @@ export interface ProjectNode {
   projectName: string;
   webUrl: string;
   fullPath: string;
+  path: string;
   languages: Language[];
   namespace: Namespace | null;
   updatedAt: string; // ISO 8601 date string

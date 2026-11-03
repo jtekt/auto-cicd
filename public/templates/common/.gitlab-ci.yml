@@ -29,7 +29,7 @@ variables:
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
 
   # --- Deployment ---
-  DEPLOYMENT_SUB_DOMAIN: ${CI_PROJECT_NAME}-${CI_PROJECT_ID}.ssc.jtektrnd.net
+  DEPLOYMENT_SUB_DOMAIN: {{PROJECT_NAME_SLUG}}-${CI_PROJECT_ID}.ssc.jtektrnd.net
   K8S_ENV_SECRET_NAME: $APPLICATION_NAME
 
 # Build the Docker container image
