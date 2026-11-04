@@ -14,12 +14,22 @@ stages:
   - deploy # Stage responsible for deploying the application to Kubernetes
 
 variables:
-  APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
-  CONTAINER_IMAGE_NAME: auto-cicd/{{USERNAME}}/{{APPLICATION_NAME}}
-  CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
-  CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
-  K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
+  # --- Kubernetes ---
+  K8S_NAMESPACE: auto-cicd
+  K8S_CONTEXT: auto-cicd/gitlab-agent-for-kubernetes:auto-cicd
+
+  # --- Application ---
+  APPLICATION_NAME: auto-cicd-$CI_PROJECT_ID
   PORT: {{PORT}}
+
+  # --- Container Image ---
+  CONTAINER_IMAGE_NAME: auto-cicd/$APPLICATION_NAME
+  CONTAINER_IMAGE: 732469118990.dkr.ecr.ap-northeast-1.amazonaws.com/${CONTAINER_IMAGE_NAME}
+  CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
+
+  # --- Deployment ---
+  DEPLOYMENT_SUB_DOMAIN: {{PROJECT_NAME_SLUG}}-${CI_PROJECT_ID}.ssc.jtektrnd.net
+  K8S_ENV_SECRET_NAME: $APPLICATION_NAME
 
 # Build the Docker container image
 build-job:
@@ -66,46 +76,26 @@ deploy-job:
     # Apply the Kubernetes manifest
     - KUBECTL_APPLY_OUTPUT=$(envsubst < kubernetes_manifest.yml | kubectl apply -f -)
 
-    # Get the Kubernetes service details
-    - KUBECTL_GET_SVC=$(kubectl get svc $APPLICATION_NAME | grep $APPLICATION_NAME)
-
-    # Ensure the service exists and extract the exposed port
-    - |
-      if [[ -z "$KUBECTL_GET_SVC" ]]; then
-        echo "Error: Could not find service port for $APPLICATION_NAME"
-        exit 1
-      fi
-
-    - PORT=$(sed "s/.*\([0-9]\+\):\([0-9]\+\)\/TCP.*/\2/" <<< "$KUBECTL_GET_SVC")
-
-    # The IP address is the static IP of one node from the Kubernetes cluster or a load balancer
-    - |
-      if [ -n "$K8S_HOST" ]; then
-        echo "The APP is available at $K8S_HOST:$PORT"
-      fi
+    - echo "The APP is available at https://$DEPLOYMENT_SUB_DOMAIN"
 
     # Send an email notification if the deployment was newly created
     - |
       if [[ $KUBECTL_APPLY_OUTPUT == *"created"* ]]; then
-        if [ -n "$K8S_HOST" ]; then
-          docker run \
-            -e SMTP_PORT=$AWS_SES_PORT \
-            -e SMTP_HOST=$AWS_SES_HOST \
-            -e SMTP_USERNAME=$AWS_SES_USERNAME \
-            -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
-            -e SMTP_TO=$GITLAB_USER_EMAIL \
-            -e SMTP_FROM=$AWS_SES_FROM \
-            -e SMTP_SUBJECT="Auto CICD" \
-            -e SMTP_MESSAGE="Your application $APPLICATION_NAME is being deployed to $K8S_HOST:$PORT. Please note that it might take a few minutes for the application to start." \
-            moreillon/sendemail
+        docker run \
+          -e SMTP_PORT=$AWS_SES_PORT \
+          -e SMTP_HOST=$AWS_SES_HOST \
+          -e SMTP_USERNAME=$AWS_SES_USERNAME \
+          -e SMTP_PASSWORD=$AWS_SES_PASSWORD \
+          -e SMTP_TO=$GITLAB_USER_EMAIL \
+          -e SMTP_FROM=$AWS_SES_FROM \
+          -e SMTP_SUBJECT="Auto CICD" \
+          -e SMTP_MESSAGE="Your application $CI_PROJECT_TITLE is being deployed to https://$DEPLOYMENT_SUB_DOMAIN. Please note that it might take a few minutes for the application to start." \
+          moreillon/sendemail
 
-          echo "Email was sent to: $GITLAB_USER_EMAIL"
-        else
-          echo "Your application $APPLICATION_NAME was deployed"
-        fi
+        echo "Email was sent to: $GITLAB_USER_EMAIL"
       else
         echo "Please note that it might take a few minutes for the application to update."
       fi
 
     # Validate deployment rollout status
-    - kubectl rollout status deployment/$APPLICATION_NAME --timeout=600s;
+    - kubectl rollout status deployment/$APPLICATION_NAME --timeout=300s;

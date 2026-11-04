@@ -15,12 +15,17 @@ stages:
   - deploy # Stage responsible for deploying the application to Kubernetes
 
 variables:
-  APPLICATION_NAME: autocicd-{{USERNAME}}-{{APPLICATION_NAME}}
+  # --- Application ---
+  APPLICATION_NAME: auto-cicd-$CI_PROJECT_ID
+  PORT: "{{PORT}}"
+
+  # --- Container Image ---
   CONTAINER_IMAGE_NAME: auto-cicd/{{USERNAME}}/{{APPLICATION_NAME}}
   CONTAINER_IMAGE: ${CONTAINER_REGISTRY_URL}/${CONTAINER_IMAGE_NAME}
   CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE}:${CI_COMMIT_SHORT_SHA}
+
+  # --- Deployment ---
   K8S_ENV_SECRET_NAME: ${APPLICATION_NAME}
-  PORT: {{PORT}}
 
 # Build the Docker container image
 build-job:

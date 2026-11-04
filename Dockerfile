@@ -5,9 +5,9 @@ FROM node:24-alpine as build-stage
 WORKDIR /app
 
 # Install dependencies
-COPY package.json ./
+COPY package.json package-lock.json ./
 
-RUN npm install
+RUN npm ci
 
 # Copy all source code
 COPY . .
